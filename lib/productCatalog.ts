@@ -1,0 +1,173 @@
+export type Orientation = "horizontal" | "vertical";
+export type ProductType = "panel" | "paint";
+
+export type ProfileRules = {
+  needsConnectionProfile: boolean;
+  needsStartProfile: boolean;
+  needsEndProfile: boolean;
+  needsCornerProfile: boolean;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  brand: string;
+  description: string;
+  type: ProductType;
+  orientations: Orientation[];
+  panelLength: number;
+  panelVisibleHeight: number;
+  panelWorkSize: number;
+  thickness: number;
+  panelAreaM2: number;
+  pricePerLinearMeterExVat?: number;
+  pricePerPanelExVat?: number;
+  pricePerM2ExVat: number;
+  wasteFactor: number;
+  insulationValue?: string;
+  soundReduction?: string;
+  fireClass?: string;
+  coating?: string;
+  warranty?: string;
+  profileRules: Record<Orientation, ProfileRules>;
+};
+
+const defaultHorizontalVerticalRules: Record<Orientation, ProfileRules> = {
+  horizontal: {
+    needsConnectionProfile: true,
+    needsStartProfile: true,
+    needsEndProfile: true,
+    needsCornerProfile: true,
+  },
+  vertical: {
+    needsConnectionProfile: true,
+    needsStartProfile: true,
+    needsEndProfile: true,
+    needsCornerProfile: true,
+  },
+};
+
+export const products: Product[] = [
+  {
+    id: "spanl-ympb-9003-mono-flat-white",
+    name: "YMPB 9003 Mono Flat White",
+    brand: "Spanl",
+    description:
+      "37 cm werkhoogte gevelpaneel in 3D gladde plankvorm met houtstructuur. Kleur off white, look alike RAL9010.",
+    type: "panel",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 4200,
+    panelVisibleHeight: 380,
+    panelWorkSize: 370,
+    thickness: 16,
+    panelAreaM2: 1.55,
+    pricePerLinearMeterExVat: 10.88,
+    pricePerPanelExVat: 45.73,
+    pricePerM2ExVat: 29.5,
+    wasteFactor: 8,
+    insulationValue: "m².K/W 0.74",
+    soundReduction: "20-25 dB",
+    fireClass: "Euroklasse A2 volgens EN13501-1",
+    coating: "Akzo Nobel poedercoating, vuilafstotend",
+    warranty: "10 jaar garantie op coating",
+    profileRules: {
+      horizontal: {
+        needsConnectionProfile: true,
+        needsStartProfile: true,
+        needsEndProfile: true,
+        needsCornerProfile: true,
+      },
+      vertical: {
+        needsConnectionProfile: false,
+        needsStartProfile: true,
+        needsEndProfile: false,
+        needsCornerProfile: true,
+      },
+    },
+  },
+
+  {
+    id: "generic-wood-cladding-horizontal",
+    name: "Wood Cladding Horizontal",
+    brand: "Generic",
+    description: "Generic horizontal wood cladding for facade renovation.",
+    type: "panel",
+    orientations: ["horizontal"],
+    panelLength: 3000,
+    panelVisibleHeight: 180,
+    panelWorkSize: 180,
+    thickness: 18,
+    panelAreaM2: 0.54,
+    pricePerM2ExVat: 65,
+    wasteFactor: 10,
+    profileRules: defaultHorizontalVerticalRules,
+  },
+
+  {
+    id: "generic-wood-cladding-vertical",
+    name: "Wood Cladding Vertical",
+    brand: "Generic",
+    description: "Generic vertical wood cladding for facade renovation.",
+    type: "panel",
+    orientations: ["vertical"],
+    panelLength: 3000,
+    panelVisibleHeight: 150,
+    panelWorkSize: 150,
+    thickness: 18,
+    panelAreaM2: 0.45,
+    pricePerM2ExVat: 70,
+    wasteFactor: 12,
+    profileRules: defaultHorizontalVerticalRules,
+  },
+
+  {
+    id: "generic-composite-panels",
+    name: "Composite Facade Panels",
+    brand: "Generic",
+    description: "Generic composite facade panel system.",
+    type: "panel",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 3600,
+    panelVisibleHeight: 180,
+    panelWorkSize: 180,
+    thickness: 20,
+    panelAreaM2: 0.65,
+    pricePerM2ExVat: 85,
+    wasteFactor: 8,
+    profileRules: defaultHorizontalVerticalRules,
+  },
+
+  {
+    id: "generic-facade-board",
+    name: "Facade Board",
+    brand: "Generic",
+    description: "Generic facade board / sheet material.",
+    type: "panel",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 3050,
+    panelVisibleHeight: 1220,
+    panelWorkSize: 1220,
+    thickness: 8,
+    panelAreaM2: 3.72,
+    pricePerM2ExVat: 55,
+    wasteFactor: 10,
+    profileRules: defaultHorizontalVerticalRules,
+  },
+
+  {
+    id: "generic-exterior-paint",
+    name: "Exterior Paint",
+    brand: "Generic",
+    description: "Generic exterior paint system for facade renovation.",
+    type: "paint",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 0,
+    panelVisibleHeight: 0,
+    panelWorkSize: 0,
+    thickness: 0,
+    panelAreaM2: 0,
+    pricePerM2ExVat: 25,
+    wasteFactor: 5,
+    profileRules: defaultHorizontalVerticalRules,
+  },
+];
