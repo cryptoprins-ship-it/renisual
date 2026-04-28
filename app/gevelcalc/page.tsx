@@ -284,22 +284,61 @@ export default function GevelCalcPage() {
     <>
       <style>{`
         @media print {
-          input[type="file"], button, .print-hidden { display: none !important; }
-          section, table, img, .print-avoid { break-inside: avoid; page-break-inside: avoid; }
-          img { max-height: 240px !important; max-width: 90% !important; margin: 0 auto !important; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          input[type="file"], button, label { display: none !important; }
+
+          /* Projectinstellingen verbergen */
+          .print-hidden { display: none !important; }
+
+          /* Compacte spacing */
+          main { padding: 0 !important; }
+          .space-y-6 > * + * { margin-top: 0.75rem !important; }
+
+          /* Secties compacter */
+          section { padding: 0.75rem !important; margin-bottom: 0.5rem !important; }
+
+          /* Afbeeldingen netjes en kleiner */
+          img {
+            max-height: 180px !important;
+            max-width: 55% !important;
+            margin: 0.25rem auto !important;
+            display: block !important;
+          }
+
+          /* Foto upload container */
+          .border-dashed { padding: 0.5rem !important; }
+
+          /* Tabel compact */
+          table { font-size: 11px !important; }
+          th, td { padding: 3px 6px !important; }
+
+          /* Paginabreuk voor productkeuze sectie */
+          .page-break-before { page-break-before: always; break-before: page; }
+
+          /* Voorkom breuk binnen secties */
+          section, table { break-inside: avoid; page-break-inside: avoid; }
+
+          /* Verberg vaste toolbar */
+          .fixed { display: none !important; }
+
+          body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-size: 13px;
+          }
         }
       `}</style>
 
       <main className="min-h-screen bg-[#f6f4ef] p-4 pb-40 text-black md:p-6">
         <div className="mx-auto max-w-6xl space-y-6">
 
-          <section className="rounded-2xl border border-black bg-white p-6 text-center print-avoid">
+          {/* Header */}
+          <section className="rounded-2xl border border-black bg-white p-6 text-center print-hidden">
             <h1 className="text-3xl font-bold">Renisual GevelCalc</h1>
             <p className="mt-2">Bereken gevelpanelen, profielen, openingen, prijs en exporteer je resultaat.</p>
           </section>
 
-          <section className="rounded-2xl border border-black bg-white p-4 print-avoid">
+          {/* Projectinstellingen — verborgen bij print */}
+          <section className="rounded-2xl border border-black bg-white p-4 print-hidden">
             <h2 className="text-lg font-semibold">Projectinstellingen</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <ToggleSwitch checked={frontBackSame} onChange={setFrontBackSame} label="Voorzijde en achterzijde hebben dezelfde afmetingen" />
@@ -307,6 +346,7 @@ export default function GevelCalcPage() {
             </div>
           </section>
 
+          {/* Zijdes */}
           {sides.map((side, index) => {
             const resolved = resolvedSides[index]!;
             const isLinked = (index === 1 && frontBackSame) || (index === 3 && leftRightSame);
@@ -321,7 +361,7 @@ export default function GevelCalcPage() {
                     {isLinked && <p className="text-sm text-gray-500">Afmetingen worden automatisch overgenomen.</p>}
                   </div>
                   {sides.length > 1 && (
-                    <button type="button" onClick={() => removeSide(side.id)} className="rounded-xl border border-black px-4 py-2 text-sm">
+                    <button type="button" onClick={() => removeSide(side.id)} className="rounded-xl border border-black px-4 py-2 text-sm print-hidden">
                       Verwijder
                     </button>
                   )}
@@ -350,15 +390,18 @@ export default function GevelCalcPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-2xl border-2 border-dashed border-black p-4 text-center print-avoid">
+                <div className="mt-5 rounded-2xl border-2 border-dashed border-black p-4 text-center print-hidden">
                   <p className="mb-3 text-sm font-semibold">Foto van deze zijde</p>
                   <input type="file" accept="image/*" onChange={(e) => handleImageUpload(side.id, e.target.files?.[0] ?? null)} />
-                  {side.photoDataUrl && (
-                    <img src={side.photoDataUrl} alt={side.name} className="mx-auto mt-4 max-h-[320px] w-full rounded-xl object-contain" />
-                  )}
                 </div>
 
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                {side.photoDataUrl && (
+                  <div className="mt-3 text-center">
+                    <img src={side.photoDataUrl} alt={side.name} className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
+                  </div>
+                )}
+
+                <div className="mt-5 grid gap-4 md:grid-cols-2 print-hidden">
                   <ToggleSwitch checked={hasWindows} onChange={(c) => setHasWindows(side.id, c)} label="Deze zijde heeft kozijnen" />
                   <ToggleSwitch checked={hasDoors} onChange={(c) => setHasDoors(side.id, c)} label="Deze zijde heeft deuren" />
                 </div>
@@ -367,10 +410,10 @@ export default function GevelCalcPage() {
                   <div className="mt-5 space-y-4 rounded-2xl border border-black p-4">
                     <h3 className="font-semibold">Openingen</h3>
                     {side.openings.map((opening) => (
-                      <div key={opening.id} className="rounded-xl border border-black p-4 print-avoid">
+                      <div key={opening.id} className="rounded-xl border border-black p-4">
                         <div className="flex justify-between gap-4">
                           <h4 className="font-semibold">{opening.label}</h4>
-                          <button type="button" onClick={() => removeOpening(side.id, opening.id)} className="text-sm underline">Verwijder</button>
+                          <button type="button" onClick={() => removeOpening(side.id, opening.id)} className="text-sm underline print-hidden">Verwijder</button>
                         </div>
                         <div className="mt-3 grid gap-3 md:grid-cols-3">
                           <input className="rounded-xl border border-black p-3" placeholder="Breedte cm" value={opening.width} onChange={(e) => updateOpening(side.id, opening.id, "width", e.target.value)} />
@@ -405,7 +448,8 @@ export default function GevelCalcPage() {
             );
           })}
 
-          <section className="rounded-2xl border border-black bg-white p-4 print-avoid">
+          {/* Productkeuze — paginabreuk bij print */}
+          <section className="rounded-2xl border border-black bg-white p-4 page-break-before">
             <h2 className="text-lg font-semibold">Productkeuze</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div>
@@ -459,7 +503,8 @@ export default function GevelCalcPage() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-black bg-white p-4 print-avoid">
+          {/* Totaaloverzicht */}
+          <section className="rounded-2xl border border-black bg-white p-4">
             <h2 className="text-lg font-semibold">Totaaloverzicht</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <div className="rounded-xl border border-black p-3">
@@ -477,11 +522,12 @@ export default function GevelCalcPage() {
             </div>
           </section>
 
+          {/* Materiaalberekening */}
           {selectedProduct && materialResult && (
-            <section className="rounded-2xl border border-black bg-white p-4 print-avoid">
+            <section className="rounded-2xl border border-black bg-white p-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <h2 className="text-lg font-semibold">Materiaalberekening</h2>
-                <div className="w-64">
+                <div className="w-64 print-hidden">
                   <ToggleSwitch checked={showInclVat} onChange={setShowInclVat} label="Incl. btw (21%)" />
                 </div>
               </div>
@@ -553,6 +599,7 @@ export default function GevelCalcPage() {
 
         </div>
 
+        {/* Toolbar */}
         <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3 print:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-2 flex-wrap">
             <button type="button" onClick={addSide} disabled={sides.length >= MAX_SIDES} className="rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium disabled:opacity-40">+ Zijde</button>
