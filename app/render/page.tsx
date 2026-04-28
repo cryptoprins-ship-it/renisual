@@ -217,7 +217,8 @@ function buildDefaultPrompt(
   const lines = [
     "You are a facade visualisation assistant for Renisual.",
     "OUTPUT REQUIREMENT: the result MUST differ visibly from the input. If your output looks identical to the input, the answer is incorrect.",
-    `TASK: remove the existing facade material on the main building (whatever it is — brick, plaster, render, paint, stone, weatherboard, siding) and replace it with Spanl panel ${panel.sku}. Finish/profile: ${finishEn(panel.finish)}. Each panel has a visible width of ${panel.panelWidthCm} cm.`,
+    "STEP 1 — ERASE: in your mind, FIRST replace the entire existing facade with a smooth blank coloured wall. Discard every seam, plank line, weatherboard rabat, brick joint, slat edge, mortar line, board division and any other small-scale rhythm visible on the building. These belong to the OLD cladding and MUST NOT survive into the output. The output must NOT inherit the spacing of the existing planks/boards/bricks visible in the photo.",
+    `STEP 2 — APPLY: onto that blank wall, install Spanl panel ${panel.sku}. Finish/profile: ${finishEn(panel.finish)}. Each new panel has a visible width of ${panel.panelWidthCm} cm — this is typically MUCH wider than narrow weatherboard rabat (~15 cm) you may see in the input. The new panel rhythm must override the old one entirely.`,
     `COLOUR (CRITICAL): ${colorDesc}. The cladding colour MUST exactly match this RAL value. Do NOT lighten the colour. Do NOT desaturate to white or pale grey. Reference photos may have been shot under bright studio lighting that makes them look paler — sample the underlying tone, not the highlights. The final wall must read as the stated colour at midday daylight.`,
     seamStyle,
     orientationBlock,
