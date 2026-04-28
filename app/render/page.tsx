@@ -147,20 +147,30 @@ function describeColor(panel: RenderPanel): string {
   return panel.colorEn;
 }
 
+function isLightPanel(panel: RenderPanel): boolean {
+  if (panel.ral === "9010" || panel.ral === "9006") return true;
+  const c = panel.colorEn.toLowerCase();
+  return c.includes("white") || c.includes("silver") || c.includes("beige");
+}
+
 function describeSeam(panel: RenderPanel): string {
+  const light = isLightPanel(panel);
+  const lightShadowRule = light
+    ? "SHADOW RULE FOR LIGHT/WHITE PANELS: the seam shadow MUST be very pale grey (e.g. RGB ~210,210,210), NEVER black, NEVER dark grey. On a white wall a normal-strength shadow reads as a stark black stripe — that is wrong. Render the seam as an almost-imperceptible tonal break. If you cannot render a sufficiently subtle shadow, render NO seam line rather than a black/dark line."
+    : "";
   switch (panel.finish) {
     case "monoFlat":
-      return "Seam style: very narrow hairline seam between panels — NOT a dark gap, NOT a black line. The seam is essentially the same colour as the panel itself, only slightly darker by a thin shadow on one side. Adjacent panels read as one continuous coloured surface with subtle dividers.";
+      return `Seam style: very narrow hairline seam between panels — NOT a dark gap, NOT a black line. The seam is essentially the same colour as the panel itself, only slightly darker by a thin shadow on one side. Adjacent panels read as one continuous coloured surface with subtle dividers. ${lightShadowRule}`;
     case "monoGroove":
-      return "Seam style: a deep V-groove between panels. The groove sits a few millimeters back from the panel face and casts a clean shadow line, but its colour is still the panel colour — not pure black.";
+      return `Seam style: a deep V-groove between panels. The groove sits a few millimeters back from the panel face and casts a clean shadow line, but its colour is still the panel colour — not pure black. ${lightShadowRule}`;
     case "strip":
-      return "Seam style: thin horizontal/vertical shadow lines between narrow planks. The seam is a fine soft shadow, never a black gap; the planks themselves remain the panel colour edge-to-edge.";
+      return `Seam style: thin horizontal/vertical shadow lines between narrow planks. The seam is a fine soft shadow, never a black gap; the planks themselves remain the panel colour edge-to-edge. ${lightShadowRule}`;
     case "brick":
       return "Seam style: thin mortar line between individual bricks — light grey mortar, NOT dark. Each brick keeps its full colour and surface texture.";
     case "spanishTile":
       return "Seam style: 3D tile overlap — each curved tile partially covers the next. Shadows fall under each tile lip, but no pure-black gaps.";
     case "wood":
-      return "Seam style: tongue-and-groove plank seam, soft shadow line between planks; never a dark gap.";
+      return `Seam style: tongue-and-groove plank seam, soft shadow line between planks; never a dark gap. ${lightShadowRule}`;
     default:
       return "";
   }
@@ -225,6 +235,7 @@ function buildDefaultPrompt(
     seamCountLine,
     refLine,
     "TEXTURE: surface must NOT be a flat uniform colour — render each panel with its seam, plank rhythm and surface structure matching the finish (deep groove / narrow strip / brick face / Spanish-tile relief / wood grain).",
+    "UNIFORMITY (CRITICAL): every seam line must look IDENTICAL to every other seam line on the facade — same colour, same width, same intensity, same shadow direction. Do NOT render some seams as dark stripes and others as faint lines. Do NOT skip seams in the middle of the wall and only draw them near the edges. Treat the entire facade as one continuous panelled surface with a perfectly uniform seam pattern, broken only by openings (windows/doors).",
     "PRESERVE EXACTLY (do NOT change): windows, window frames, doors, door frames, gutters, roof edges, downspouts, glazing, sky, plants, street, vehicles, camera angle, perspective, lighting direction and shadows.",
     "OUTPUT: one photorealistic image of the full facade.",
   ];
@@ -338,7 +349,11 @@ export default function RenderPage() {
         const variant = await urlToDataUrl(selectedPanel.variantUrl);
         if (variant) refUrls.push(await compressDataUrl(variant, 1024, 0.82));
       }
-      const photoForApi = await compressDataUrl(sourcePhoto, 1600, 0.85);
+      const photoForApi = await compressDataUrl(
+        sourcePhoto,
+        provider === "hf" ? 896 : 1600,
+        provider === "hf" ? 0.75 : 0.85
+      );
       const ralPart = selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : "";
       const productLabel = `Spanl ${selectedPanel.sku} — ${selectedPanel.colorEn}${ralPart}, ${finishEn(selectedPanel.finish)}`;
       const endpoint = provider === "hf" ? "/api/render-hf" : "/api/render";

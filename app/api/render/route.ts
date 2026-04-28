@@ -29,27 +29,59 @@ function dataUrlToInlinePart(dataUrl: string): InlinePart | null {
 
 function readEnvCaseInsensitive(name: string): string | undefined {
   const target = name.toLowerCase();
-  for (const [k, v] of Object.entries(process.env)) {
-    if (k.toLowerCase() === target && v) return v;
+  for (const k of Object.keys(process.env)) {
+    if (k.toLowerCase() === target) {
+      const v = process.env[k];
+      if (typeof v === "string" && v.trim().length > 0) return v;
+    }
   }
   return undefined;
 }
 
+function resolveGeminiKey(): { key?: string; diag: Record<string, unknown> } {
+  const candidates = [
+    "GEMINI_API_KEY",
+    "Gemini_API_Key",
+    "Gemini_Api_Key",
+    "gemini_api_key",
+    "GOOGLE_API_KEY",
+    "Google_API_Key",
+  ];
+  const tried: Record<string, string> = {};
+  for (const name of candidates) {
+    const raw = process.env[name];
+    if (typeof raw === "string") {
+      tried[name] = `len=${raw.length}, trim=${raw.trim().length}`;
+      if (raw.trim().length > 0) return { key: raw.trim(), diag: { matchedDirect: name, tried } };
+    } else {
+      tried[name] = "undefined";
+    }
+  }
+  const ci = readEnvCaseInsensitive("GEMINI_API_KEY");
+  if (ci) return { key: ci.trim(), diag: { matchedCaseInsensitive: true, tried } };
+
+  const allMatching = Object.keys(process.env).filter((k) => /gemini|google/i.test(k));
+  const valuesProbe = allMatching.map((k) => {
+    const v = process.env[k];
+    return { name: k, type: typeof v, len: typeof v === "string" ? v.length : null };
+  });
+  return { diag: { tried, allMatching, valuesProbe } };
+}
+
 export async function POST(request: Request) {
-  const envKeys = Object.keys(process.env).filter((k) => /gemini|google/i.test(k));
-  const apiKey = readEnvCaseInsensitive("GEMINI_API_KEY");
+  const { key: apiKey, diag } = resolveGeminiKey();
   if (!apiKey) {
-    console.error("[render] GEMINI_API_KEY missing. Env keys containing GEMINI/GOOGLE:", envKeys);
+    console.error("[render] No usable Gemini API key found. Diagnostic:", JSON.stringify(diag));
     return Response.json(
       {
-        error: "GEMINI_API_KEY missing on server.",
-        hint: "Add GEMINI_API_KEY in Vercel → Project → Settings → Environment Variables (Production scope), then redeploy.",
-        envKeysSeen: envKeys,
+        error: "Gemini API key missing or empty on server.",
+        hint: "Add GEMINI_API_KEY in Vercel → Settings → Environment Variables (Production scope) with a non-empty value, then redeploy. Mixed-case names like 'Gemini_API_Key' also work.",
+        diag,
       },
       { status: 500 }
     );
   }
-  console.log(`[render] GEMINI_API_KEY found (length=${apiKey.length}, prefix=${apiKey.slice(0, 4)}…)`);
+  console.log(`[render] Gemini key resolved (length=${apiKey.length}, prefix=${apiKey.slice(0, 4)}…), diag=${JSON.stringify(diag)}`);
 
   let body: RenderBody;
   try {

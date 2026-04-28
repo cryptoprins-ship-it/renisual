@@ -1,3 +1,4 @@
+import { InferenceClient } from "@huggingface/inference";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -8,9 +9,14 @@ type HfBody = {
   prompt?: string;
   strength?: number;
   model?: string;
+  provider?: string;
 };
 
-const DEFAULT_MODEL = "timbrooks/instruct-pix2pix";
+const DEFAULT_MODEL = "black-forest-labs/FLUX.1-Kontext-dev";
+const FALLBACK_MODELS = [
+  "Qwen/Qwen-Image-Edit",
+  "timbrooks/instruct-pix2pix",
+];
 
 function stripDataUrlPrefix(dataUrl: string): { mime: string; b64: string } | null {
   const m = /^data:([^;,]+);base64,(.+)$/.exec(dataUrl);
@@ -20,24 +26,68 @@ function stripDataUrlPrefix(dataUrl: string): { mime: string; b64: string } | nu
 
 function readEnvCaseInsensitive(name: string): string | undefined {
   const target = name.toLowerCase();
-  for (const [k, v] of Object.entries(process.env)) {
-    if (k.toLowerCase() === target && v) return v;
+  for (const k of Object.keys(process.env)) {
+    if (k.toLowerCase() === target) {
+      const v = process.env[k];
+      if (typeof v === "string" && v.trim().length > 0) return v;
+    }
   }
   return undefined;
+}
+
+function base64ToBlob(b64: string, mime: string): Blob {
+  const bytes = Buffer.from(b64, "base64");
+  return new Blob([new Uint8Array(bytes)], { type: mime });
+}
+
+async function blobToBase64DataUrl(blob: Blob): Promise<string> {
+  const buf = Buffer.from(await blob.arrayBuffer());
+  const mime = blob.type || "image/png";
+  return `data:${mime};base64,${buf.toString("base64")}`;
+}
+
+type CallResult = { ok: true; dataUrl: string; modelUsed: string } | { ok: false; error: string };
+
+async function tryModel(
+  client: InferenceClient,
+  model: string,
+  imageBlob: Blob,
+  prompt: string,
+  strength: number
+): Promise<CallResult> {
+  try {
+    const result = await client.imageToImage({
+      model,
+      inputs: imageBlob,
+      parameters: {
+        prompt,
+        guidance_scale: 7.5,
+        num_inference_steps: 30,
+        strength,
+      },
+    });
+    const dataUrl = await blobToBase64DataUrl(result);
+    return { ok: true, dataUrl, modelUsed: model };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return { ok: false, error: `${model}: ${message}` };
+  }
 }
 
 export async function POST(req: Request) {
   let body: HfBody;
   try {
     body = (await req.json()) as HfBody;
-  } catch {
+  } catch (err) {
+    console.error("[render-hf] JSON parse failed:", err);
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
   const hfKey = readEnvCaseInsensitive("HUGGINGFACE_API_KEY") || readEnvCaseInsensitive("HF_API_KEY");
   if (!hfKey) {
+    console.error("[render-hf] HUGGINGFACE_API_KEY missing");
     return NextResponse.json(
-      { error: "HUGGINGFACE_API_KEY missing on the server." },
+      { error: "HUGGINGFACE_API_KEY missing on the server.", hint: "Add it in Vercel env vars and redeploy." },
       { status: 500 }
     );
   }
@@ -50,62 +100,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "photoDataUrl is not a valid data URL." }, { status: 400 });
   }
 
-  const model = body.model || DEFAULT_MODEL;
-  const prompt = (body.prompt ?? "").trim() || "modern facade cladding, architectural photo";
-  const strength = typeof body.strength === "number" ? body.strength : 0.85;
+  const prompt = (body.prompt ?? "").trim() || "Replace the facade cladding with the described modern panels, keep windows/doors/sky/perspective unchanged.";
+  const strength = typeof body.strength === "number" ? body.strength : 0.78;
+  const requestedModel = body.model || DEFAULT_MODEL;
 
-  try {
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${encodeURIComponent(model)}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${hfKey}`,
-          "Content-Type": "application/json",
-          "x-use-cache": "false",
-          Accept: "image/png",
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            image: parsed.b64,
-            strength,
-            num_inference_steps: 30,
-            guidance_scale: 7.5,
-          },
-        }),
-      }
-    );
+  const client = new InferenceClient(hfKey);
+  const imageBlob = base64ToBlob(parsed.b64, parsed.mime);
 
-    if (!response.ok) {
-      const text = await response.text();
-      if (response.status === 503) {
-        return NextResponse.json(
-          { error: "HF model is loading (cold start). Try again in 30-60 s." },
-          { status: 503 }
-        );
-      }
-      return NextResponse.json(
-        { error: `HF (${response.status}): ${text.slice(0, 400)}` },
-        { status: response.status }
-      );
+  const tried: string[] = [];
+  const candidates = [requestedModel, ...FALLBACK_MODELS.filter((m) => m !== requestedModel)];
+
+  for (const model of candidates) {
+    const result = await tryModel(client, model, imageBlob, prompt, strength);
+    if (result.ok) {
+      console.log(`[render-hf] success with ${result.modelUsed}, prior tries: ${JSON.stringify(tried)}`);
+      return NextResponse.json({
+        renderDataUrl: result.dataUrl,
+        modelUsed: result.modelUsed,
+        triedBeforeSuccess: tried,
+      });
     }
-
-    const ct = response.headers.get("content-type") ?? "";
-    if (ct.startsWith("application/json")) {
-      const errJson = await response.json().catch(() => null);
-      return NextResponse.json(
-        { error: `HF returned JSON instead of image: ${JSON.stringify(errJson).slice(0, 400)}` },
-        { status: 502 }
-      );
-    }
-
-    const buf = await response.arrayBuffer();
-    const b64 = Buffer.from(buf).toString("base64");
-    const mime = ct || "image/png";
-    return NextResponse.json({ renderDataUrl: `data:${mime};base64,${b64}` });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown HF error";
-    return NextResponse.json({ error: `HF call failed: ${message}` }, { status: 502 });
+    console.error(`[render-hf] ${model} failed: ${result.error}`);
+    tried.push(result.error);
   }
+
+  return NextResponse.json(
+    {
+      error: "All HF models failed.",
+      tried,
+      hint:
+        "Check HF token permissions (must include 'inference'). FLUX.1-Kontext-dev requires accepting its license on the model page. Some models need a paid Inference Endpoint or Inference Providers credit.",
+    },
+    { status: 502 }
+  );
 }
