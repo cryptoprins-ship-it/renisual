@@ -27,25 +27,42 @@ function dataUrlToInlinePart(dataUrl: string): InlinePart | null {
   return { inlineData: { mimeType: m[1], data: m[2] } };
 }
 
+function readEnvCaseInsensitive(name: string): string | undefined {
+  const target = name.toLowerCase();
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k.toLowerCase() === target && v) return v;
+  }
+  return undefined;
+}
+
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const envKeys = Object.keys(process.env).filter((k) => /gemini|google/i.test(k));
+  const apiKey = readEnvCaseInsensitive("GEMINI_API_KEY");
   if (!apiKey) {
+    console.error("[render] GEMINI_API_KEY missing. Env keys containing GEMINI/GOOGLE:", envKeys);
     return Response.json(
-      { error: "GEMINI_API_KEY ontbreekt op de server. Voeg deze toe aan .env.local." },
+      {
+        error: "GEMINI_API_KEY missing on server.",
+        hint: "Add GEMINI_API_KEY in Vercel → Project → Settings → Environment Variables (Production scope), then redeploy.",
+        envKeysSeen: envKeys,
+      },
       { status: 500 }
     );
   }
+  console.log(`[render] GEMINI_API_KEY found (length=${apiKey.length}, prefix=${apiKey.slice(0, 4)}…)`);
 
   let body: RenderBody;
   try {
     body = (await request.json()) as RenderBody;
-  } catch {
-    return Response.json({ error: "Ongeldige JSON in request." }, { status: 400 });
+  } catch (err) {
+    console.error("[render] JSON parse failed:", err);
+    return Response.json({ error: "Invalid JSON in request." }, { status: 400 });
   }
 
   const photoPart = body.photoDataUrl ? dataUrlToInlinePart(body.photoDataUrl) : null;
   if (!photoPart) {
-    return Response.json({ error: "Geldige photoDataUrl ontbreekt." }, { status: 400 });
+    console.error("[render] photoDataUrl missing or malformed. Body keys:", Object.keys(body));
+    return Response.json({ error: "Valid photoDataUrl missing." }, { status: 400 });
   }
 
   const referenceUrls = body.referenceDataUrls?.length
@@ -115,7 +132,8 @@ export async function POST(request: Request) {
     const mime = imagePart.inlineData.mimeType ?? "image/png";
     return Response.json({ renderDataUrl: `data:${mime};base64,${imagePart.inlineData.data}` });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Onbekende fout";
-    return Response.json({ error: `Gemini-aanroep mislukte: ${message}` }, { status: 502 });
+    console.error("[render] Gemini call failed:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return Response.json({ error: `Gemini call failed: ${message}` }, { status: 502 });
   }
 }

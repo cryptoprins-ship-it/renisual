@@ -18,6 +18,14 @@ function stripDataUrlPrefix(dataUrl: string): { mime: string; b64: string } | nu
   return { mime: m[1], b64: m[2] };
 }
 
+function readEnvCaseInsensitive(name: string): string | undefined {
+  const target = name.toLowerCase();
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k.toLowerCase() === target && v) return v;
+  }
+  return undefined;
+}
+
 export async function POST(req: Request) {
   let body: HfBody;
   try {
@@ -26,7 +34,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
-  const hfKey = process.env.HUGGINGFACE_API_KEY;
+  const hfKey = readEnvCaseInsensitive("HUGGINGFACE_API_KEY") || readEnvCaseInsensitive("HF_API_KEY");
   if (!hfKey) {
     return NextResponse.json(
       { error: "HUGGINGFACE_API_KEY missing on the server." },
