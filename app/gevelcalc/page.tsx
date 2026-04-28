@@ -1,6 +1,11 @@
+usePhotoStore.ts
+layout.tsx
+page.tsx
+app/gevelcalc/page.tsx
+Kopieer
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { products, type Orientation } from "@/lib/productCatalog";
 import {
   type CalcSide,
@@ -15,6 +20,7 @@ import {
   toNumber,
   DEFAULT_SPANL_PROFILES,
 } from "@/lib/calcEngine";
+import { usePhotoStore } from "@/lib/usePhotoStore";
 
 const SIDE_NAMES = ["Voorzijde", "Achterzijde", "Linkerzijde", "Rechterzijde"];
 const MAX_SIDES = 10;
@@ -38,7 +44,6 @@ function createSide(index: number): CalcSide {
     width: "",
     height: "",
     openings: [],
-    photoDataUrl: "",
   };
 }
 
@@ -49,13 +54,22 @@ function createDefaultSides(): CalcSide[] {
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = () =>
       typeof reader.result === "string"
         ? resolve(reader.result)
         : reject(new Error("Kon afbeelding niet lezen."));
-    };
     reader.onerror = () => reject(new Error("Kon afbeelding niet laden."));
     reader.readAsDataURL(file);
+  });
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString("nl-NL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -82,17 +96,80 @@ function ToggleSwitch({
   );
 }
 
+function InputWithSuffix({
+  value,
+  onChange,
+  placeholder,
+  suffix,
+  disabled,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  suffix?: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className="relative">
+      <input
+        className={`w-full rounded-xl border border-black p-3 pr-12 disabled:bg-neutral-100 ${className ?? ""}`}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      {suffix && (
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none select-none print:hidden">
+          {suffix}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function Toast({ message, type }: { message: string; type: "ok" | "error" }) {
+  return (
+    <div
+      className={`fixed top-4 right-4 z-50 rounded-xl border px-5 py-3 text-sm font-medium shadow-md print:hidden ${
+        type === "ok"
+          ? "border-green-300 bg-green-50 text-green-800"
+          : "border-red-300 bg-red-50 text-red-800"
+      }`}
+    >
+      {message}
+    </div>
+  );
+}
+
 export default function GevelCalcPage() {
   const [sides, setSides] = useState<CalcSide[]>(createDefaultSides());
+  const [photos, setPhotos] = useState<Record<string, string>>({});
   const [frontBackSame, setFrontBackSame] = useState(false);
   const [leftRightSame, setLeftRightSame] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [totalDiscountPercent, setTotalDiscountPercent] = useState("0");
   const [showInclVat, setShowInclVat] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [calcDate, setCalcDate] = useState<string>("");
+  const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
+  const { savePhoto, deletePhoto, loadAllPhotos, clearAllPhotos } = usePhotoStore();
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showToast(message: string, type: "ok" | "error" = "ok") {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  }
+
+  useEffect(() => {
+    loadAllPhotos(sides.map((s) => s.id)).then(setPhotos).catch(() => {});
+  }, []);
 
   const resolvedSides = useMemo<CalcSide[]>(() => {
     return sides.map((side, index) => {
@@ -127,6 +204,12 @@ export default function GevelCalcPage() {
     return `€${value.toFixed(2)}`;
   }
 
+  function validateForExport(): string | null {
+    if (activeSides.length === 0) return "Vul minimaal één zijde in met breedte en hoogte.";
+    if (!selectedProduct) return "Kies eerst een product voordat je exporteert.";
+    return null;
+  }
+
   function updateSide(sideId: string, updater: (side: CalcSide) => CalcSide) {
     setSides((prev) => prev.map((s) => (s.id === sideId ? updater(s) : s)));
   }
@@ -135,8 +218,10 @@ export default function GevelCalcPage() {
     setSides((prev) => prev.length >= MAX_SIDES ? prev : [...prev, createSide(prev.length)]);
   }
 
-  function removeSide(sideId: string) {
+  async function removeSide(sideId: string) {
     setSides((prev) => prev.filter((s) => s.id !== sideId));
+    await deletePhoto(sideId).catch(() => {});
+    setPhotos((prev) => { const n = { ...prev }; delete n[sideId]; return n; });
   }
 
   function setHasWindows(sideId: string, checked: boolean) {
@@ -165,33 +250,31 @@ export default function GevelCalcPage() {
   }
 
   function addOpening(sideId: string, type: OpeningType) {
-    updateSide(sideId, (side) => ({
-      ...side,
-      openings: [...side.openings, createOpening(type)],
-    }));
+    updateSide(sideId, (side) => ({ ...side, openings: [...side.openings, createOpening(type)] }));
   }
 
   function removeOpening(sideId: string, openingId: string) {
-    updateSide(sideId, (side) => ({
-      ...side,
-      openings: side.openings.filter((o) => o.id !== openingId),
-    }));
+    updateSide(sideId, (side) => ({ ...side, openings: side.openings.filter((o) => o.id !== openingId) }));
   }
 
   async function handleImageUpload(sideId: string, file: File | null) {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const dataUrl = await fileToDataUrl(file);
-      updateSide(sideId, (side) => ({ ...side, photoDataUrl: dataUrl }));
+      await savePhoto(sideId, dataUrl);
+      setPhotos((prev) => ({ ...prev, [sideId]: dataUrl }));
     } catch {
-      alert("Afbeelding uploaden mislukt.");
+      showToast("Afbeelding uploaden mislukt.", "error");
     }
   }
 
   function buildSaveData() {
+    const now = new Date().toISOString();
+    setCalcDate(now);
     return {
       version: STORAGE_KEY,
-      savedAt: new Date().toISOString(),
+      savedAt: now,
+      projectName,
       sides,
       frontBackSame,
       leftRightSame,
@@ -203,27 +286,31 @@ export default function GevelCalcPage() {
 
   function restoreFromData(data: ReturnType<typeof buildSaveData>) {
     setSides(data.sides ?? createDefaultSides());
+    setProjectName(data.projectName ?? "");
     setFrontBackSame(data.frontBackSame ?? false);
     setLeftRightSame(data.leftRightSame ?? false);
     setSelectedProductId(data.selectedProductId ?? "");
     setOrientation(data.orientation ?? "horizontal");
     setTotalDiscountPercent(data.totalDiscountPercent ?? "0");
+    setCalcDate(data.savedAt ?? "");
+    const ids = (data.sides ?? []).map((s: CalcSide) => s.id);
+    loadAllPhotos(ids).then(setPhotos).catch(() => {});
   }
 
   function saveToBrowser() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData()));
-      alert("Berekening opgeslagen.");
+      showToast("Berekening opgeslagen.");
     } catch {
-      alert("Opslaan mislukt — mogelijk te veel foto's voor localStorage.");
+      showToast("Opslaan mislukt.", "error");
     }
   }
 
   function loadFromBrowser() {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) { alert("Geen opgeslagen berekening gevonden."); return; }
-    try { restoreFromData(JSON.parse(raw)); }
-    catch { alert("Laden mislukt."); }
+    if (!raw) { showToast("Geen opgeslagen berekening gevonden.", "error"); return; }
+    try { restoreFromData(JSON.parse(raw)); showToast("Berekening geladen."); }
+    catch { showToast("Laden mislukt.", "error"); }
   }
 
   function exportJson() {
@@ -240,30 +327,42 @@ export default function GevelCalcPage() {
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
-      if (!Array.isArray(data.sides)) { alert("Ongeldig JSON-bestand."); return; }
+      if (!Array.isArray(data.sides)) { showToast("Ongeldig JSON-bestand.", "error"); return; }
       restoreFromData(data);
-      alert("JSON geïmporteerd.");
-    } catch { alert("Importeren mislukt."); }
+      showToast("JSON geïmporteerd.");
+    } catch { showToast("Importeren mislukt.", "error"); }
   }
 
-  function resetData() {
+  async function resetData() {
     if (!confirm("Alle data wissen inclusief foto's? Dit kan niet ongedaan worden gemaakt.")) return;
     localStorage.removeItem(STORAGE_KEY);
+    await clearAllPhotos().catch(() => {});
     setSides(createDefaultSides());
+    setPhotos({});
+    setProjectName("");
     setFrontBackSame(false);
     setLeftRightSame(false);
     setSelectedProductId("");
     setOrientation("horizontal");
     setTotalDiscountPercent("0");
+    setCalcDate("");
+    showToast("Data gewist.");
   }
 
-  function exportPdf() { window.print(); }
+  function exportPdf() {
+    const err = validateForExport();
+    if (err) { showToast(err, "error"); return; }
+    setCalcDate(new Date().toISOString());
+    setTimeout(() => window.print(), 100);
+  }
 
   function sendMail() {
-    const subject = encodeURIComponent("Renisual GevelCalc berekening");
+    const err = validateForExport();
+    if (err) { showToast(err, "error"); return; }
     const vatLabel = showInclVat ? "incl. btw" : "excl. btw";
+    const subject = encodeURIComponent(`Renisual GevelCalc${projectName ? ` — ${projectName}` : ""}`);
     const body = encodeURIComponent(
-      `Renisual GevelCalc\n\n` +
+      `Renisual GevelCalc${projectName ? `\nProject: ${projectName}` : ""}\nDatum: ${formatDate(new Date().toISOString())}\n\n` +
       `Totaal bruto: ${totals.gross.toFixed(2)} m²\n` +
       `Totaal openingen: ${totals.openings.toFixed(2)} m²\n` +
       `Totaal netto: ${totals.net.toFixed(2)} m²\n\n` +
@@ -284,74 +383,63 @@ export default function GevelCalcPage() {
     <>
       <style>{`
         @media print {
-          input[type="file"], button, label { display: none !important; }
-
-          /* Projectinstellingen verbergen */
-          .print-hidden { display: none !important; }
-
-          /* Compacte spacing */
+          input[type="file"], button, label, .print-hidden { display: none !important; }
           main { padding: 0 !important; }
           .space-y-6 > * + * { margin-top: 0.75rem !important; }
-
-          /* Secties compacter */
           section { padding: 0.75rem !important; margin-bottom: 0.5rem !important; }
-
-          /* Afbeeldingen netjes en kleiner */
-          img {
-            max-height: 180px !important;
-            max-width: 55% !important;
-            margin: 0.25rem auto !important;
-            display: block !important;
-          }
-
-          /* Foto upload container */
-          .border-dashed { padding: 0.5rem !important; }
-
-          /* Tabel compact */
+          img { max-height: 180px !important; max-width: 55% !important; margin: 0.25rem auto !important; display: block !important; }
+          .border-dashed { display: none !important; }
           table { font-size: 11px !important; }
           th, td { padding: 3px 6px !important; }
-
-          /* Paginabreuk voor productkeuze sectie */
           .page-break-before { page-break-before: always; break-before: page; }
-
-          /* Voorkom breuk binnen secties */
           section, table { break-inside: avoid; page-break-inside: avoid; }
-
-          /* Verberg vaste toolbar */
           .fixed { display: none !important; }
-
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            font-size: 13px;
-          }
+          .opening-print-label { display: block !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 13px; }
         }
       `}</style>
+
+      {toast && <Toast message={toast.message} type={toast.type} />}
 
       <main className="min-h-screen bg-[#f6f4ef] p-4 pb-40 text-black md:p-6">
         <div className="mx-auto max-w-6xl space-y-6">
 
-          {/* Header */}
           <section className="rounded-2xl border border-black bg-white p-6 text-center print-hidden">
             <h1 className="text-3xl font-bold">Renisual GevelCalc</h1>
             <p className="mt-2">Bereken gevelpanelen, profielen, openingen, prijs en exporteer je resultaat.</p>
           </section>
 
-          {/* Projectinstellingen — verborgen bij print */}
+          <div className="hidden print:block mb-4">
+            <h1 className="text-2xl font-bold">Renisual GevelCalc</h1>
+            {projectName && <p className="text-base font-medium mt-1">{projectName}</p>}
+            {calcDate && <p className="text-sm text-gray-500 mt-1">Berekening: {formatDate(calcDate)}</p>}
+          </div>
+
           <section className="rounded-2xl border border-black bg-white p-4 print-hidden">
             <h2 className="text-lg font-semibold">Projectinstellingen</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <ToggleSwitch checked={frontBackSame} onChange={setFrontBackSame} label="Voorzijde en achterzijde hebben dezelfde afmetingen" />
-              <ToggleSwitch checked={leftRightSame} onChange={setLeftRightSame} label="Linkerzijde en rechterzijde hebben dezelfde afmetingen" />
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium">Projectnaam / klantnaam</label>
+                <input
+                  className="w-full rounded-xl border border-black p-3"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  placeholder="Bijv. Familie De Vries — Hoofddorp"
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <ToggleSwitch checked={frontBackSame} onChange={setFrontBackSame} label="Voorzijde en achterzijde hebben dezelfde afmetingen" />
+                <ToggleSwitch checked={leftRightSame} onChange={setLeftRightSame} label="Linkerzijde en rechterzijde hebben dezelfde afmetingen" />
+              </div>
             </div>
           </section>
 
-          {/* Zijdes */}
           {sides.map((side, index) => {
             const resolved = resolvedSides[index]!;
             const isLinked = (index === 1 && frontBackSame) || (index === 3 && leftRightSame);
             const hasWindows = side.openings.some((o) => o.type === "window");
             const hasDoors = side.openings.some((o) => o.type === "door");
+            const photo = photos[side.id];
 
             return (
               <section key={side.id} className="rounded-2xl border border-black bg-white p-4 md:p-6">
@@ -369,24 +457,12 @@ export default function GevelCalcPage() {
 
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium">Breedte zijde (cm)</label>
-                    <input
-                      className="w-full rounded-xl border border-black p-3 disabled:bg-neutral-100"
-                      value={resolved.width}
-                      disabled={isLinked}
-                      onChange={(e) => updateSide(side.id, (s) => ({ ...s, width: e.target.value }))}
-                      placeholder="Bijv. 540"
-                    />
+                    <label className="mb-1 block text-sm font-medium">Breedte zijde</label>
+                    <InputWithSuffix value={resolved.width} onChange={(v) => updateSide(side.id, (s) => ({ ...s, width: v }))} placeholder="Bijv. 540" suffix="cm" disabled={isLinked} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium">Hoogte zijde (cm)</label>
-                    <input
-                      className="w-full rounded-xl border border-black p-3 disabled:bg-neutral-100"
-                      value={resolved.height}
-                      disabled={isLinked}
-                      onChange={(e) => updateSide(side.id, (s) => ({ ...s, height: e.target.value }))}
-                      placeholder="Bijv. 280"
-                    />
+                    <label className="mb-1 block text-sm font-medium">Hoogte zijde</label>
+                    <InputWithSuffix value={resolved.height} onChange={(v) => updateSide(side.id, (s) => ({ ...s, height: v }))} placeholder="Bijv. 280" suffix="cm" disabled={isLinked} />
                   </div>
                 </div>
 
@@ -395,9 +471,9 @@ export default function GevelCalcPage() {
                   <input type="file" accept="image/*" onChange={(e) => handleImageUpload(side.id, e.target.files?.[0] ?? null)} />
                 </div>
 
-                {side.photoDataUrl && (
+                {photo && (
                   <div className="mt-3 text-center">
-                    <img src={side.photoDataUrl} alt={side.name} className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
+                    <img src={photo} alt={side.name} className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
                   </div>
                 )}
 
@@ -415,9 +491,12 @@ export default function GevelCalcPage() {
                           <h4 className="font-semibold">{opening.label}</h4>
                           <button type="button" onClick={() => removeOpening(side.id, opening.id)} className="text-sm underline print-hidden">Verwijder</button>
                         </div>
-                        <div className="mt-3 grid gap-3 md:grid-cols-3">
-                          <input className="rounded-xl border border-black p-3" placeholder="Breedte cm" value={opening.width} onChange={(e) => updateOpening(side.id, opening.id, "width", e.target.value)} />
-                          <input className="rounded-xl border border-black p-3" placeholder="Hoogte cm" value={opening.height} onChange={(e) => updateOpening(side.id, opening.id, "height", e.target.value)} />
+                        <p className="opening-print-label hidden text-sm text-gray-600 mt-1">
+                          Breedte: {opening.width || "—"} cm / Hoogte: {opening.height || "—"} cm / Aantal: {opening.count || "—"}
+                        </p>
+                        <div className="mt-3 grid gap-3 md:grid-cols-3 print-hidden">
+                          <InputWithSuffix value={opening.width} onChange={(v) => updateOpening(side.id, opening.id, "width", v)} placeholder="Breedte" suffix="cm" />
+                          <InputWithSuffix value={opening.height} onChange={(v) => updateOpening(side.id, opening.id, "height", v)} placeholder="Hoogte" suffix="cm" />
                           <input className="rounded-xl border border-black p-3" placeholder="Aantal" value={opening.count} onChange={(e) => updateOpening(side.id, opening.id, "count", e.target.value)} />
                         </div>
                       </div>
@@ -448,34 +527,26 @@ export default function GevelCalcPage() {
             );
           })}
 
-          {/* Productkeuze — paginabreuk bij print */}
           <section className="rounded-2xl border border-black bg-white p-4 page-break-before">
             <h2 className="text-lg font-semibold">Productkeuze</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-medium">Product</label>
-                <select
-                  className="w-full rounded-xl border border-black p-3"
-                  value={selectedProductId}
+                <select className="w-full rounded-xl border border-black p-3" value={selectedProductId}
                   onChange={(e) => {
                     const product = products.find((p) => p.id === e.target.value);
                     setSelectedProductId(e.target.value);
                     if (product?.orientations[0]) setOrientation(product.orientations[0]);
-                  }}
-                >
+                  }}>
                   <option value="">Kies product</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.brand} - {p.name}</option>
-                  ))}
+                  {products.map((p) => <option key={p.id} value={p.id}>{p.brand} - {p.name}</option>)}
                 </select>
               </div>
               {selectedProduct && (
                 <div>
                   <label className="mb-1 block text-sm font-medium">Richting</label>
                   <select className="w-full rounded-xl border border-black p-3" value={orientation} onChange={(e) => setOrientation(e.target.value as Orientation)}>
-                    {selectedProduct.orientations.map((o) => (
-                      <option key={o} value={o}>{o === "horizontal" ? "Horizontaal" : "Verticaal"}</option>
-                    ))}
+                    {selectedProduct.orientations.map((o) => <option key={o} value={o}>{o === "horizontal" ? "Horizontaal" : "Verticaal"}</option>)}
                   </select>
                 </div>
               )}
@@ -503,26 +574,15 @@ export default function GevelCalcPage() {
             )}
           </section>
 
-          {/* Totaaloverzicht */}
           <section className="rounded-2xl border border-black bg-white p-4">
             <h2 className="text-lg font-semibold">Totaaloverzicht</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-black p-3">
-                <div className="text-sm">Totaal bruto</div>
-                <div className="text-lg font-semibold">{totals.gross.toFixed(2)} m²</div>
-              </div>
-              <div className="rounded-xl border border-black p-3">
-                <div className="text-sm">Totaal openingen</div>
-                <div className="text-lg font-semibold">{totals.openings.toFixed(2)} m²</div>
-              </div>
-              <div className="rounded-xl border border-black p-3">
-                <div className="text-sm">Totaal netto</div>
-                <div className="text-lg font-semibold">{totals.net.toFixed(2)} m²</div>
-              </div>
+              <div className="rounded-xl border border-black p-3"><div className="text-sm">Totaal bruto</div><div className="text-lg font-semibold">{totals.gross.toFixed(2)} m²</div></div>
+              <div className="rounded-xl border border-black p-3"><div className="text-sm">Totaal openingen</div><div className="text-lg font-semibold">{totals.openings.toFixed(2)} m²</div></div>
+              <div className="rounded-xl border border-black p-3"><div className="text-sm">Totaal netto</div><div className="text-lg font-semibold">{totals.net.toFixed(2)} m²</div></div>
             </div>
           </section>
 
-          {/* Materiaalberekening */}
           {selectedProduct && materialResult && (
             <section className="rounded-2xl border border-black bg-white p-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -531,24 +591,13 @@ export default function GevelCalcPage() {
                   <ToggleSwitch checked={showInclVat} onChange={setShowInclVat} label="Incl. btw (21%)" />
                 </div>
               </div>
-
               <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <div className="rounded-xl border border-black p-3">
-                  <div className="text-sm">Netto incl. snijverlies</div>
-                  <div className="text-lg font-semibold">{materialResult.netWithWaste.toFixed(2)} m²</div>
-                </div>
+                <div className="rounded-xl border border-black p-3"><div className="text-sm">Netto incl. snijverlies</div><div className="text-lg font-semibold">{materialResult.netWithWaste.toFixed(2)} m²</div></div>
                 {selectedProduct.type === "panel" && (
-                  <div className="rounded-xl border border-black p-3">
-                    <div className="text-sm">Benodigde panelen</div>
-                    <div className="text-lg font-semibold">{materialResult.panelCount}</div>
-                  </div>
+                  <div className="rounded-xl border border-black p-3"><div className="text-sm">Benodigde panelen</div><div className="text-lg font-semibold">{materialResult.panelCount}</div></div>
                 )}
-                <div className="rounded-xl border border-black p-3">
-                  <div className="text-sm">Materiaalprijs</div>
-                  <div className="text-lg font-semibold">{fmt(materialResult.materialPriceExVat)}</div>
-                </div>
+                <div className="rounded-xl border border-black p-3"><div className="text-sm">Materiaalprijs</div><div className="text-lg font-semibold">{fmt(materialResult.materialPriceExVat)}</div></div>
               </div>
-
               {materialResult.profileItems.length > 0 && (
                 <>
                   <h3 className="mt-6 font-semibold">Profielen</h3>
@@ -582,24 +631,22 @@ export default function GevelCalcPage() {
                   </div>
                 </>
               )}
-
               <div className="mt-4 rounded-xl border border-black p-4 text-sm space-y-1">
                 <p>Materiaalprijs: {fmt(materialResult.materialPriceExVat)}</p>
-                {materialResult.profileItems.length > 0 && (
-                  <p>Profielenprijs: {fmt(materialResult.profilePriceExVat)}</p>
-                )}
+                {materialResult.profileItems.length > 0 && <p>Profielenprijs: {fmt(materialResult.profilePriceExVat)}</p>}
                 <p>Subtotaal: {fmt(materialResult.subtotalExVat)}</p>
                 <p>Korting {totalDiscountPercent}%: -{fmt(materialResult.totalDiscount)}</p>
-                <p className="font-semibold pt-1 border-t border-black">
-                  Totaal na korting: {fmt(materialResult.totalExVat)}
-                </p>
+                <p className="font-semibold pt-1 border-t border-black">Totaal na korting: {fmt(materialResult.totalExVat)}</p>
               </div>
             </section>
           )}
 
+          <div className="hidden print:block mt-6 pt-4 border-t border-gray-300 text-xs text-gray-400">
+            Renisual GevelCalc{projectName ? ` — ${projectName}` : ""}{calcDate ? ` — ${formatDate(calcDate)}` : ""}
+          </div>
+
         </div>
 
-        {/* Toolbar */}
         <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3 print:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-2 flex-wrap">
             <button type="button" onClick={addSide} disabled={sides.length >= MAX_SIDES} className="rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium disabled:opacity-40">+ Zijde</button>
