@@ -38,6 +38,7 @@ type RenderVariant = {
   prompt: string;
   dataUrl: string;
   createdAt: number;
+  provider: "gemini" | "hf";
 };
 
 function cleanSku(s: string): string {
@@ -77,6 +78,30 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+async function compressDataUrl(dataUrl: string, maxEdge: number, quality = 0.85): Promise<string> {
+  if (!dataUrl.startsWith("data:")) return dataUrl;
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error("img decode failed"));
+    i.src = dataUrl;
+  });
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const longest = Math.max(w, h);
+  if (longest <= maxEdge && dataUrl.startsWith("data:image/jpeg")) return dataUrl;
+  const scale = Math.min(1, maxEdge / longest);
+  const cw = Math.round(w * scale);
+  const ch = Math.round(h * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = cw;
+  canvas.height = ch;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl;
+  ctx.drawImage(img, 0, 0, cw, ch);
+  return canvas.toDataURL("image/jpeg", quality);
 }
 
 async function urlToDataUrl(url: string): Promise<string | null> {
@@ -122,6 +147,25 @@ function describeColor(panel: RenderPanel): string {
   return panel.colorEn;
 }
 
+function describeSeam(panel: RenderPanel): string {
+  switch (panel.finish) {
+    case "monoFlat":
+      return "Seam style: very narrow hairline seam between panels — NOT a dark gap, NOT a black line. The seam is essentially the same colour as the panel itself, only slightly darker by a thin shadow on one side. Adjacent panels read as one continuous coloured surface with subtle dividers.";
+    case "monoGroove":
+      return "Seam style: a deep V-groove between panels. The groove sits a few millimeters back from the panel face and casts a clean shadow line, but its colour is still the panel colour — not pure black.";
+    case "strip":
+      return "Seam style: thin horizontal/vertical shadow lines between narrow planks. The seam is a fine soft shadow, never a black gap; the planks themselves remain the panel colour edge-to-edge.";
+    case "brick":
+      return "Seam style: thin mortar line between individual bricks — light grey mortar, NOT dark. Each brick keeps its full colour and surface texture.";
+    case "spanishTile":
+      return "Seam style: 3D tile overlap — each curved tile partially covers the next. Shadows fall under each tile lip, but no pure-black gaps.";
+    case "wood":
+      return "Seam style: tongue-and-groove plank seam, soft shadow line between planks; never a dark gap.";
+    default:
+      return "";
+  }
+}
+
 function buildDefaultPrompt(
   panel: RenderPanel | undefined,
   orientation: Orientation,
@@ -130,6 +174,7 @@ function buildDefaultPrompt(
 ): string {
   if (!panel) return "";
   const colorDesc = describeColor(panel);
+  const seamStyle = describeSeam(panel);
   const isVertical = orientation === "vertical";
 
   let seamCountLine = "";
@@ -174,6 +219,7 @@ function buildDefaultPrompt(
     "OUTPUT REQUIREMENT: the result MUST differ visibly from the input. If your output looks identical to the input, the answer is incorrect.",
     `TASK: remove the existing facade material on the main building (whatever it is — brick, plaster, render, paint, stone, weatherboard, siding) and replace it with Spanl panel ${panel.sku}. Finish/profile: ${finishEn(panel.finish)}. Each panel has a visible width of ${panel.panelWidthCm} cm.`,
     `COLOUR (CRITICAL): ${colorDesc}. The cladding colour MUST exactly match this RAL value. Do NOT lighten the colour. Do NOT desaturate to white or pale grey. Reference photos may have been shot under bright studio lighting that makes them look paler — sample the underlying tone, not the highlights. The final wall must read as the stated colour at midday daylight.`,
+    seamStyle,
     orientationBlock,
     seamCountLine,
     refLine,
@@ -201,6 +247,7 @@ export default function RenderPage() {
   const [variants, setVariants] = useState<RenderVariant[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [provider, setProvider] = useState<"gemini" | "hf">("gemini");
 
   const { loadAllPhotos, saveRender } = usePhotoStore();
 
@@ -267,8 +314,9 @@ export default function RenderPage() {
   async function handleUpload(file: File | null) {
     if (!file || !file.type.startsWith("image/")) return;
     try {
-      const dataUrl = await fileToDataUrl(file);
-      setPhotoOverride(dataUrl);
+      const raw = await fileToDataUrl(file);
+      const compressed = await compressDataUrl(raw, 1600, 0.85);
+      setPhotoOverride(compressed);
       setSelectedSideId("");
     } catch {
       setErrorMsg(t("render.error.upload"));
@@ -283,29 +331,38 @@ export default function RenderPage() {
       const refUrls: string[] = [];
       if (selectedPanel.imageUrl) {
         const main = await urlToDataUrl(selectedPanel.imageUrl);
-        if (main) refUrls.push(main);
+        if (main) refUrls.push(await compressDataUrl(main, 1024, 0.82));
       }
       if (selectedPanel.variantUrl) {
         const variant = await urlToDataUrl(selectedPanel.variantUrl);
-        if (variant) refUrls.push(variant);
+        if (variant) refUrls.push(await compressDataUrl(variant, 1024, 0.82));
       }
+      const photoForApi = await compressDataUrl(sourcePhoto, 1600, 0.85);
       const ralPart = selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : "";
       const productLabel = `Spanl ${selectedPanel.sku} — ${selectedPanel.colorEn}${ralPart}, ${finishEn(selectedPanel.finish)}`;
-      const res = await fetch("/api/render", {
+      const endpoint = provider === "hf" ? "/api/render-hf" : "/api/render";
+      const payload = provider === "hf"
+        ? {
+            photoDataUrl: photoForApi,
+            prompt: effectivePrompt,
+            strength: 0.82,
+          }
+        : {
+            photoDataUrl: photoForApi,
+            referenceDataUrls: refUrls,
+            productLabel,
+            productDescription: `Color: ${selectedPanel.colorEn}${ralPart}. Finish: ${finishEn(selectedPanel.finish)}. Visible panel width: ${selectedPanel.panelWidthCm} cm.`,
+            orientation,
+            panelWidthCm: selectedPanel.panelWidthCm,
+            facadeWidthCm: facadeDims?.widthCm,
+            facadeHeightCm: facadeDims?.heightCm,
+            prompt: effectivePrompt || undefined,
+            locale,
+          };
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          photoDataUrl: sourcePhoto,
-          referenceDataUrls: refUrls,
-          productLabel,
-          productDescription: `Color: ${selectedPanel.colorEn}${ralPart}. Finish: ${finishEn(selectedPanel.finish)}. Visible panel width: ${selectedPanel.panelWidthCm} cm.`,
-          orientation,
-          panelWidthCm: selectedPanel.panelWidthCm,
-          facadeWidthCm: facadeDims?.widthCm,
-          facadeHeightCm: facadeDims?.heightCm,
-          prompt: effectivePrompt || undefined,
-          locale,
-        }),
+        body: JSON.stringify(payload),
       });
       const json = (await res.json()) as { renderDataUrl?: string; error?: string };
       if (!res.ok || !json.renderDataUrl) {
@@ -320,9 +377,10 @@ export default function RenderPage() {
         prompt: effectivePrompt,
         dataUrl: json.renderDataUrl,
         createdAt: Date.now(),
+        provider,
       };
       setVariants((prev) => [variant, ...prev]);
-      const key = await sha256(`${sourcePhoto}|${selectedPanel.sku}|${orientation}|${effectivePrompt}|${variant.id}`);
+      const key = await sha256(`${photoForApi}|${selectedPanel.sku}|${orientation}|${effectivePrompt}|${variant.id}`);
       await saveRender(key, json.renderDataUrl).catch(() => {});
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t("render.error.generic"));
@@ -460,6 +518,36 @@ export default function RenderPage() {
             </div>
           </div>
 
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium">Render engine</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setProvider("gemini")}
+                className={`rounded-xl border px-4 py-2 text-sm ${
+                  provider === "gemini" ? "border-black bg-black text-white" : "border-black bg-white"
+                }`}
+              >
+                Gemini
+              </button>
+              <button
+                type="button"
+                onClick={() => setProvider("hf")}
+                className={`rounded-xl border px-4 py-2 text-sm ${
+                  provider === "hf" ? "border-black bg-black text-white" : "border-black bg-white"
+                }`}
+              >
+                Hugging Face (test)
+              </button>
+            </div>
+            {provider === "hf" && (
+              <p className="mt-1 text-xs text-amber-700">
+                Experimenteel: img2img zonder mask via HF inference (instruct-pix2pix). Cold start kan 30-60 s duren. Geen
+                referentiebeeld, alleen tekst-prompt.
+              </p>
+            )}
+          </div>
+
           {selectedPanel && (
             <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-black p-4">
               {selectedPanel.imageUrl ? (
@@ -540,6 +628,9 @@ export default function RenderPage() {
                 <img src={v.dataUrl} alt={v.panelLabel} className="block w-full" />
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
                   <div>
+                    <span className="mr-2 rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] uppercase">
+                      {v.provider}
+                    </span>
                     <span className="font-semibold">{v.panelLabel}</span>
                     <span className="text-gray-500">
                       {" · "}
