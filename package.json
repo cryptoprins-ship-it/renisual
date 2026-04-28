@@ -1,27 +1,37 @@
 {
   "name": "renisual",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
+    "@google/genai": "^1.50.1",
+    "@tailwindcss/postcss": "^4.2.4",
+    "axios": "^1.15.2",
+    "cheerio": "^1.2.0",
     "fabric": "^7.3.1",
-    "next": "^9.3.3",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.4",
-    "tailwindcss": "^4",
+    "eslint-config-next": "^16.2.4",
+    "install": "^0.13.0",
+    "nodemailer": "^8.0.7",
+    "npm": "^11.13.0",
+    "postcss": "^8",
+    "tailwindcss": "^4.0.0",
     "typescript": "^5"
   }
 }
