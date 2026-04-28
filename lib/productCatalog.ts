@@ -32,7 +32,7 @@ export type Product = {
   profileRules: Record<Orientation, ProfileRules>;
 };
 
-const defaultHorizontalVerticalRules: Record<Orientation, ProfileRules> = {
+const defaultPanelRules: Record<Orientation, ProfileRules> = {
   horizontal: {
     needsConnectionProfile: true,
     needsStartProfile: true,
@@ -44,6 +44,21 @@ const defaultHorizontalVerticalRules: Record<Orientation, ProfileRules> = {
     needsStartProfile: true,
     needsEndProfile: true,
     needsCornerProfile: true,
+  },
+};
+
+const paintProfileRules: Record<Orientation, ProfileRules> = {
+  horizontal: {
+    needsConnectionProfile: false,
+    needsStartProfile: false,
+    needsEndProfile: false,
+    needsCornerProfile: false,
+  },
+  vertical: {
+    needsConnectionProfile: false,
+    needsStartProfile: false,
+    needsEndProfile: false,
+    needsCornerProfile: false,
   },
 };
 
@@ -85,7 +100,6 @@ export const products: Product[] = [
       },
     },
   },
-
   {
     id: "generic-wood-cladding-horizontal",
     name: "Wood Cladding Horizontal",
@@ -100,9 +114,8 @@ export const products: Product[] = [
     panelAreaM2: 0.54,
     pricePerM2ExVat: 65,
     wasteFactor: 10,
-    profileRules: defaultHorizontalVerticalRules,
+    profileRules: defaultPanelRules,
   },
-
   {
     id: "generic-wood-cladding-vertical",
     name: "Wood Cladding Vertical",
@@ -117,9 +130,8 @@ export const products: Product[] = [
     panelAreaM2: 0.45,
     pricePerM2ExVat: 70,
     wasteFactor: 12,
-    profileRules: defaultHorizontalVerticalRules,
+    profileRules: defaultPanelRules,
   },
-
   {
     id: "generic-composite-panels",
     name: "Composite Facade Panels",
@@ -134,9 +146,8 @@ export const products: Product[] = [
     panelAreaM2: 0.65,
     pricePerM2ExVat: 85,
     wasteFactor: 8,
-    profileRules: defaultHorizontalVerticalRules,
+    profileRules: defaultPanelRules,
   },
-
   {
     id: "generic-facade-board",
     name: "Facade Board",
@@ -151,9 +162,8 @@ export const products: Product[] = [
     panelAreaM2: 3.72,
     pricePerM2ExVat: 55,
     wasteFactor: 10,
-    profileRules: defaultHorizontalVerticalRules,
+    profileRules: defaultPanelRules,
   },
-
   {
     id: "generic-exterior-paint",
     name: "Exterior Paint",
@@ -168,6 +178,6 @@ export const products: Product[] = [
     panelAreaM2: 0,
     pricePerM2ExVat: 25,
     wasteFactor: 5,
-    profileRules: defaultHorizontalVerticalRules,
+    profileRules: paintProfileRules,
   },
 ];
