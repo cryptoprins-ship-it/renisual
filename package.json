@@ -8,8 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "tsx scripts/test-agent.ts",
-    "test:local": "tsx scripts/test-agent.ts http://localhost:3000"
+    "test": "tsx scripts/test-agent",
+    "test:local": "tsx scripts/test-agent http://localhost:3000",
+    "test:suite": "tsx scripts/test-agent --suite"
   },
   "dependencies": {
     "@google/genai": "^1.50.1",

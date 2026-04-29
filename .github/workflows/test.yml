@@ -3,6 +3,9 @@ name: Smoke test
 on:
   push:
     branches: [main]
+  schedule:
+    # 06:00 Europe/Amsterdam ≈ 04:00 UTC year-round (close enough for smoke)
+    - cron: "0 4 * * *"
   workflow_dispatch:
 
 jobs:
@@ -45,11 +48,13 @@ jobs:
           secure: true
           username: ${{ secrets.SMTP_USER }}
           password: ${{ secrets.SMTP_PASS }}
-          subject: "[Renisual] smoke-test FAILED on main"
+          subject: "[Renisual] smoke-test FAILED (${{ github.event_name }})"
           to: info@renisual.com
           from: "Renisual CI <${{ secrets.SMTP_USER }}>"
           body: |
-            Smoke-test failed for commit ${{ github.sha }} on branch ${{ github.ref_name }}.
+            Smoke-test failed (${{ github.event_name }}).
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             Download the "smoke-report" artifact for details.
           attachments: public/test-results/report.html
