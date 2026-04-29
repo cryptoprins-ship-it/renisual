@@ -7,6 +7,7 @@ import { loadSpanlImageIndex, type SpanlImageProduct } from "@/lib/spanlImageCat
 import { SPANL_PANELS, finishEn, type SpanlPanelEntry } from "@/lib/spanlPanelCatalog";
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale } from "@/lib/i18n";
+import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 
@@ -39,6 +40,53 @@ type RenderVariant = {
   dataUrl: string;
   createdAt: number;
   provider: "gemini" | "hf";
+  colorCheck?: ColorCheck;
+};
+
+type WindowMaterial = "hardwood" | "plastic-white" | "plastic-anthracite" | "aluminium";
+type DoorMaterial = "hardwood" | "plastic-white" | "plastic-anthracite" | "steel";
+type DoorColour = "white" | "anthracite" | "black" | "wood-colour";
+
+const WINDOW_MATERIAL_LABEL_NL: Record<WindowMaterial, string> = {
+  hardwood: "Hardhout",
+  "plastic-white": "Kunststof wit",
+  "plastic-anthracite": "Kunststof antraciet",
+  aluminium: "Aluminium",
+};
+
+const DOOR_MATERIAL_LABEL_NL: Record<DoorMaterial, string> = {
+  hardwood: "Hardhout",
+  "plastic-white": "Kunststof wit",
+  "plastic-anthracite": "Kunststof antraciet",
+  steel: "Staal",
+};
+
+const DOOR_COLOUR_LABEL_NL: Record<DoorColour, string> = {
+  white: "Wit",
+  anthracite: "Antraciet",
+  black: "Zwart",
+  "wood-colour": "Houtkleur",
+};
+
+const WINDOW_MATERIAL_EN: Record<WindowMaterial, string> = {
+  hardwood: "natural-finish hardwood timber",
+  "plastic-white": "white PVC plastic",
+  "plastic-anthracite": "anthracite-grey PVC plastic",
+  aluminium: "powder-coated aluminium",
+};
+
+const DOOR_MATERIAL_EN: Record<DoorMaterial, string> = {
+  hardwood: "hardwood timber",
+  "plastic-white": "PVC plastic",
+  "plastic-anthracite": "PVC plastic",
+  steel: "steel",
+};
+
+const DOOR_COLOUR_EN: Record<DoorColour, string> = {
+  white: "white (RAL 9010 / 9016)",
+  anthracite: "anthracite grey (RAL 7016)",
+  black: "matt black (RAL 9005)",
+  "wood-colour": "natural wood colour",
 };
 
 function cleanSku(s: string): string {
@@ -180,12 +228,20 @@ function buildDefaultPrompt(
   panel: RenderPanel | undefined,
   orientation: Orientation,
   refCount: number,
-  facade?: { widthCm?: number; heightCm?: number }
+  facade?: { widthCm?: number; heightCm?: number },
+  openings?: { windowFrame?: string; doorMaterial?: string; doorColour?: string }
 ): string {
   if (!panel) return "";
   const colorDesc = describeColor(panel);
   const seamStyle = describeSeam(panel);
   const isVertical = orientation === "vertical";
+
+  const windowLine = openings?.windowFrame
+    ? `Also replace all window frames with ${openings.windowFrame}.`
+    : "";
+  const doorLine = openings?.doorMaterial && openings?.doorColour
+    ? `Replace all doors with ${openings.doorMaterial} in ${openings.doorColour}.`
+    : "";
 
   let seamCountLine = "";
   if (isVertical && facade?.widthCm && facade.widthCm > 0) {
@@ -236,7 +292,14 @@ function buildDefaultPrompt(
     refLine,
     "TEXTURE: surface must NOT be a flat uniform colour — render each panel with its seam, plank rhythm and surface structure matching the finish (deep groove / narrow strip / brick face / Spanish-tile relief / wood grain).",
     "UNIFORMITY (CRITICAL): every seam line must look IDENTICAL to every other seam line on the facade — same colour, same width, same intensity, same shadow direction. Do NOT render some seams as dark stripes and others as faint lines. Do NOT skip seams in the middle of the wall and only draw them near the edges. Treat the entire facade as one continuous panelled surface with a perfectly uniform seam pattern, broken only by openings (windows/doors).",
-    "PRESERVE EXACTLY (do NOT change): windows, window frames, doors, door frames, gutters, roof edges, downspouts, glazing, sky, plants, street, vehicles, camera angle, perspective, lighting direction and shadows.",
+    "Do NOT add any black lines, dark stripes, or shadows between panels. Panel seams must be the same colour as the panels, only slightly darker. Maximum seam width 3mm. Do not add any new dark elements that were not in the original photo.",
+    windowLine,
+    doorLine,
+    `PRESERVE EXACTLY (do NOT change position, size or shape of): window openings${
+      windowLine ? " (replace only the FRAMES as instructed above; keep glazing, opening size and position identical)" : ", window frames"
+    }, door openings${
+      doorLine ? " (replace only the door leaf/material as instructed above; keep opening size and position identical)" : ", doors, door frames"
+    }, gutters, roof edges, downspouts, glazing, sky, plants, street, vehicles, camera angle, perspective, lighting direction and shadows.`,
     "OUTPUT: one photorealistic image of the full facade.",
   ];
   return lines.filter(Boolean).join(" ");
@@ -260,6 +323,9 @@ export default function RenderPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [provider, setProvider] = useState<"gemini" | "hf">("gemini");
+  const [windowMaterial, setWindowMaterial] = useState<WindowMaterial | "">("");
+  const [doorMaterial, setDoorMaterial] = useState<DoorMaterial | "">("");
+  const [doorColour, setDoorColour] = useState<DoorColour | "">("");
 
   const { loadAllPhotos, saveRender } = usePhotoStore();
 
@@ -285,9 +351,18 @@ export default function RenderPage() {
 
   const refCount = selectedPanel ? (selectedPanel.variantUrl ? 2 : selectedPanel.imageUrl ? 1 : 0) : 0;
 
+  const openingsForPrompt = useMemo(
+    () => ({
+      windowFrame: windowMaterial ? WINDOW_MATERIAL_EN[windowMaterial] : undefined,
+      doorMaterial: doorMaterial ? DOOR_MATERIAL_EN[doorMaterial] : undefined,
+      doorColour: doorColour ? DOOR_COLOUR_EN[doorColour] : undefined,
+    }),
+    [windowMaterial, doorMaterial, doorColour]
+  );
+
   const defaultPrompt = useMemo(
-    () => buildDefaultPrompt(selectedPanel, orientation, refCount, facadeDims),
-    [selectedPanel, orientation, refCount, facadeDims]
+    () => buildDefaultPrompt(selectedPanel, orientation, refCount, facadeDims, openingsForPrompt),
+    [selectedPanel, orientation, refCount, facadeDims, openingsForPrompt]
   );
   const effectivePrompt = promptTouched ? customPrompt : defaultPrompt;
 
@@ -372,6 +447,10 @@ export default function RenderPage() {
             panelWidthCm: selectedPanel.panelWidthCm,
             facadeWidthCm: facadeDims?.widthCm,
             facadeHeightCm: facadeDims?.heightCm,
+            windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
+            door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
+              ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
+              : undefined,
             prompt: effectivePrompt || undefined,
             locale,
           };
@@ -398,6 +477,17 @@ export default function RenderPage() {
       setVariants((prev) => [variant, ...prev]);
       const key = await sha256(`${photoForApi}|${selectedPanel.sku}|${orientation}|${effectivePrompt}|${variant.id}`);
       await saveRender(key, json.renderDataUrl).catch(() => {});
+      const targetHex = selectedPanel.ral && RAL_HEX[selectedPanel.ral]?.hex;
+      if (targetHex) {
+        try {
+          const check = await checkRenderColor(json.renderDataUrl, targetHex);
+          if (check) {
+            setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, colorCheck: check } : v)));
+          }
+        } catch {
+          /* color check best-effort */
+        }
+      }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t("render.error.generic"));
     } finally {
@@ -595,6 +685,65 @@ export default function RenderPage() {
         </section>
 
         <section className="rounded-2xl border border-black bg-white p-4">
+          <h2 className="text-lg font-semibold">Kozijnen &amp; Deuren</h2>
+          <p className="mt-1 text-xs text-gray-500">
+            Optioneel — laat leeg om bestaande kozijnen/deuren onveranderd te laten.
+          </p>
+          <div className="mt-3 grid gap-4 md:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Kozijnmateriaal</label>
+              <select
+                className="w-full rounded-xl border border-black p-3"
+                value={windowMaterial}
+                onChange={(e) => setWindowMaterial(e.target.value as WindowMaterial | "")}
+              >
+                <option value="">(ongewijzigd)</option>
+                {(Object.keys(WINDOW_MATERIAL_LABEL_NL) as WindowMaterial[]).map((k) => (
+                  <option key={k} value={k}>
+                    {WINDOW_MATERIAL_LABEL_NL[k]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">Deurmateriaal</label>
+              <select
+                className="w-full rounded-xl border border-black p-3"
+                value={doorMaterial}
+                onChange={(e) => setDoorMaterial(e.target.value as DoorMaterial | "")}
+              >
+                <option value="">(ongewijzigd)</option>
+                {(Object.keys(DOOR_MATERIAL_LABEL_NL) as DoorMaterial[]).map((k) => (
+                  <option key={k} value={k}>
+                    {DOOR_MATERIAL_LABEL_NL[k]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">Deurkleur</label>
+              <select
+                className="w-full rounded-xl border border-black p-3"
+                value={doorColour}
+                onChange={(e) => setDoorColour(e.target.value as DoorColour | "")}
+              >
+                <option value="">(ongewijzigd)</option>
+                {(Object.keys(DOOR_COLOUR_LABEL_NL) as DoorColour[]).map((k) => (
+                  <option key={k} value={k}>
+                    {DOOR_COLOUR_LABEL_NL[k]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {doorMaterial && !doorColour && (
+            <p className="mt-2 text-xs text-amber-700">Kies ook een deurkleur — anders wordt de instructie niet meegestuurd.</p>
+          )}
+        </section>
+
+        <section className="rounded-2xl border border-black bg-white p-4">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{t("render.section.prompt")}</h2>
             {promptTouched && (
@@ -643,10 +792,35 @@ export default function RenderPage() {
               <article key={v.id} className="overflow-hidden rounded-xl border border-black">
                 <img src={v.dataUrl} alt={v.panelLabel} className="block w-full" />
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
-                  <div>
-                    <span className="mr-2 rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] uppercase">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] uppercase">
                       {v.provider}
                     </span>
+                    {v.colorCheck && (
+                      <span
+                        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${
+                          v.colorCheck.verdict === "good"
+                            ? "bg-green-100 text-green-800"
+                            : v.colorCheck.verdict === "off"
+                            ? "bg-amber-100 text-amber-900"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                        title={`sampled ${v.colorCheck.sampledHex} vs target ${v.colorCheck.targetHex}, ΔE76 = ${v.colorCheck.deltaE}`}
+                      >
+                        <span
+                          aria-hidden
+                          className="inline-block h-2.5 w-2.5 rounded-full border border-black/20"
+                          style={{ background: v.colorCheck.sampledHex }}
+                        />
+                        →
+                        <span
+                          aria-hidden
+                          className="inline-block h-2.5 w-2.5 rounded-full border border-black/20"
+                          style={{ background: v.colorCheck.targetHex }}
+                        />
+                        ΔE {v.colorCheck.deltaE}
+                      </span>
+                    )}
                     <span className="font-semibold">{v.panelLabel}</span>
                     <span className="text-gray-500">
                       {" · "}

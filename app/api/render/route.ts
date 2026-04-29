@@ -15,6 +15,8 @@ type RenderBody = {
   panelWidthCm?: number;
   facadeWidthCm?: number;
   facadeHeightCm?: number;
+  windowFrame?: { material?: string };
+  door?: { material?: string; colour?: string };
   prompt?: string;
   locale?: string;
 };
@@ -135,7 +137,10 @@ export async function POST(request: Request) {
       ? "KRITISCH: gebruik de TWEEDE afbeelding als exacte visuele referentie voor kleur, motief, plankverdeling en oppervlaktestructuur."
       : "",
     "KRITISCH MOTIEF: het paneeloppervlak mag niet egaal zijn — toon individuele panelen met duidelijke naden ertussen.",
-    "Behoud ramen, kozijnen, deuren, dakgoten, dakranden, regenpijpen, beglazing, omgeving (lucht, planten, straat, voertuigen), perspectief en belichting van de originele foto exact.",
+    "Do NOT add any black lines, dark stripes, or shadows between panels. Panel seams must be the same colour as the panels, only slightly darker. Maximum seam width 3mm. Do not add any new dark elements that were not in the original photo.",
+    body.windowFrame?.material ? `Also replace all window frames with ${body.windowFrame.material}.` : "",
+    body.door?.material && body.door?.colour ? `Replace all doors with ${body.door.material} in ${body.door.colour}.` : "",
+    `Behoud raamopeningen${body.windowFrame?.material ? " (vervang alléén de kozijnen zoals beschreven)" : ", kozijnen"}, deuropeningen${body.door?.material ? " (vervang alléén het deurblad zoals beschreven)" : ", deuren"}, dakgoten, dakranden, regenpijpen, beglazing, omgeving (lucht, planten, straat, voertuigen), perspectief en belichting van de originele foto exact.`,
     "Lever één fotorealistische compositie van de volledige gevel als output.",
   ]
     .filter(Boolean)
