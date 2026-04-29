@@ -898,10 +898,16 @@ export default function GevelCalcPage() {
                   }}
                 >
                   <option value="">{t("gc.chooseProduct")}</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.brand} - {p.name}
-                    </option>
+                  {Array.from(new Set(products.map((p) => p.brand))).map((brand) => (
+                    <optgroup key={brand} label={brand}>
+                      {products
+                        .filter((p) => p.brand === brand)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

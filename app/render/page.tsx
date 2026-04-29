@@ -2,9 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { type Orientation } from "@/lib/productCatalog";
+import { products, type Orientation } from "@/lib/productCatalog";
 import { loadSpanlImageIndex, type SpanlImageProduct } from "@/lib/spanlImageCatalog";
 import { SPANL_PANELS, finishEn, type SpanlPanelEntry } from "@/lib/spanlPanelCatalog";
+import {
+  KERALIT_COLORS,
+  KERALIT_FINISH_LABEL_NL,
+  KERALIT_FINISH_LABEL_EN,
+  type KeralitColor,
+} from "@/lib/keralitColorCatalog";
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale } from "@/lib/i18n";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
@@ -224,6 +230,75 @@ function describeSeam(panel: RenderPanel): string {
   }
 }
 
+function buildKeralitPrompt(opts: {
+  productName: string;
+  panelWidthCm: number;
+  finishEn: string;
+  colorName: string;
+  colorNumber: number;
+  orientation: Orientation;
+  refCount: number;
+  facade?: { widthCm?: number; heightCm?: number };
+  openings?: { windowFrame?: string; doorMaterial?: string; doorColour?: string };
+}): string {
+  const { productName, panelWidthCm, finishEn, colorName, colorNumber, orientation, refCount, facade, openings } = opts;
+  const isVertical = orientation === "vertical";
+
+  let seamCountLine = "";
+  if (isVertical && facade?.widthCm && facade.widthCm > 0) {
+    const count = Math.max(2, Math.round(facade.widthCm / panelWidthCm));
+    seamCountLine = `The facade is approximately ${(facade.widthCm / 100).toFixed(1)} m wide, so exactly ${count} vertical panels must be visible side-by-side.`;
+  } else if (!isVertical && facade?.heightCm && facade.heightCm > 0) {
+    const count = Math.max(2, Math.round(facade.heightCm / panelWidthCm));
+    seamCountLine = `The facade is approximately ${(facade.heightCm / 100).toFixed(1)} m tall, so exactly ${count} horizontal panels must be visible stacked vertically.`;
+  } else {
+    seamCountLine = `Seams visible at a regular interval of ${panelWidthCm} cm across the entire facade.`;
+  }
+
+  const orientationLine = isVertical
+    ? `PLACEMENT: VERTICAL — panels stand upright, seams are straight TOP-TO-BOTTOM lines, horizontal distance between adjacent seams = ${panelWidthCm} cm.`
+    : `PLACEMENT: HORIZONTAL — panels lie on their long edge, seams are straight LEFT-TO-RIGHT lines parallel to the ground, vertical distance between adjacent seams = ${panelWidthCm} cm.`;
+
+  const refLine = refCount === 1
+    ? "REFERENCE: image 2 is the official Keralit color thumbnail. Sample its underlying tone for the facade colour."
+    : "";
+
+  const windowLine = openings?.windowFrame ? `Also replace all window frames with ${openings.windowFrame}.` : "";
+  const doorLine = openings?.doorMaterial && openings?.doorColour
+    ? `Replace all doors with ${openings.doorMaterial} in ${openings.doorColour}.`
+    : "";
+
+  const lines = [
+    "You are a facade visualisation assistant for Renisual.",
+    "OUTPUT REQUIREMENT: the result MUST differ visibly from the input.",
+    `TASK: replace the existing facade material on the main building with Keralit ${productName} (PVC cladding, fully maintenance-free), ${finishEn}.`,
+    `COLOUR: Keralit color number ${colorNumber} — "${colorName}". Match this colour exactly. The Keralit ${finishEn} surface texture must be visible.`,
+    `TEXTURE: ${
+      finishEn.includes("Pure matt")
+        ? "completely smooth, matt finish, no wood grain, no relief"
+        : finishEn.includes("Modern oak")
+        ? "soft, even oak wood texture with subtle grain"
+        : "fine wood-grain texture across each panel face, like Classic Keralit profile"
+    }.`,
+    `STEP — ERASE: discard every seam, plank, brick joint, slat or board division of the OLD facade — they belong to the existing material and must NOT survive in the output.`,
+    `STEP — APPLY: install Keralit panels at ${panelWidthCm} cm visible width.`,
+    orientationLine,
+    seamCountLine,
+    refLine,
+    "Do NOT add any black lines, dark stripes, or shadows between panels. Panel seams must be the same colour as the panels, only slightly darker. Maximum seam width 3mm.",
+    "UNIFORMITY: every seam line identical to every other seam — same colour, width, intensity. Treat the entire facade as one continuous panelled surface.",
+    windowLine,
+    doorLine,
+    `PRESERVE EXACTLY (do NOT change position, size or shape of): window openings${
+      windowLine ? " (replace only the FRAMES as instructed above)" : ", window frames"
+    }, door openings${
+      doorLine ? " (replace only the door leaf as instructed above)" : ", doors, door frames"
+    }, gutters, roof edges, downspouts, glazing, sky, plants, street, vehicles, camera angle, perspective, lighting and shadows.`,
+    "OUTPUT: one photorealistic image of the full facade.",
+  ];
+  return lines.filter(Boolean).join(" ");
+}
+
 function buildDefaultPrompt(
   panel: RenderPanel | undefined,
   orientation: Orientation,
@@ -326,6 +401,19 @@ export default function RenderPage() {
   const [windowMaterial, setWindowMaterial] = useState<WindowMaterial | "">("");
   const [doorMaterial, setDoorMaterial] = useState<DoorMaterial | "">("");
   const [doorColour, setDoorColour] = useState<DoorColour | "">("");
+  const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
+  const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
+  const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
+
+  const keralitProducts = useMemo(() => products.filter((p) => p.brand === "Keralit"), []);
+  const selectedKeralitProduct = useMemo(
+    () => keralitProducts.find((p) => p.id === selectedKeralitProductId),
+    [keralitProducts, selectedKeralitProductId]
+  );
+  const selectedKeralitColor = useMemo(
+    () => (selectedKeralitColorNumber != null ? KERALIT_COLORS.find((c) => c.number === selectedKeralitColorNumber) : undefined),
+    [selectedKeralitColorNumber]
+  );
 
   const { loadAllPhotos, saveRender } = usePhotoStore();
 
@@ -360,10 +448,24 @@ export default function RenderPage() {
     [windowMaterial, doorMaterial, doorColour]
   );
 
-  const defaultPrompt = useMemo(
-    () => buildDefaultPrompt(selectedPanel, orientation, refCount, facadeDims, openingsForPrompt),
-    [selectedPanel, orientation, refCount, facadeDims, openingsForPrompt]
-  );
+  const keralitRefCount = brand === "keralit" && selectedKeralitColor ? 1 : 0;
+
+  const defaultPrompt = useMemo(() => {
+    if (brand === "keralit" && selectedKeralitProduct && selectedKeralitColor) {
+      return buildKeralitPrompt({
+        productName: selectedKeralitProduct.name,
+        panelWidthCm: selectedKeralitProduct.panelWorkSize / 10,
+        finishEn: KERALIT_FINISH_LABEL_EN[selectedKeralitColor.finish],
+        colorName: selectedKeralitColor.name,
+        colorNumber: selectedKeralitColor.number,
+        orientation,
+        refCount: keralitRefCount,
+        facade: facadeDims,
+        openings: openingsForPrompt,
+      });
+    }
+    return buildDefaultPrompt(selectedPanel, orientation, refCount, facadeDims, openingsForPrompt);
+  }, [brand, selectedKeralitProduct, selectedKeralitColor, selectedPanel, orientation, refCount, keralitRefCount, facadeDims, openingsForPrompt]);
   const effectivePrompt = promptTouched ? customPrompt : defaultPrompt;
 
   useEffect(() => {
@@ -411,26 +513,53 @@ export default function RenderPage() {
   }
 
   async function handleGenerate() {
-    if (!sourcePhoto || !selectedPanel) return;
+    if (!sourcePhoto) return;
+    if (brand === "spanl" && !selectedPanel) return;
+    if (brand === "keralit" && (!selectedKeralitProduct || !selectedKeralitColor)) return;
     setIsGenerating(true);
     setErrorMsg("");
     try {
       const refUrls: string[] = [];
-      if (selectedPanel.imageUrl) {
-        const main = await urlToDataUrl(selectedPanel.imageUrl);
-        if (main) refUrls.push(await compressDataUrl(main, 1024, 0.82));
-      }
-      if (selectedPanel.variantUrl) {
-        const variant = await urlToDataUrl(selectedPanel.variantUrl);
-        if (variant) refUrls.push(await compressDataUrl(variant, 1024, 0.82));
+      if (brand === "spanl" && selectedPanel) {
+        if (selectedPanel.imageUrl) {
+          const main = await urlToDataUrl(selectedPanel.imageUrl);
+          if (main) refUrls.push(await compressDataUrl(main, 1024, 0.82));
+        }
+        if (selectedPanel.variantUrl) {
+          const variant = await urlToDataUrl(selectedPanel.variantUrl);
+          if (variant) refUrls.push(await compressDataUrl(variant, 1024, 0.82));
+        }
+      } else if (brand === "keralit" && selectedKeralitColor) {
+        const swatch = await urlToDataUrl(selectedKeralitColor.thumbnailUrl);
+        if (swatch) refUrls.push(await compressDataUrl(swatch, 1024, 0.82));
       }
       const photoForApi = await compressDataUrl(
         sourcePhoto,
         provider === "hf" ? 896 : 1600,
         provider === "hf" ? 0.75 : 0.85
       );
-      const ralPart = selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : "";
-      const productLabel = `Spanl ${selectedPanel.sku} — ${selectedPanel.colorEn}${ralPart}, ${finishEn(selectedPanel.finish)}`;
+
+      let productLabel: string;
+      let productDescription: string;
+      let panelWidthCm: number;
+      let panelSkuForVariant: string;
+      let targetHex: string | undefined;
+      if (brand === "keralit" && selectedKeralitProduct && selectedKeralitColor) {
+        productLabel = `Keralit ${selectedKeralitProduct.name} — ${selectedKeralitColor.name} (${selectedKeralitColor.number}), ${KERALIT_FINISH_LABEL_NL[selectedKeralitColor.finish]}`;
+        productDescription = `Keralit PVC cladding, ${KERALIT_FINISH_LABEL_EN[selectedKeralitColor.finish]}, color ${selectedKeralitColor.name} (Keralit color number ${selectedKeralitColor.number}).`;
+        panelWidthCm = selectedKeralitProduct.panelWorkSize / 10;
+        panelSkuForVariant = `keralit-${selectedKeralitProduct.id}-${selectedKeralitColor.number}`;
+        targetHex = undefined;
+      } else if (selectedPanel) {
+        const ralPart = selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : "";
+        productLabel = `Spanl ${selectedPanel.sku} — ${selectedPanel.colorEn}${ralPart}, ${finishEn(selectedPanel.finish)}`;
+        productDescription = `Color: ${selectedPanel.colorEn}${ralPart}. Finish: ${finishEn(selectedPanel.finish)}. Visible panel width: ${selectedPanel.panelWidthCm} cm.`;
+        panelWidthCm = selectedPanel.panelWidthCm;
+        panelSkuForVariant = selectedPanel.sku;
+        targetHex = selectedPanel.ral && RAL_HEX[selectedPanel.ral]?.hex;
+      } else {
+        return;
+      }
       const endpoint = provider === "hf" ? "/api/render-hf" : "/api/render";
       const payload = provider === "hf"
         ? {
@@ -442,9 +571,9 @@ export default function RenderPage() {
             photoDataUrl: photoForApi,
             referenceDataUrls: refUrls,
             productLabel,
-            productDescription: `Color: ${selectedPanel.colorEn}${ralPart}. Finish: ${finishEn(selectedPanel.finish)}. Visible panel width: ${selectedPanel.panelWidthCm} cm.`,
+            productDescription,
             orientation,
-            panelWidthCm: selectedPanel.panelWidthCm,
+            panelWidthCm,
             facadeWidthCm: facadeDims?.widthCm,
             facadeHeightCm: facadeDims?.heightCm,
             windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
@@ -467,7 +596,7 @@ export default function RenderPage() {
       const variant: RenderVariant = {
         id: crypto.randomUUID(),
         panelLabel: productLabel,
-        panelSku: selectedPanel.sku,
+        panelSku: panelSkuForVariant,
         orientation,
         prompt: effectivePrompt,
         dataUrl: json.renderDataUrl,
@@ -475,9 +604,8 @@ export default function RenderPage() {
         provider,
       };
       setVariants((prev) => [variant, ...prev]);
-      const key = await sha256(`${photoForApi}|${selectedPanel.sku}|${orientation}|${effectivePrompt}|${variant.id}`);
+      const key = await sha256(`${photoForApi}|${panelSkuForVariant}|${orientation}|${effectivePrompt}|${variant.id}`);
       await saveRender(key, json.renderDataUrl).catch(() => {});
-      const targetHex = selectedPanel.ral && RAL_HEX[selectedPanel.ral]?.hex;
       if (targetHex) {
         try {
           const check = await checkRenderColor(json.renderDataUrl, targetHex);
@@ -583,7 +711,99 @@ export default function RenderPage() {
         <section className="rounded-2xl border border-black bg-white p-4">
           <h2 className="text-lg font-semibold">{t("render.section.panel")}</h2>
 
-          <div className="mt-3 grid gap-4 md:grid-cols-2">
+          <div className="mt-3 mb-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setBrand("spanl")}
+              className={`rounded-xl border px-4 py-2 text-sm ${
+                brand === "spanl" ? "border-black bg-black text-white" : "border-black bg-white"
+              }`}
+            >
+              Spanl
+            </button>
+            <button
+              type="button"
+              onClick={() => setBrand("keralit")}
+              className={`rounded-xl border px-4 py-2 text-sm ${
+                brand === "keralit" ? "border-black bg-black text-white" : "border-black bg-white"
+              }`}
+            >
+              Keralit
+            </button>
+          </div>
+
+          {brand === "keralit" ? (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Keralit paneel</label>
+                  <select
+                    className="w-full rounded-xl border border-black p-3"
+                    value={selectedKeralitProductId}
+                    onChange={(e) => setSelectedKeralitProductId(e.target.value)}
+                  >
+                    <option value="">{t("render.choosePanel")}</option>
+                    {keralitProducts.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.panelWorkSize} mm)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
+                  <select
+                    className="w-full rounded-xl border border-black p-3"
+                    value={orientation}
+                    onChange={(e) => setOrientation(e.target.value as Orientation)}
+                  >
+                    <option value="horizontal">{t("render.horizontal")}</option>
+                    <option value="vertical">{t("render.vertical")}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Kleur ({KERALIT_COLORS.length} kleuren)
+                </label>
+                {(["classic-houtnerf", "pure-mat", "modern-eiken"] as const).map((finish) => {
+                  const colors = KERALIT_COLORS.filter((c) => c.finish === finish);
+                  return (
+                    <div key={finish} className="mb-4">
+                      <p className="mb-2 text-xs font-semibold text-gray-600">
+                        {KERALIT_FINISH_LABEL_NL[finish]} ({colors.length})
+                      </p>
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+                        {colors.map((c) => (
+                          <button
+                            key={c.number}
+                            type="button"
+                            onClick={() => setSelectedKeralitColorNumber(c.number)}
+                            className={`overflow-hidden rounded-lg border-2 text-left transition ${
+                              selectedKeralitColorNumber === c.number
+                                ? "border-black ring-2 ring-black"
+                                : "border-gray-200 hover:border-gray-400"
+                            }`}
+                            title={`${c.number} ${c.name}`}
+                          >
+                            <img src={c.thumbnailUrl} alt={c.name} className="block aspect-square w-full object-cover" />
+                            <div className="p-1 text-[10px] leading-tight">
+                              <div className="font-semibold">{c.number}</div>
+                              <div className="truncate text-gray-600">{c.name}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+          <>
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">{t("render.spanlPanel")}</label>
               <select
@@ -681,6 +901,8 @@ export default function RenderPage() {
                 <p className="mt-1 text-xs text-gray-400">Spanl {selectedPanel.sku}</p>
               </div>
             </div>
+          )}
+          </>
           )}
         </section>
 
@@ -858,7 +1080,11 @@ export default function RenderPage() {
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={isGenerating || !selectedPanel || !sourcePhoto}
+            disabled={
+              isGenerating ||
+              !sourcePhoto ||
+              (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
+            }
             className="rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white disabled:opacity-40"
           >
             {variants.length > 0 ? t("render.btnAddVariant") : t("render.btnGenerate")}
