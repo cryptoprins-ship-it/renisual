@@ -455,127 +455,6 @@
     ]
   },
   {
-    "name": "sg9010a",
-    "sku": "sg9010a",
-    "category": "panels",
-    "group": "panels",
-    "slug": "sg9010a",
-    "url": "",
-    "folder": "/samples/spanl/panels/sg9010a",
-    "images": [
-      {
-        "type": "main",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/main.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-01.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-02.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-03.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-04.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-05.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-06.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-07.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-08.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-09.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-10.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-11.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-12.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-13.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-14.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-15.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-16.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-17.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-18.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-19.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-20.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/sg9010a/variant-21.jpg"
-      }
-    ]
-  },
-  {
     "name": "ts 9006p strip zilvergrijs 1 554m2 per paneel lengte",
     "sku": "ts-9006p-strip-zilvergrijs-1-554m2-per-paneel-lengte",
     "category": "panels",
@@ -678,107 +557,6 @@
         "type": "variant",
         "source": "",
         "local": "/samples/spanl/panels/ts-9006p-strip-zilvergrijs-1-554m2-per-paneel-lengte/variant-18.jpg"
-      }
-    ]
-  },
-  {
-    "name": "ts9010p 1",
-    "sku": "ts9010p-1",
-    "category": "panels",
-    "group": "panels",
-    "slug": "ts9010p-1",
-    "url": "",
-    "folder": "/samples/spanl/panels/ts9010p-1",
-    "images": [
-      {
-        "type": "main",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/main.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-01.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-02.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-03.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-04.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-05.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-06.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-07.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-08.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-09.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-10.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-11.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-12.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-13.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-14.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-15.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-16.jpg"
-      },
-      {
-        "type": "variant",
-        "source": "",
-        "local": "/samples/spanl/panels/ts9010p-1/variant-17.jpg"
       }
     ]
   },
@@ -915,6 +693,278 @@
         "type": "variant",
         "source": "",
         "local": "/samples/spanl/panels/ympb-7021a-mono-flat-dark-grey-black-1-55m2-per-paneel-lengte/variant-24.jpg"
+      }
+    ]
+  },
+  {
+    "name": "CZS70-01A",
+    "sku": "czs70-01a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "czs70-01a",
+    "url": "https://spanl.nl/product-category/spanish-tile-czs70-01a/",
+    "folder": "/samples/spanl/panels/czs70-01a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/CZS70-01-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/czs70-01a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "CZS70-02A",
+    "sku": "czs70-02a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "czs70-02a",
+    "url": "https://spanl.nl/product-category/spanish-tile-czs70-02a/",
+    "folder": "/samples/spanl/panels/czs70-02a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/CZS70-02-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/czs70-02a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "PB9003A",
+    "sku": "pb9003a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "pb9003a",
+    "url": "https://spanl.nl/product-category/pb9003a/",
+    "folder": "/samples/spanl/panels/pb9003a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/PB9010A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/pb9003a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "PBW32-06",
+    "sku": "pbw32-06",
+    "category": "panels",
+    "group": "panels",
+    "slug": "pbw32-06",
+    "url": "https://spanl.nl/product-category/natural-wood/",
+    "folder": "/samples/spanl/panels/pbw32-06",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2019/12/PBW32-06-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/pbw32-06/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "SG7021A",
+    "sku": "sg7021a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "sg7021a",
+    "url": "https://spanl.nl/product-category/sg-dark-grey-7021a-serie/",
+    "folder": "/samples/spanl/panels/sg7021a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/SG7021A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/sg7021a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "SG9003A",
+    "sku": "sg9003a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "sg9003a",
+    "url": "https://spanl.nl/product-category/sg-white-9010a-serie/",
+    "folder": "/samples/spanl/panels/sg9003a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/SG9010A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/sg9003a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "SG9005A",
+    "sku": "sg9005a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "sg9005a",
+    "url": "https://spanl.nl/product-category/sg-black-9005a-serie/",
+    "folder": "/samples/spanl/panels/sg9005a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/SG9005A-hoekopstelling-1.jpg",
+        "local": "/samples/spanl/panels/sg9005a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "TS70-02A",
+    "sku": "ts70-02a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ts70-02a",
+    "url": "https://spanl.nl/product-category/ts70-02a-serie/",
+    "folder": "/samples/spanl/panels/ts70-02a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2022/03/TS70-02-hoekopstelling-scaled-e1647979248180.jpg",
+        "local": "/samples/spanl/panels/ts70-02a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "TS7021A",
+    "sku": "ts7021a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ts7021a",
+    "url": "https://spanl.nl/product-category/ts7021a/",
+    "folder": "/samples/spanl/panels/ts7021a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2025/05/TS7021A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ts7021a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "TS9003P",
+    "sku": "ts9003p",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ts9003p",
+    "url": "https://spanl.nl/product-category/ts-9010p-serie/",
+    "folder": "/samples/spanl/panels/ts9003p",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/TS9010A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ts9003p/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YMPB9003A",
+    "sku": "ympb9003a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ympb9003a",
+    "url": "https://spanl.nl/product-category/ympb-9010a-white-serie/",
+    "folder": "/samples/spanl/panels/ympb9003a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/YMPB9010A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ympb9003a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YMPB9005A",
+    "sku": "ympb9005a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ympb9005a",
+    "url": "https://spanl.nl/product-category/ympb-9005a-black-serie/",
+    "folder": "/samples/spanl/panels/ympb9005a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/YMPB9005A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ympb9005a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YMSG7021A",
+    "sku": "ymsg7021a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ymsg7021a",
+    "url": "https://spanl.nl/product-category/ymsg-7021a-serie/",
+    "folder": "/samples/spanl/panels/ymsg7021a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2019/12/YMSG7021A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ymsg7021a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YMSG7038A",
+    "sku": "ymsg7038a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ymsg7038a",
+    "url": "https://spanl.nl/product-category/ymsg7038a-serie/",
+    "folder": "/samples/spanl/panels/ymsg7038a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2023/03/YMSG7038A-hoekopstelling-2.jpg",
+        "local": "/samples/spanl/panels/ymsg7038a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YMSG9003A",
+    "sku": "ymsg9003a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ymsg9003a",
+    "url": "https://spanl.nl/product-category/ymsg-9010a-serie/",
+    "folder": "/samples/spanl/panels/ymsg9003a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2020/04/YMSG9010A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ymsg9003a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YMSG9005A",
+    "sku": "ymsg9005a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ymsg9005a",
+    "url": "https://spanl.nl/product-category/ymsg9005a/",
+    "folder": "/samples/spanl/panels/ymsg9005a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2023/09/ymsg9005a-HOEKOPSTELLING.jpg",
+        "local": "/samples/spanl/panels/ymsg9005a/main.jpg"
+      }
+    ]
+  },
+  {
+    "name": "YPMB7038A",
+    "sku": "ypmb7038a",
+    "category": "panels",
+    "group": "panels",
+    "slug": "ypmb7038a",
+    "url": "https://spanl.nl/product-category/ypmb7038a-serie/",
+    "folder": "/samples/spanl/panels/ypmb7038a",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://spanl.nl/wp-content/uploads/2023/03/YMPB7038A-hoekopstelling.jpg",
+        "local": "/samples/spanl/panels/ypmb7038a/main.jpg"
       }
     ]
   }

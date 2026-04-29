@@ -133,6 +133,66 @@ export default function SubsidieClient() {
             </article>
           ))}
 
+          <section className="rounded-2xl border border-black bg-white p-6">
+            <h2 className="text-xl font-bold mb-2">
+              Gemeentelijke subsidies &amp; toewijzingen
+            </h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+              Naast de landelijke ISDE subsidie hebben veel gemeenten eigen
+              subsidieregelingen voor isolatie en gevelrenovatie. Een
+              gemeentelijke toewijzing is een officiële goedkeuring waarbij uw
+              gemeente bevestigt dat uw woning in aanmerking komt voor extra
+              subsidie.
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2 mb-6">
+              <div className="rounded-xl border border-black bg-[#f6f4ef] p-4">
+                <h3 className="font-semibold mb-2">Voorbeelden per gemeente</h3>
+                <ul className="text-sm space-y-1 text-gray-700">
+                  <li>🏙️ Amsterdam — tot €1.500 spouwmuurisolatie</li>
+                  <li>🏙️ Rotterdam — gratis energieadvies + subsidie</li>
+                  <li>🏙️ Den Haag — buurtaanpak hele straten</li>
+                  <li>🏙️ Utrecht — isolatielening 0% rente</li>
+                  <li>🏙️ Alle gemeenten — check uw postcode</li>
+                </ul>
+              </div>
+              <div className="rounded-xl border border-black bg-[#f6f4ef] p-4">
+                <h3 className="font-semibold mb-2">Hoe werkt een toewijzing?</h3>
+                <ol className="text-sm space-y-1 text-gray-700 list-decimal list-inside">
+                  <li>Aanvraag indienen bij uw gemeente</li>
+                  <li>Gemeente keurt uw woning goed</li>
+                  <li>U ontvangt een toewijzingsbrief</li>
+                  <li>Werkzaamheden uitvoeren</li>
+                  <li>Factuur opsturen → subsidie ontvangen</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="rounded-xl border-2 border-black bg-black text-white p-5 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold">Controleer subsidies in uw gemeente</p>
+                <p className="text-sm text-gray-300 mt-1">
+                  Vul uw postcode in op verbeterjehuis.nl en zie direct welke
+                  regelingen beschikbaar zijn.
+                </p>
+              </div>
+              <a
+                href="https://www.verbeterjehuis.nl/subsidies"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl bg-white text-black px-5 py-2.5 text-sm font-semibold hover:bg-gray-100 transition-colors flex-shrink-0"
+              >
+                Check uw gemeente →
+              </a>
+            </div>
+
+            <p className="mt-4 text-xs text-gray-400">
+              Renisual helpt u bij het samenstellen van uw aanvraagdossier.
+              Gemeentelijk beleid wijzigt regelmatig — controleer altijd de
+              actuele informatie via uw gemeente of verbeterjehuis.nl.
+            </p>
+          </section>
+
         </div>
       </section>
 

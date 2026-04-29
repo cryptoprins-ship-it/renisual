@@ -669,6 +669,18 @@ export default function GevelCalcPage() {
   }
 
   async function goToRender() {
+    // No photos yet, no calculation to hand off — just go to /render and let
+    // the user upload a fresh photo there. Otherwise /render would treat the
+    // empty config as "missing photo" and show a confusing error.
+    const anyPhoto = Object.values(photos).some(Boolean);
+    if (!anyPhoto) {
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {}
+      window.location.href = "/render";
+      return;
+    }
+
     // 1. Make sure every photo currently in component state is also persisted
     //    to IndexedDB. After importing a config file the writes were fire-and-forget,
     //    so navigating before they completed left /render with no photo.
@@ -1202,7 +1214,7 @@ export default function GevelCalcPage() {
               />
             )}
 
-            {selectedProduct?.insulationValue && (
+            {selectedProduct?.insulationValue && locale === "nl" && (
               <div className="mt-4 rounded-xl border-2 border-amber-400 bg-amber-50 p-3 text-sm print-hidden">
                 <p className="font-semibold text-amber-900">
                   💡 Subsidie beschikbaar voor isolatie via ISDE
@@ -1331,16 +1343,15 @@ export default function GevelCalcPage() {
 
         <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3 print:hidden">
           <div className="mx-auto max-w-6xl">
-            {hasPhotos ? (
-              <button
-                type="button"
-                onClick={goToRender}
-                className="flex items-center justify-center w-full rounded-xl border-2 border-black bg-white text-black px-4 py-2.5 text-sm font-semibold mb-2 hover:bg-black hover:text-white transition-colors"
-              >
-                {t("gc.viewRender")}
-              </button>
-            ) : (
-              <p className="text-xs text-center text-gray-400 mb-2 py-1">{t("gc.uploadHint")}</p>
+            <button
+              type="button"
+              onClick={goToRender}
+              className="flex items-center justify-center w-full rounded-xl border-2 border-black bg-white text-black px-4 py-2.5 text-sm font-semibold mb-2 hover:bg-black hover:text-white transition-colors"
+            >
+              {t("gc.viewRender")}
+            </button>
+            {!hasPhotos && (
+              <p className="text-[11px] text-center text-gray-400 -mt-1 mb-2">{t("gc.uploadHint")}</p>
             )}
 
             <div className="flex items-center gap-2 overflow-x-auto pb-1">

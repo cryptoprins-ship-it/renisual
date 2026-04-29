@@ -81,6 +81,26 @@ const DOOR_COLOUR_LABEL_NL: Record<DoorColour, string> = {
   "wood-colour": "Houtkleur",
 };
 
+// i18n key fragments — link option values to render.frames.*Mat.* / *Col.* keys.
+const WINDOW_MATERIAL_KEY: Record<WindowMaterial, string> = {
+  hardwood: "hardwood",
+  "plastic-white": "plasticWhite",
+  "plastic-anthracite": "plasticAnthracite",
+  aluminium: "aluminium",
+};
+const DOOR_MATERIAL_KEY: Record<DoorMaterial, string> = {
+  hardwood: "hardwood",
+  "plastic-white": "plasticWhite",
+  "plastic-anthracite": "plasticAnthracite",
+  steel: "steel",
+};
+const DOOR_COLOUR_KEY: Record<DoorColour, string> = {
+  white: "white",
+  anthracite: "anthracite",
+  black: "black",
+  "wood-colour": "wood",
+};
+
 const WINDOW_MATERIAL_EN: Record<WindowMaterial, string> = {
   hardwood: "natural-finish hardwood timber",
   "plastic-white": "white PVC plastic",
@@ -1103,61 +1123,59 @@ export default function RenderPage() {
         </section>
 
         <section className="rounded-2xl border border-black bg-white p-4">
-          <h2 className="text-lg font-semibold">Kozijnen &amp; Deuren</h2>
-          <p className="mt-1 text-xs text-gray-500">
-            Optioneel — laat leeg om bestaande kozijnen/deuren onveranderd te laten.
-          </p>
+          <h2 className="text-lg font-semibold">{t("render.frames.heading")}</h2>
+          <p className="mt-1 text-xs text-gray-500">{t("render.frames.subtitle")}</p>
           <div className="mt-3 grid gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">Kozijnmateriaal</label>
+              <label className="mb-1 block text-sm font-medium">{t("render.frames.windowMaterial")}</label>
               <select
                 className="w-full rounded-xl border border-black p-3"
                 value={windowMaterial}
                 onChange={(e) => setWindowMaterial(e.target.value as WindowMaterial | "")}
               >
-                <option value="">(ongewijzigd)</option>
+                <option value="">{t("render.frames.unchanged")}</option>
                 {(Object.keys(WINDOW_MATERIAL_LABEL_NL) as WindowMaterial[]).map((k) => (
                   <option key={k} value={k}>
-                    {WINDOW_MATERIAL_LABEL_NL[k]}
+                    {t(`render.frames.windowMat.${WINDOW_MATERIAL_KEY[k]}`)}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Deurmateriaal</label>
+              <label className="mb-1 block text-sm font-medium">{t("render.frames.doorMaterial")}</label>
               <select
                 className="w-full rounded-xl border border-black p-3"
                 value={doorMaterial}
                 onChange={(e) => setDoorMaterial(e.target.value as DoorMaterial | "")}
               >
-                <option value="">(ongewijzigd)</option>
+                <option value="">{t("render.frames.unchanged")}</option>
                 {(Object.keys(DOOR_MATERIAL_LABEL_NL) as DoorMaterial[]).map((k) => (
                   <option key={k} value={k}>
-                    {DOOR_MATERIAL_LABEL_NL[k]}
+                    {t(`render.frames.doorMat.${DOOR_MATERIAL_KEY[k]}`)}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Deurkleur</label>
+              <label className="mb-1 block text-sm font-medium">{t("render.frames.doorColour")}</label>
               <select
                 className="w-full rounded-xl border border-black p-3"
                 value={doorColour}
                 onChange={(e) => setDoorColour(e.target.value as DoorColour | "")}
               >
-                <option value="">(ongewijzigd)</option>
+                <option value="">{t("render.frames.unchanged")}</option>
                 {(Object.keys(DOOR_COLOUR_LABEL_NL) as DoorColour[]).map((k) => (
                   <option key={k} value={k}>
-                    {DOOR_COLOUR_LABEL_NL[k]}
+                    {t(`render.frames.doorCol.${DOOR_COLOUR_KEY[k]}`)}
                   </option>
                 ))}
               </select>
             </div>
           </div>
           {doorMaterial && !doorColour && (
-            <p className="mt-2 text-xs text-amber-700">Kies ook een deurkleur — anders wordt de instructie niet meegestuurd.</p>
+            <p className="mt-2 text-xs text-amber-700">{t("render.frames.doorWarn")}</p>
           )}
         </section>
 
@@ -1191,11 +1209,16 @@ export default function RenderPage() {
                 variants.length >= MAX_VARIANTS ? "text-amber-700" : "text-gray-500"
               }`}
             >
-              {variants.length >= MAX_VARIANTS
-                ? `${variants.length}/${MAX_VARIANTS} — verwijder een variant`
-                : `${variants.length}/${MAX_VARIANTS} varianten`}
+              {`${variants.length}/${MAX_VARIANTS}`}
             </span>
           </div>
+
+          {variants.length >= MAX_VARIANTS && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900">
+              <span aria-hidden className="text-base leading-none">⚠</span>
+              <span>{t("render.cap.banner")}</span>
+            </div>
+          )}
 
           {isGenerating && (
             <div className="mt-3 overflow-hidden rounded-xl border border-black">
@@ -1314,7 +1337,11 @@ export default function RenderPage() {
             }
             className="rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white disabled:opacity-40"
           >
-            {variants.length > 0 ? t("render.btnAddVariant") : t("render.btnGenerate")}
+            {variants.length >= MAX_VARIANTS
+              ? t("render.cap.btnLabel")
+              : variants.length > 0
+              ? t("render.btnAddVariant")
+              : t("render.btnGenerate")}
           </button>
         </div>
       </div>

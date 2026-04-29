@@ -1,13 +1,14 @@
 "use client";
 
 import { useLocale, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n";
+import FlagIcon from "./FlagIcon";
 
-const FLAGS: Record<Locale, { flag: string; code: string }> = {
-  nl: { flag: "🇳🇱", code: "NL" },
-  en: { flag: "🇬🇧", code: "EN" },
-  de: { flag: "🇩🇪", code: "DE" },
-  fr: { flag: "🇫🇷", code: "FR" },
-  es: { flag: "🇪🇸", code: "ES" },
+const LABELS: Record<Locale, string> = {
+  nl: "Nederlands",
+  en: "English",
+  de: "Deutsch",
+  fr: "Français",
+  es: "Español",
 };
 
 type Props = {
@@ -21,12 +22,13 @@ export default function NavLocaleSwitcher({ className, compact }: Props) {
 
   const onPick = (l: Locale) => {
     if (l === locale) return;
-    setLocale(l); // writes to localStorage + updates html lang
-    if (typeof window !== "undefined") {
-      // Reload so any module-level state / SSR copy that doesn't subscribe to
-      // useLocale repaints in the new language.
-      window.location.reload();
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("[i18n] switcher onClick →", l);
     }
+    // setLocale updates currentLocale, writes localStorage, syncs <html lang>,
+    // and notifies every subscribed useLocale() consumer to re-render. No
+    // reload required — components that use t() repaint immediately.
+    setLocale(l);
   };
 
   return (
@@ -48,17 +50,17 @@ export default function NavLocaleSwitcher({ className, compact }: Props) {
             key={l}
             type="button"
             onClick={() => onPick(l)}
-            aria-label={`Switch language to ${FLAGS[l].code}`}
+            aria-label={`Switch language to ${LABELS[l]}`}
+            title={LABELS[l]}
             aria-pressed={active}
             className={[
-              "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition",
+              "flex items-center justify-center rounded-lg p-1.5 transition",
               active
-                ? "bg-black text-white"
-                : "text-zinc-700 hover:bg-zinc-100",
+                ? "bg-black ring-2 ring-black"
+                : "hover:bg-zinc-100",
             ].join(" ")}
           >
-            <span aria-hidden>{FLAGS[l].flag}</span>
-            <span>{FLAGS[l].code}</span>
+            <FlagIcon locale={l} />
           </button>
         );
       })}
