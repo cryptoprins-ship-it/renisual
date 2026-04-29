@@ -1,9 +1,11 @@
 export type Orientation = "horizontal" | "vertical";
-export type ProductType = "panel" | "paint" | "kozijn";
-export type ProductCategory = "gevelbekleding" | "kozijnen";
+export type ProductType = "panel" | "paint" | "kozijn" | "insulation";
+export type ProductCategory = "gevelbekleding" | "kozijnen" | "isolatie";
 
 export function categoryForType(type: ProductType): ProductCategory {
-  return type === "kozijn" ? "kozijnen" : "gevelbekleding";
+  if (type === "kozijn") return "kozijnen";
+  if (type === "insulation") return "isolatie";
+  return "gevelbekleding";
 }
 
 export type ProfileRules = {
@@ -68,44 +70,56 @@ const paintProfileRules: Record<Orientation, ProfileRules> = {
   },
 };
 
+import { SPANL_PANELS, finishEn, type SpanlFinish } from "@/lib/spanlPanelCatalog";
+
+const SPANL_PROFILE_RULES: Record<Orientation, ProfileRules> = {
+  horizontal: { needsConnectionProfile: true, needsStartProfile: true, needsEndProfile: true, needsCornerProfile: true },
+  vertical: { needsConnectionProfile: false, needsStartProfile: true, needsEndProfile: false, needsCornerProfile: true },
+};
+
+const SPANL_PRICE_PER_M2 = 29.5;
+
+function spanlOrientations(finish: SpanlFinish): Orientation[] {
+  if (finish === "monoFlat" || finish === "monoGroove") return ["horizontal", "vertical"];
+  return ["horizontal"];
+}
+
+function spanlProducts(): Product[] {
+  return SPANL_PANELS.map((panel) => {
+    const widthM = panel.panelWidthCm / 100;
+    const lengthMm = 4200;
+    const lengthM = lengthMm / 1000;
+    const panelAreaM2 = Number((widthM * lengthM).toFixed(3));
+    const pricePerPanelExVat = Number((panelAreaM2 * SPANL_PRICE_PER_M2).toFixed(2));
+    const ralPart = panel.ral ? ` (RAL ${panel.ral})` : "";
+    const note = panel.note ? ` — ${panel.note}` : "";
+    return {
+      id: `spanl-${panel.sku.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+      name: `${panel.sku} — ${panel.colorEn}${ralPart}`,
+      brand: "Spanl",
+      description: `Spanl ${panel.sku} (${finishEn(panel.finish)}). ${panel.panelWidthCm} cm zichtbare paneelmaat${note}.`,
+      type: "panel",
+      orientations: spanlOrientations(panel.finish),
+      panelLength: lengthMm,
+      panelVisibleHeight: panel.panelWidthCm * 10 + 10,
+      panelWorkSize: panel.panelWidthCm * 10,
+      thickness: 16,
+      panelAreaM2,
+      pricePerPanelExVat,
+      pricePerM2ExVat: SPANL_PRICE_PER_M2,
+      wasteFactor: 8,
+      insulationValue: "m².K/W 0.74",
+      soundReduction: "20-25 dB",
+      fireClass: "Euroklasse A2 volgens EN13501-1",
+      coating: "Akzo Nobel poedercoating, vuilafstotend",
+      warranty: "10 jaar garantie op coating",
+      profileRules: SPANL_PROFILE_RULES,
+    } satisfies Product;
+  });
+}
+
 export const products: Product[] = [
-  {
-    id: "spanl-ympb-9003-mono-flat-white",
-    name: "YMPB 9003 Mono Flat White",
-    brand: "Spanl",
-    description:
-      "37 cm werkhoogte gevelpaneel in 3D gladde plankvorm met houtstructuur. Kleur off white, look alike RAL9010.",
-    type: "panel",
-    orientations: ["horizontal", "vertical"],
-    panelLength: 4200,
-    panelVisibleHeight: 380,
-    panelWorkSize: 370,
-    thickness: 16,
-    panelAreaM2: 1.55,
-    pricePerLinearMeterExVat: 10.88,
-    pricePerPanelExVat: 45.73,
-    pricePerM2ExVat: 29.5,
-    wasteFactor: 8,
-    insulationValue: "m².K/W 0.74",
-    soundReduction: "20-25 dB",
-    fireClass: "Euroklasse A2 volgens EN13501-1",
-    coating: "Akzo Nobel poedercoating, vuilafstotend",
-    warranty: "10 jaar garantie op coating",
-    profileRules: {
-      horizontal: {
-        needsConnectionProfile: true,
-        needsStartProfile: true,
-        needsEndProfile: true,
-        needsCornerProfile: true,
-      },
-      vertical: {
-        needsConnectionProfile: false,
-        needsStartProfile: true,
-        needsEndProfile: false,
-        needsCornerProfile: true,
-      },
-    },
-  },
+  ...spanlProducts(),
   {
     id: "keralit-gevelpaneel-250",
     name: "Gevelpaneel 250mm",
@@ -295,6 +309,63 @@ export const products: Product[] = [
     wasteFactor: 5,
     insulationValue: "Uf 1.1 W/m².K",
     warranty: "10 jaar garantie op profielen en coating",
+    profileRules: paintProfileRules,
+  },
+  {
+    id: "rockwool-frontrock",
+    name: "Frontrock MAX E",
+    brand: "Rockwool",
+    description: "Steenwol gevelisolatieplaat voor minerale buitenpleister, niet brandbaar (Euroklasse A1).",
+    type: "insulation",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 1000,
+    panelVisibleHeight: 600,
+    panelWorkSize: 600,
+    thickness: 100,
+    panelAreaM2: 0.6,
+    pricePerM2ExVat: 45,
+    wasteFactor: 5,
+    insulationValue: "λ 0.036 W/m.K — Rd 2.78 m².K/W bij 100 mm",
+    fireClass: "Euroklasse A1 (niet brandbaar)",
+    warranty: "Levenslang (steenwol)",
+    profileRules: paintProfileRules,
+  },
+  {
+    id: "isover-facade",
+    name: "Façade 32",
+    brand: "Isover",
+    description: "Glaswol gevelisolatie geschikt voor spouw- en voorzetwand-isolatie.",
+    type: "insulation",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 1200,
+    panelVisibleHeight: 600,
+    panelWorkSize: 600,
+    thickness: 100,
+    panelAreaM2: 0.72,
+    pricePerM2ExVat: 18,
+    wasteFactor: 5,
+    insulationValue: "λ 0.032 W/m.K — Rd 3.13 m².K/W bij 100 mm",
+    fireClass: "Euroklasse A1",
+    warranty: "Levenslang (glaswol)",
+    profileRules: paintProfileRules,
+  },
+  {
+    id: "recticel-eurowall",
+    name: "Eurowall PIR",
+    brand: "Recticel",
+    description: "PIR isolatieplaat met aluminium cachering — hoge isolatiewaarde bij beperkte dikte.",
+    type: "insulation",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 1200,
+    panelVisibleHeight: 600,
+    panelWorkSize: 600,
+    thickness: 80,
+    panelAreaM2: 0.72,
+    pricePerM2ExVat: 35,
+    wasteFactor: 5,
+    insulationValue: "λ 0.022 W/m.K — Rd 3.6 m².K/W bij 80 mm",
+    fireClass: "Euroklasse E",
+    warranty: "10 jaar fabrieksgarantie",
     profileRules: paintProfileRules,
   },
 ];

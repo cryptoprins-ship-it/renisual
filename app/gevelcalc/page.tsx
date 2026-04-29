@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { products, categoryForType, type Orientation, type ProductCategory } from "@/lib/productCatalog";
+import { useSpanlImage } from "@/lib/spanlImageCatalog";
 import {
   KERALIT_COLORS,
   KERALIT_FINISH_LABEL_NL,
@@ -211,6 +212,19 @@ function InputWithSuffix({
         </span>
       )}
     </div>
+  );
+}
+
+function SpanlThumb({ productId, productName }: { productId: string; productName: string }) {
+  const sku = productId.replace(/^spanl-/, "");
+  const src = useSpanlImage(sku, productName);
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={productName}
+      className="block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+    />
   );
 }
 
@@ -1019,6 +1033,15 @@ export default function GevelCalcPage() {
               >
                 Kozijnen
               </button>
+              <button
+                type="button"
+                onClick={() => setProductCategory("isolatie")}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                  productCategory === "isolatie" ? "bg-black text-white" : "bg-white text-black"
+                }`}
+              >
+                Isolatie
+              </button>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div>
@@ -1084,7 +1107,11 @@ export default function GevelCalcPage() {
               )}
             </div>
             {selectedProduct && (
-              <div className="mt-4 rounded-xl border border-black p-4">
+              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-black p-4 sm:flex-row">
+                {selectedProduct.brand === "Spanl" && (
+                  <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
+                )}
+                <div className="flex-1">
                 <h3 className="font-semibold">
                   {selectedProduct.brand} - {selectedProduct.name}
                 </h3>
@@ -1106,6 +1133,7 @@ export default function GevelCalcPage() {
                   <p className="mt-2 text-sm">{t("gc.pricePerM2", { price: selectedProduct.pricePerM2ExVat.toFixed(2) })}</p>
                 )}
                 <p className="mt-1 text-sm">{t("gc.wasteFactor", { percent: selectedProduct.wasteFactor })}</p>
+                </div>
               </div>
             )}
 

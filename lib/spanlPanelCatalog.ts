@@ -26,12 +26,12 @@ export const SPANL_PANELS: SpanlPanelEntry[] = [
   { sku: "SG7038A", colorKey: "color.concreteGrey", colorEn: "concrete look matt grey", ral: "7038", finish: "monoGroove", panelWidthCm: 37 },
   { sku: "SG9003A", colorKey: "color.white", colorEn: "white", ral: "9010", finish: "monoGroove", panelWidthCm: 37, note: "RAL 9010 look" },
   { sku: "SG9005A", colorKey: "color.mattBlack", colorEn: "matt black", ral: "9005", finish: "monoGroove", panelWidthCm: 37 },
-  { sku: "SG9006A", colorKey: "color.silver", colorEn: "metallic silver", ral: "9006", finish: "monoGroove", panelWidthCm: 37 },
+  { sku: "SG9006A", colorKey: "color.silver", colorEn: "metallic silver-grey, brushed aluminium look — NOT white", ral: "9006", finish: "monoGroove", panelWidthCm: 37 },
 
   { sku: "TS70-02A", colorKey: "color.grey", colorEn: "grey", finish: "strip", panelWidthCm: 25 },
   { sku: "TS7021A", colorKey: "color.darkGrey", colorEn: "dark grey", ral: "7021", finish: "strip", panelWidthCm: 25 },
   { sku: "TS9003P", colorKey: "color.white", colorEn: "white", ral: "9010", finish: "strip", panelWidthCm: 25, note: "RAL 9010 look" },
-  { sku: "TS9006P", colorKey: "color.silver", colorEn: "metallic silver", ral: "9006", finish: "strip", panelWidthCm: 25 },
+  { sku: "TS9006P", colorKey: "color.silver", colorEn: "metallic silver-grey, brushed aluminium look — NOT white", ral: "9006", finish: "strip", panelWidthCm: 25 },
 
   { sku: "YMPB7021A", colorKey: "color.darkGrey", colorEn: "dark grey almost black", ral: "7021", finish: "monoFlat", panelWidthCm: 37 },
   { sku: "YMPB9003A", colorKey: "color.white", colorEn: "white", ral: "9010", finish: "monoFlat", panelWidthCm: 37, note: "RAL 9010 look" },

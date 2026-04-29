@@ -108,6 +108,44 @@ export async function POST(request: Request) {
     .map((url) => dataUrlToInlinePart(url))
     .filter((p): p is InlinePart => p !== null);
 
+  const RAL_HEX: Record<string, { hex: string; description: string }> = {
+    "7021": { hex: "#2A2D2F", description: "very dark charcoal grey, almost black" },
+    "7038": { hex: "#7B7B79", description: "medium agate grey" },
+    "9005": { hex: "#0E0E10", description: "deep matt black" },
+    "9006": {
+      hex: "#A5A8A6",
+      description:
+        "WHITE ALUMINIUM — this is NOT white. It is a medium metallic silver-grey, similar to brushed aluminium or galvanized steel. The surface has a subtle metallic sheen. Hex value #A5A8A6. Do NOT render as white or cream. Render as distinctly grey with metallic quality.",
+    },
+    "9007": {
+      hex: "#8F8F8C",
+      description:
+        "GREY ALUMINIUM — a darker metallic silver-grey than RAL 9006, similar to anodised aluminium. Distinctly grey with a metallic sheen. Hex value #8F8F8C. Do NOT render as plain grey paint — it must read as metallic.",
+    },
+    "9010": { hex: "#F1ECE1", description: "warm off-white" },
+  };
+
+  function metallicWarningFor(ralCode: string): string {
+    if (ralCode === "9006") {
+      return "CRITICAL COLOUR WARNING: RAL 9006 is WHITE ALUMINIUM — a metallic silver-grey colour, NOT white. The rendered facade MUST look distinctly grey-silver, like brushed metal. If the output looks white or cream, it is WRONG.";
+    }
+    if (ralCode === "9007") {
+      return "CRITICAL COLOUR WARNING: RAL 9007 is GREY ALUMINIUM — a darker metallic silver-grey, NOT plain grey paint. The rendered facade MUST read as anodised aluminium with a clear metallic sheen. If the output looks like flat matte grey, it is WRONG.";
+    }
+    return "";
+  }
+
+  const ralFromText = (() => {
+    const haystack = `${body.productLabel ?? ""} ${body.productDescription ?? ""}`;
+    const m = /RAL\s?(\d{4})/i.exec(haystack);
+    return m ? m[1] : "";
+  })();
+  const ralEntry = ralFromText ? RAL_HEX[ralFromText] : undefined;
+  const ralColourLine = ralEntry
+    ? `COLOUR (CRITICAL): RAL ${ralFromText} — ${ralEntry.description} (hex ${ralEntry.hex}). The cladding MUST exactly match this colour.`
+    : "";
+  const ralMetallicWarning = ralFromText ? metallicWarningFor(ralFromText) : "";
+
   const orientationLabel = body.orientation === "vertical" ? "verticaal" : "horizontaal";
   const panelSize =
     body.panelLength && body.panelVisibleHeight
@@ -131,6 +169,8 @@ export async function POST(request: Request) {
     panelWidth ? `Paneelmaat: ${panelWidth} breed.` : "",
     visibleSeams,
     body.productDescription ? `Producteigenschappen: ${body.productDescription}.` : "",
+    ralColourLine,
+    ralMetallicWarning,
     referenceParts.length >= 2
       ? "Gebruik beide referentieafbeeldingen (afbeelding 2 en 3): close-up én toepassing — combineer voor kleur én plankritme."
       : referenceParts.length === 1

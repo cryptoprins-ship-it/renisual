@@ -16,6 +16,7 @@ import { useLocale } from "@/lib/i18n";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
+const MAX_VARIANTS = 3;
 
 type SavedSide = {
   id: string;
@@ -188,9 +189,30 @@ const RAL_HEX: Record<string, { hex: string; description: string }> = {
   "7021": { hex: "#2A2D2F", description: "very dark charcoal grey, almost black" },
   "7038": { hex: "#7B7B79", description: "medium agate grey" },
   "9005": { hex: "#0E0E10", description: "deep matt black" },
-  "9006": { hex: "#A5A8A6", description: "white-aluminium silver, light metallic grey" },
+  "9006": {
+    hex: "#A5A8A6",
+    description:
+      "WHITE ALUMINIUM — this is NOT white. It is a medium metallic silver-grey, similar to brushed aluminium or galvanized steel. The surface has a subtle metallic sheen. Hex value #A5A8A6. Do NOT render as white or cream. Render as distinctly grey with metallic quality.",
+  },
+  "9007": {
+    hex: "#8F8F8C",
+    description:
+      "GREY ALUMINIUM — a darker metallic silver-grey than RAL 9006, similar to anodised aluminium. Distinctly grey with a metallic sheen. Hex value #8F8F8C. Do NOT render as plain grey paint — it must read as metallic.",
+  },
   "9010": { hex: "#F1ECE1", description: "warm off-white" },
 };
+
+const METALLIC_RALS = new Set(["9006", "9007"]);
+
+function metallicWarning(ral: string): string {
+  if (ral === "9006") {
+    return "CRITICAL COLOUR WARNING: RAL 9006 is WHITE ALUMINIUM — a metallic silver-grey colour, NOT white. The rendered facade MUST look distinctly grey-silver, like brushed metal. If the output looks white or cream, it is WRONG.";
+  }
+  if (ral === "9007") {
+    return "CRITICAL COLOUR WARNING: RAL 9007 is GREY ALUMINIUM — a darker metallic silver-grey, NOT plain grey paint. The rendered facade MUST read as anodised aluminium with a clear metallic sheen. If the output looks like flat matte grey, it is WRONG.";
+  }
+  return "";
+}
 
 function describeColor(panel: RenderPanel): string {
   if (panel.ral && RAL_HEX[panel.ral]) {
@@ -361,6 +383,7 @@ function buildDefaultPrompt(
     "STEP 1 — ERASE: in your mind, FIRST replace the entire existing facade with a smooth blank coloured wall. Discard every seam, plank line, weatherboard rabat, brick joint, slat edge, mortar line, board division and any other small-scale rhythm visible on the building. These belong to the OLD cladding and MUST NOT survive into the output. The output must NOT inherit the spacing of the existing planks/boards/bricks visible in the photo.",
     `STEP 2 — APPLY: onto that blank wall, install Spanl panel ${panel.sku}. Finish/profile: ${finishEn(panel.finish)}. Each new panel has a visible width of ${panel.panelWidthCm} cm — this is typically MUCH wider than narrow weatherboard rabat (~15 cm) you may see in the input. The new panel rhythm must override the old one entirely.`,
     `COLOUR (CRITICAL): ${colorDesc}. The cladding colour MUST exactly match this RAL value. Do NOT lighten the colour. Do NOT desaturate to white or pale grey. Reference photos may have been shot under bright studio lighting that makes them look paler — sample the underlying tone, not the highlights. The final wall must read as the stated colour at midday daylight.`,
+    panel.ral && METALLIC_RALS.has(panel.ral) ? metallicWarning(panel.ral) : "",
     seamStyle,
     orientationBlock,
     seamCountLine,
@@ -397,6 +420,13 @@ export default function RenderPage() {
   const [variants, setVariants] = useState<RenderVariant[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 3500);
+    return () => window.clearTimeout(id);
+  }, [toast]);
   const [progressPct, setProgressPct] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
   const [attemptCount, setAttemptCount] = useState(0);
@@ -617,6 +647,10 @@ export default function RenderPage() {
     if (!sourcePhoto) return;
     if (brand === "spanl" && !selectedPanel) return;
     if (brand === "keralit" && (!selectedKeralitProduct || !selectedKeralitColor)) return;
+    if (variants.length >= MAX_VARIANTS) {
+      setToast("Maximaal 3 varianten — verwijder er één om verder te gaan");
+      return;
+    }
     setIsGenerating(true);
     setErrorMsg("");
     setAttemptCount(0);
@@ -969,35 +1003,7 @@ export default function RenderPage() {
               </div>
             </div>
           ) : (
-          <>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium">{t("render.spanlPanel")}</label>
-              <select
-                className="w-full rounded-xl border border-black p-3"
-                value={selectedSku}
-                onChange={(e) => setSelectedSku(e.target.value)}
-              >
-                <option value="">{t("render.choosePanel")}</option>
-                {panels.map((p) => {
-                  const ral = p.ral ? ` (RAL ${p.ral})` : "";
-                  const noRef = !p.imageUrl ? ` — ${t("render.noReference")}` : "";
-                  return (
-                    <option key={p.sku} value={p.sku}>
-                      {p.sku} — {t(p.colorKey)}{ral}, {t(`finish.${p.finish}`)}{noRef}
-                    </option>
-                  );
-                })}
-              </select>
-              {panels.every((p) => !p.imageUrl) && (
-                <p className="mt-1 text-xs text-amber-700">
-                  {t("render.panelIndexHint", {
-                    cmd: "node scripts/build-spanl-index.js",
-                  })}
-                </p>
-              )}
-            </div>
-
+          <div className="space-y-4">
             <div>
               <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
               <select
@@ -1009,37 +1015,69 @@ export default function RenderPage() {
                 <option value="vertical">{t("render.vertical")}</option>
               </select>
             </div>
-          </div>
 
-          {selectedPanel && (
-            <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-black p-4">
-              {selectedPanel.imageUrl ? (
-                <img
-                  src={selectedPanel.imageUrl}
-                  alt={selectedPanel.sku}
-                  className="h-28 w-36 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex h-28 w-36 items-center justify-center rounded-xl border border-dashed border-black text-center text-[10px] text-gray-500">
-                  {t("render.noReference")}
-                </div>
-              )}
-              <div className="text-sm">
-                <div className="font-semibold">
-                  {t(selectedPanel.colorKey)}
-                  {selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : ""}
-                </div>
-                <p className="mt-1 text-gray-500">
-                  {t(`finish.${selectedPanel.finish}`)} · {selectedPanel.panelWidthCm} cm ·{" "}
-                  {orientation === "horizontal"
-                    ? t("render.horizontal").toLowerCase()
-                    : t("render.vertical").toLowerCase()}
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                {t("render.spanlPanel")} ({panels.length})
+              </label>
+              {panels.every((p) => !p.imageUrl) && (
+                <p className="mb-3 text-xs text-amber-700">
+                  {t("render.panelIndexHint", {
+                    cmd: "node scripts/build-spanl-index.js",
+                  })}
                 </p>
-                <p className="mt-1 text-xs text-gray-400">Spanl {selectedPanel.sku}</p>
-              </div>
+              )}
+              {(["monoFlat", "monoGroove", "strip", "brick", "spanishTile", "wood"] as const).map((finish) => {
+                const group = panels.filter((p) => p.finish === finish);
+                if (group.length === 0) return null;
+                return (
+                  <div key={finish} className="mb-4">
+                    <p className="mb-2 text-xs font-semibold text-gray-600">
+                      {t(`finish.${finish}`)} ({group.length})
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+                      {group.map((p) => {
+                        const ral = p.ral ? ` (RAL ${p.ral})` : "";
+                        return (
+                          <button
+                            key={p.sku}
+                            type="button"
+                            onClick={() => setSelectedSku(p.sku)}
+                            className={`overflow-hidden rounded-lg border-2 text-left transition ${
+                              selectedSku === p.sku
+                                ? "border-black ring-2 ring-black"
+                                : "border-gray-200 hover:border-gray-400"
+                            }`}
+                            title={`${p.sku} — ${t(p.colorKey)}${ral}`}
+                          >
+                            {p.imageUrl ? (
+                              <img
+                                src={p.imageUrl}
+                                alt={p.sku}
+                                loading="lazy"
+                                className="block aspect-square w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex aspect-square w-full items-center justify-center bg-neutral-100 text-[9px] text-gray-400">
+                                {t("render.noReference")}
+                              </div>
+                            )}
+                            <div className="p-1 text-[10px] leading-tight">
+                              <div className="font-semibold">{p.sku}</div>
+                              <div className="truncate text-gray-600">
+                                {t(p.colorKey)}
+                                {p.ral ? ` · ${p.ral}` : ""}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-          </>
+          </div>
           )}
         </section>
 
@@ -1127,13 +1165,15 @@ export default function RenderPage() {
         <section className="rounded-2xl border border-black bg-white p-4">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{t("render.section.renders")}</h2>
-            {variants.length > 0 && (
-              <span className="text-xs text-gray-500">
-                {variants.length === 1
-                  ? t("render.variantsOne", { count: variants.length })
-                  : t("render.variantsMany", { count: variants.length })}
-              </span>
-            )}
+            <span
+              className={`text-xs font-medium ${
+                variants.length >= MAX_VARIANTS ? "text-amber-700" : "text-gray-500"
+              }`}
+            >
+              {variants.length >= MAX_VARIANTS
+                ? `${variants.length}/${MAX_VARIANTS} — verwijder een variant`
+                : `${variants.length}/${MAX_VARIANTS} varianten`}
+            </span>
           </div>
 
           {isGenerating && (
@@ -1234,6 +1274,12 @@ export default function RenderPage() {
         </section>
       </div>
 
+      {toast && (
+        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-amber-400 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 shadow-md">
+          {toast}
+        </div>
+      )}
+
       <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3">
         <div className="mx-auto flex max-w-5xl items-center justify-end gap-2">
           <button
@@ -1242,6 +1288,7 @@ export default function RenderPage() {
             disabled={
               isGenerating ||
               !sourcePhoto ||
+              variants.length >= MAX_VARIANTS ||
               (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
             }
             className="rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white disabled:opacity-40"

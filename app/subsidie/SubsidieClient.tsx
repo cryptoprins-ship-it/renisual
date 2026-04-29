@@ -103,7 +103,7 @@ export default function SubsidieClient() {
             Bijgewerkt voor 2026
           </div>
           <h1 className="text-4xl font-bold leading-tight md:text-5xl">
-            Subsidies voor isolatie & renovatie
+            Subsidies voor isolatie & renovatie 2026
           </h1>
           <p className="mt-4 text-lg text-gray-600">
             Bespaar duizenden euro&apos;s met deze regelingen.
@@ -133,27 +133,6 @@ export default function SubsidieClient() {
             </article>
           ))}
 
-          <article className="rounded-2xl border border-dashed border-black bg-[#f6f4ef] p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <h2 className="text-lg font-bold">Bonus: Saldering zonnepanelen</h2>
-              <span className="rounded-full border border-yellow-300 bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-800">
-                Tip
-              </span>
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-gray-600">
-              Wek je zelf stroom op? De salderingsregeling laat je opgewekte stroom
-              wegstrepen tegen verbruikte stroom — een aanzienlijke verlaging van je
-              energierekening.
-            </p>
-            <a
-              href="https://www.rvo.nl/subsidies-financiering/saldering"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm font-semibold underline underline-offset-4"
-            >
-              rvo.nl/saldering ↗
-            </a>
-          </article>
         </div>
       </section>
 

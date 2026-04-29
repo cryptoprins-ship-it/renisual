@@ -18,7 +18,13 @@ const ROADMAP_AVAILABLE: string[] = [
 const ROADMAP_BINNENKORT: Array<{ heading: string; items: string[] }> = [
   {
     heading: "Exterieur",
-    items: ["Tuin & bestrating calculator", "Schutting & hekwerk", "Veranda & overkapping"],
+    items: [
+      "Gevelisolatie calculator",
+      "Dakisolatie calculator",
+      "Tuin & bestrating calculator",
+      "Schutting & hekwerk",
+      "Veranda & overkapping",
+    ],
   },
   {
     heading: "Interieur per ruimte",
@@ -114,6 +120,7 @@ export default function HomeClient() {
               </h1>
               <p className="mt-6 text-lg leading-relaxed text-gray-600">
                 Het complete platform voor huisrenovatie — exterieur én interieur.
+                Upload een foto, kies een materiaal en zie direct hoe het eruitziet.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -277,8 +284,9 @@ export default function HomeClient() {
             </div>
             <div className="space-y-3">
               {[
+                { label: "Dakisolatie", roi: 90, color: "bg-green-700", advies: "✓ Hoogste ROI van alle renovaties" },
+                { label: "Gevelisolatie", roi: 85, color: "bg-green-600", advies: "✓ Beste ROI + ISDE subsidie" },
                 { label: "Gevelbekleding", roi: 70, color: "bg-green-500", advies: "✓ Vaak rendabel bij verkoop" },
-                { label: "Dakisolatie", roi: 85, color: "bg-green-600", advies: "✓ Vaak rendabel bij verkoop" },
                 { label: "Kozijnen", roi: 60, color: "bg-green-400", advies: "✓ Vaak rendabel bij verkoop" },
                 { label: "Nieuwe keuken", roi: 40, color: "bg-amber-400", advies: "~ Soms rendabel" },
               ].map((item) => (
@@ -300,14 +308,14 @@ export default function HomeClient() {
             </div>
           </div>
 
-          <div className="mt-10 rounded-2xl border-2 border-amber-400 bg-amber-50 p-5">
-            <p className="text-sm font-semibold text-amber-900">
-              💡 Tip: combineer gevelbekleding met isolatie en profiteer van ISDE
-              subsidie tot €30/m².
+          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
+            <p className="text-sm text-green-800">
+              💡 Combineer gevelbekleding met isolatie en profiteer van ISDE subsidie
+              tot €30/m²
             </p>
             <Link
               href="/subsidie"
-              className="mt-2 inline-block text-sm font-semibold text-amber-900 underline underline-offset-4 hover:text-amber-700"
+              className="mt-2 inline-block text-sm font-semibold text-green-800 underline underline-offset-4"
             >
               Bekijk alle subsidies →
             </Link>
