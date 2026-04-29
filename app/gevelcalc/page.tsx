@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { products, type Orientation } from "@/lib/productCatalog";
+import { products, categoryForType, type Orientation, type ProductCategory } from "@/lib/productCatalog";
+import {
+  KERALIT_COLORS,
+  KERALIT_FINISH_LABEL_NL,
+  type KeralitFinish,
+  type KeralitColor,
+} from "@/lib/keralitColorCatalog";
 import {
   type CalcSide,
   type OpeningType,
@@ -67,6 +73,25 @@ function fileToDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(new Error("read failed"));
     reader.readAsDataURL(file);
   });
+}
+
+const BRAND_ORDER = [
+  "Spanl",
+  "Keralit",
+  "Novicell",
+  "VinyPlus",
+  "Deceuninck",
+  "Kömmerling",
+  "Schüco",
+  "Generic",
+];
+
+function sortedBrandNames(brands: string[]): string[] {
+  const score = (b: string) => {
+    const i = BRAND_ORDER.indexOf(b);
+    return i === -1 ? BRAND_ORDER.length : i;
+  };
+  return [...brands].sort((a, b) => score(a) - score(b) || a.localeCompare(b));
 }
 
 function localeToDateLocale(locale: Locale): string {
@@ -189,6 +214,67 @@ function InputWithSuffix({
   );
 }
 
+function KeralitColorPicker({
+  selectedNumber,
+  onSelect,
+}: {
+  selectedNumber: number | null;
+  onSelect: (n: number) => void;
+}) {
+  const finishes = Array.from(new Set(KERALIT_COLORS.map((c) => c.finish))) as KeralitFinish[];
+  const [activeFinish, setActiveFinish] = useState<KeralitFinish>(finishes[0]);
+  const colorsForFinish = KERALIT_COLORS.filter((c) => c.finish === activeFinish);
+  const selected = selectedNumber != null ? KERALIT_COLORS.find((c) => c.number === selectedNumber) : null;
+
+  return (
+    <div className="mt-4 rounded-xl border border-black p-4 print-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-semibold">Keralit kleur</h3>
+        {selected && (
+          <span className="text-xs text-gray-600">
+            {selected.name} · {selected.number} · {KERALIT_FINISH_LABEL_NL[selected.finish]}
+          </span>
+        )}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {finishes.map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setActiveFinish(f)}
+            className={`rounded-lg border px-3 py-1 text-xs ${
+              activeFinish === f ? "border-black bg-black text-white" : "border-black bg-white"
+            }`}
+          >
+            {KERALIT_FINISH_LABEL_NL[f]}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+        {colorsForFinish.map((c) => (
+          <button
+            key={c.number}
+            type="button"
+            onClick={() => onSelect(c.number)}
+            title={`${c.name} (${c.number})`}
+            className={`group flex flex-col items-center gap-1 rounded-lg border p-1 ${
+              selectedNumber === c.number ? "border-black ring-2 ring-black" : "border-neutral-300"
+            }`}
+          >
+            <img
+              src={c.thumbnailUrl}
+              alt={c.name}
+              loading="lazy"
+              className="h-12 w-full rounded object-cover"
+            />
+            <span className="truncate text-[10px] leading-tight">{c.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Toast({ message, type }: { message: string; type: "ok" | "error" }) {
   return (
     <div
@@ -205,6 +291,31 @@ export default function GevelCalcPage() {
   const { t, locale } = useLocale();
 
   const [mode, setMode] = useState<Mode>("advanced");
+  const [modeHydrated, setModeHydrated] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let resolved: Mode | null = null;
+    const params = new URLSearchParams(window.location.search);
+    const modus = params.get("modus");
+    if (modus === "quick" || modus === "eenvoudig") resolved = "quick";
+    else if (modus === "pro" || modus === "professional" || modus === "advanced") resolved = "advanced";
+    if (!resolved) {
+      const stored = window.localStorage.getItem("renisual-mode");
+      if (stored === "quick" || stored === "advanced") resolved = stored;
+    }
+    if (resolved) setMode(resolved);
+    setModeHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!modeHydrated) return;
+    try {
+      window.localStorage.setItem("renisual-mode", mode);
+    } catch {
+      /* ignore */
+    }
+  }, [mode, modeHydrated]);
   const [unit, setUnit] = useState<Unit>("m2");
   const [unitTouched, setUnitTouched] = useState(false);
 
@@ -217,6 +328,8 @@ export default function GevelCalcPage() {
   const [frontBackSame, setFrontBackSame] = useState(false);
   const [leftRightSame, setLeftRightSame] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [keralitColorNumber, setKeralitColorNumber] = useState<number | null>(null);
+  const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [totalDiscountPercent, setTotalDiscountPercent] = useState("0");
   const [showInclVat, setShowInclVat] = useState(false);
@@ -393,6 +506,7 @@ export default function GevelCalcPage() {
       frontBackSame,
       leftRightSame,
       selectedProductId,
+      keralitColorNumber,
       orientation,
       totalDiscountPercent,
     };
@@ -413,6 +527,7 @@ export default function GevelCalcPage() {
     setFrontBackSame(data.frontBackSame ?? false);
     setLeftRightSame(data.leftRightSame ?? false);
     setSelectedProductId(data.selectedProductId ?? "");
+    setKeralitColorNumber(typeof data.keralitColorNumber === "number" ? data.keralitColorNumber : null);
     setOrientation(data.orientation ?? "horizontal");
     setTotalDiscountPercent(data.totalDiscountPercent ?? "0");
     setCalcDate(data.savedAt ?? "");
@@ -885,6 +1000,26 @@ export default function GevelCalcPage() {
 
           <section className="rounded-2xl border border-black bg-white p-4 page-break-before">
             <h2 className="text-lg font-semibold">{t("gc.productChoice")}</h2>
+            <div className="mt-3 inline-flex rounded-xl border border-black p-1 print-hidden">
+              <button
+                type="button"
+                onClick={() => setProductCategory("gevelbekleding")}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                  productCategory === "gevelbekleding" ? "bg-black text-white" : "bg-white text-black"
+                }`}
+              >
+                Gevelbekleding
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductCategory("kozijnen")}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                  productCategory === "kozijnen" ? "bg-black text-white" : "bg-white text-black"
+                }`}
+              >
+                Kozijnen
+              </button>
+            </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-medium">{t("gc.product")}</label>
@@ -895,13 +1030,22 @@ export default function GevelCalcPage() {
                     const product = products.find((p) => p.id === e.target.value);
                     setSelectedProductId(e.target.value);
                     if (product?.orientations[0]) setOrientation(product.orientations[0]);
+                    if (product?.brand !== "Keralit") setKeralitColorNumber(null);
                   }}
                 >
                   <option value="">{t("gc.chooseProduct")}</option>
-                  {Array.from(new Set(products.map((p) => p.brand))).map((brand) => (
+                  {sortedBrandNames(
+                    Array.from(
+                      new Set(
+                        products
+                          .filter((p) => categoryForType(p.type) === productCategory)
+                          .map((p) => p.brand)
+                      )
+                    )
+                  ).map((brand) => (
                     <optgroup key={brand} label={brand}>
                       {products
-                        .filter((p) => p.brand === brand)
+                        .filter((p) => p.brand === brand && categoryForType(p.type) === productCategory)
                         .map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
@@ -927,15 +1071,17 @@ export default function GevelCalcPage() {
                   </select>
                 </div>
               )}
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("gc.discount")}</label>
-                <input
-                  className="w-full rounded-xl border border-black p-3"
-                  value={totalDiscountPercent}
-                  onChange={(e) => setTotalDiscountPercent(e.target.value)}
-                  placeholder={t("gc.discountPlaceholder")}
-                />
-              </div>
+              {mode === "advanced" && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("gc.discount")}</label>
+                  <input
+                    className="w-full rounded-xl border border-black p-3"
+                    value={totalDiscountPercent}
+                    onChange={(e) => setTotalDiscountPercent(e.target.value)}
+                    placeholder={t("gc.discountPlaceholder")}
+                  />
+                </div>
+              )}
             </div>
             {selectedProduct && (
               <div className="mt-4 rounded-xl border border-black p-4">
@@ -962,6 +1108,27 @@ export default function GevelCalcPage() {
                 <p className="mt-1 text-sm">{t("gc.wasteFactor", { percent: selectedProduct.wasteFactor })}</p>
               </div>
             )}
+
+            {selectedProduct?.brand === "Keralit" && (
+              <KeralitColorPicker
+                selectedNumber={keralitColorNumber}
+                onSelect={setKeralitColorNumber}
+              />
+            )}
+
+            {selectedProduct?.insulationValue && (
+              <div className="mt-4 rounded-xl border-2 border-amber-400 bg-amber-50 p-3 text-sm print-hidden">
+                <p className="font-semibold text-amber-900">
+                  💡 Subsidie beschikbaar voor isolatie via ISDE
+                </p>
+                <a
+                  href="/subsidie"
+                  className="mt-1 inline-block text-xs font-semibold text-amber-900 underline underline-offset-2"
+                >
+                  Bekijk regelingen →
+                </a>
+              </div>
+            )}
           </section>
 
           <section className="rounded-2xl border border-black bg-white p-4">
@@ -986,9 +1153,11 @@ export default function GevelCalcPage() {
             <section className="rounded-2xl border border-black bg-white p-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <h2 className="text-lg font-semibold">{t("gc.materialCalc")}</h2>
-                <div className="w-64 print-hidden">
-                  <ToggleSwitch checked={showInclVat} onChange={setShowInclVat} label={t("gc.inclVat")} />
-                </div>
+                {mode === "advanced" && (
+                  <div className="w-64 print-hidden">
+                    <ToggleSwitch checked={showInclVat} onChange={setShowInclVat} label={t("gc.inclVat")} />
+                  </div>
+                )}
               </div>
               <div className="metrics-row mt-4 grid grid-cols-3 gap-2">
                 <div className="rounded-xl border border-black p-3">
@@ -1099,19 +1268,23 @@ export default function GevelCalcPage() {
               <button type="button" onClick={sendMail} className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium">
                 {t("gc.btnMail")}
               </button>
-              <div className="flex-shrink-0 h-6 w-px bg-black/20" />
-              <button type="button" onClick={exportConfig} className="flex-shrink-0 rounded-xl border border-black px-3 py-2 text-sm">
-                {t("gc.btnExportConfig")}
-              </button>
-              <label className="flex-shrink-0 cursor-pointer rounded-xl border border-black px-3 py-2 text-sm">
-                {t("gc.btnLoadConfig")}
-                <input
-                  type="file"
-                  accept=".config,application/json"
-                  className="hidden"
-                  onChange={(e) => importConfig(e.target.files?.[0] ?? null)}
-                />
-              </label>
+              {mode === "advanced" && (
+                <>
+                  <div className="flex-shrink-0 h-6 w-px bg-black/20" />
+                  <button type="button" onClick={exportConfig} className="flex-shrink-0 rounded-xl border border-black px-3 py-2 text-sm">
+                    {t("gc.btnExportConfig")}
+                  </button>
+                  <label className="flex-shrink-0 cursor-pointer rounded-xl border border-black px-3 py-2 text-sm">
+                    {t("gc.btnLoadConfig")}
+                    <input
+                      type="file"
+                      accept=".config,application/json"
+                      className="hidden"
+                      onChange={(e) => importConfig(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </>
+              )}
               <button
                 type="button"
                 onClick={resetData}

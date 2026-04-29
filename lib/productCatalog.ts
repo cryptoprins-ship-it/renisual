@@ -1,5 +1,10 @@
 export type Orientation = "horizontal" | "vertical";
-export type ProductType = "panel" | "paint";
+export type ProductType = "panel" | "paint" | "kozijn";
+export type ProductCategory = "gevelbekleding" | "kozijnen";
+
+export function categoryForType(type: ProductType): ProductCategory {
+  return type === "kozijn" ? "kozijnen" : "gevelbekleding";
+}
 
 export type ProfileRules = {
   needsConnectionProfile: boolean;
@@ -236,6 +241,60 @@ export const products: Product[] = [
     panelAreaM2: 0,
     pricePerM2ExVat: 25,
     wasteFactor: 5,
+    profileRules: paintProfileRules,
+  },
+  {
+    id: "deceuninck-zendow-70",
+    name: "Zendow 70",
+    brand: "Deceuninck",
+    description: "Kunststof kozijnsysteem met 5-kamer profiel, 70 mm bouwdiepte, hoge isolatiewaarde.",
+    type: "kozijn",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 0,
+    panelVisibleHeight: 0,
+    panelWorkSize: 0,
+    thickness: 70,
+    panelAreaM2: 0,
+    pricePerM2ExVat: 580,
+    wasteFactor: 5,
+    insulationValue: "Uf 1.3 W/m².K",
+    warranty: "10 jaar garantie op profielen",
+    profileRules: paintProfileRules,
+  },
+  {
+    id: "kommerling-88-md",
+    name: "76 MD",
+    brand: "Kömmerling",
+    description: "Duits 6-kamer kunststof kozijnsysteem, 76 mm bouwdiepte, geschikt voor passief bouwen.",
+    type: "kozijn",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 0,
+    panelVisibleHeight: 0,
+    panelWorkSize: 0,
+    thickness: 76,
+    panelAreaM2: 0,
+    pricePerM2ExVat: 620,
+    wasteFactor: 5,
+    insulationValue: "Uf 1.0 W/m².K",
+    warranty: "10 jaar garantie op profielen",
+    profileRules: paintProfileRules,
+  },
+  {
+    id: "schuco-aws-75",
+    name: "AWS 75.SI+",
+    brand: "Schüco",
+    description: "Aluminium kozijnsysteem met thermische onderbreking, 75 mm bouwdiepte, hoogwaardige afwerking.",
+    type: "kozijn",
+    orientations: ["horizontal", "vertical"],
+    panelLength: 0,
+    panelVisibleHeight: 0,
+    panelWorkSize: 0,
+    thickness: 75,
+    panelAreaM2: 0,
+    pricePerM2ExVat: 850,
+    wasteFactor: 5,
+    insulationValue: "Uf 1.1 W/m².K",
+    warranty: "10 jaar garantie op profielen en coating",
     profileRules: paintProfileRules,
   },
 ];

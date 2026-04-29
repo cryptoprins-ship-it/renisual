@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(browser-harness --help)",
+      "Bash(browser-harness --doctor)",
+      "Bash(curl -sL --max-time 20 -A \"Mozilla/5.0 Renisual\" \"https://www.keralit.nl/gratis-kleurmonsters\" -o /tmp/keralit.html)",
+      "Read(//tmp/**)",
+      "Bash(curl -sL --max-time 20 -A \"Mozilla/5.0\" \"https://cms.keralit.nl/api/collections/panels/entries\")",
+      "Bash(curl -sL --max-time 20 -A \"Mozilla/5.0\" \"https://cms.keralit.nl/api/collections\")",
+      "Bash(curl -sL --max-time 8 -A Mozilla/5.0 'https://cms.keralit.nl/api/collections/__TRACKED_VAR__/entries?limit=3')",
+      "Bash(curl -sL --max-time 20 \"https://cms.keralit.nl/api/collections/pages/entries/a79b2852-b03d-47ac-a779-c51cc5acd113\")",
+      "Bash(curl -sL --max-time 20 \"https://cms.keralit.nl/api/taxonomies/products/terms\")",
+      "Bash(curl -sL --max-time 20 \"https://cms.keralit.nl/api/collections/panels/entries/fcb3bf5e-d6ba-466f-9b19-f79a40468612\")",
+      "Bash(curl -sL --max-time 8 'https://cms.keralit.nl/api/taxonomies/__TRACKED_VAR__/terms?limit=2')",
+      "Bash(curl -sL --max-time 8 'https://cms.keralit.nl/api/collections/__TRACKED_VAR__/entries?limit=2')",
+      "Bash(grep -oE '\\\\\\\\\"slug\\\\\\\\\":\\\\\\\\\"[^\"]+\\\\\\\\\"' /tmp/keralit.html)",
+      "Bash(browser-harness --setup)",
+      "Bash(browser-harness -c 'print\\(\"attached:\", page_info\\(\\)\\)')",
+      "Bash(browser-harness -c ' *)",
+      "Bash(curl -sL --max-time 5 http://localhost:9222/json/version)",
+      "Bash(browser-harness --reload)",
+      "Bash(browser-harness -c 'print\\(page_info\\(\\).get\\(\"title\"\\)\\)')",
+      "Bash(curl -sL --max-time 20 -A \"Mozilla/5.0\" \"https://visualisator.keralit.nl/\" -o /tmp/visualisator.html)",
+      "Bash(curl -sL --max-time 10 \"https://assets.keralit.nl/visualisator/\" -o /tmp/assets.html)",
+      "Bash(curl -sL --max-time 30 \"https://visualisator.keralit.nl/assets/keralit-gevelvisualisator-6d540180be3173bbf97edf68fa8d69d7.js\" -o /tmp/bundle.js)",
+      "Bash(grep -oE 'baseURLHouseVisuals.{0,200}' /tmp/bundle.js)",
+      "Bash(npm ls *)",
+      "Bash(npm uninstall *)",
+      "Bash(node *)"
+    ]
+  }
+}

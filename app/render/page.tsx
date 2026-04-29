@@ -28,6 +28,7 @@ type SavedSide = {
 type SavedConfig = {
   sides: SavedSide[];
   selectedProductId?: string;
+  keralitColorNumber?: number | null;
   orientation?: Orientation;
   projectName?: string;
 };
@@ -45,7 +46,6 @@ type RenderVariant = {
   prompt: string;
   dataUrl: string;
   createdAt: number;
-  provider: "gemini" | "hf";
   colorCheck?: ColorCheck;
 };
 
@@ -397,13 +397,47 @@ export default function RenderPage() {
   const [variants, setVariants] = useState<RenderVariant[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
-  const [provider, setProvider] = useState<"gemini" | "hf">("gemini");
+  const [progressPct, setProgressPct] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
+  const [attemptCount, setAttemptCount] = useState(0);
   const [windowMaterial, setWindowMaterial] = useState<WindowMaterial | "">("");
   const [doorMaterial, setDoorMaterial] = useState<DoorMaterial | "">("");
   const [doorColour, setDoorColour] = useState<DoorColour | "">("");
   const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
+  const [sampleTab, setSampleTab] = useState<"houses" | "woonboten" | null>(null);
+  const [houseSamples, setHouseSamples] = useState<Array<{ file: string; label: string }>>([]);
+  const [woonbootSamples, setWoonbootSamples] = useState<Array<{ file: string; label: string }>>([]);
+
+  useEffect(() => {
+    fetch("/samples/houses/index.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setHouseSamples)
+      .catch(() => setHouseSamples([]));
+    fetch("/samples/woonboten/index.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setWoonbootSamples)
+      .catch(() => setWoonbootSamples([]));
+  }, []);
+
+  async function loadSamplePhoto(folder: "houses" | "woonboten", file: string) {
+    try {
+      const res = await fetch(`/samples/${folder}/${file}`);
+      const blob = await res.blob();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      const compressed = await compressDataUrl(dataUrl, 1600, 0.85);
+      setPhotoOverride(compressed);
+      setSelectedSideId("");
+    } catch {
+      setErrorMsg(t("render.error.upload"));
+    }
+  }
 
   const keralitProducts = useMemo(() => products.filter((p) => p.brand === "Keralit"), []);
   const selectedKeralitProduct = useMemo(
@@ -481,6 +515,16 @@ export default function RenderPage() {
       const parsed = JSON.parse(raw) as SavedConfig;
       setSavedConfig(parsed);
       if (parsed.orientation) setOrientation(parsed.orientation);
+      if (parsed.selectedProductId) {
+        const product = products.find((p) => p.id === parsed.selectedProductId);
+        if (product?.brand === "Keralit") {
+          setBrand("keralit");
+          setSelectedKeralitProductId(parsed.selectedProductId);
+          if (typeof parsed.keralitColorNumber === "number") {
+            setSelectedKeralitColorNumber(parsed.keralitColorNumber);
+          }
+        }
+      }
       const ids = (parsed.sides ?? []).map((s) => s.id);
       if (ids.length === 0) return;
       loadAllPhotos(ids)
@@ -500,6 +544,63 @@ export default function RenderPage() {
     setErrorMsg("");
   }, [sourcePhoto]);
 
+  useEffect(() => {
+    if (!isGenerating) {
+      setProgressPct(0);
+      setProgressMessage("");
+      return;
+    }
+    const start = Date.now();
+    const messageSets: Record<string, string[]> = {
+      nl: [
+        "AI analyseert uw gevel...",
+        "Materiaal wordt toegepast...",
+        "Details worden verfijnd...",
+        "Bijna klaar...",
+      ],
+      en: [
+        "AI is analysing your facade...",
+        "Applying material...",
+        "Refining details...",
+        "Almost done...",
+      ],
+      de: [
+        "KI analysiert Ihre Fassade...",
+        "Material wird angewendet...",
+        "Details werden verfeinert...",
+        "Fast fertig...",
+      ],
+      fr: [
+        "L'IA analyse votre façade...",
+        "Application du matériau...",
+        "Affinage des détails...",
+        "Presque terminé...",
+      ],
+      es: [
+        "La IA analiza su fachada...",
+        "Aplicando el material...",
+        "Refinando los detalles...",
+        "Casi listo...",
+      ],
+    };
+    const texts = messageSets[locale] ?? messageSets.en;
+    const messages: Array<{ at: number; text: string }> = [
+      { at: 0, text: texts[0] },
+      { at: 5000, text: texts[1] },
+      { at: 10000, text: texts[2] },
+      { at: 15000, text: texts[3] },
+    ];
+    const TOTAL_MS = 20000;
+    const id = window.setInterval(() => {
+      const elapsed = Date.now() - start;
+      const cyclical = elapsed % TOTAL_MS;
+      setProgressPct(Math.min(95, (cyclical / TOTAL_MS) * 100));
+      const current = [...messages].reverse().find((m) => cyclical >= m.at);
+      if (current) setProgressMessage(current.text);
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [isGenerating, locale]);
+
   async function handleUpload(file: File | null) {
     if (!file || !file.type.startsWith("image/")) return;
     try {
@@ -518,6 +619,7 @@ export default function RenderPage() {
     if (brand === "keralit" && (!selectedKeralitProduct || !selectedKeralitColor)) return;
     setIsGenerating(true);
     setErrorMsg("");
+    setAttemptCount(0);
     try {
       const refUrls: string[] = [];
       if (brand === "spanl" && selectedPanel) {
@@ -533,11 +635,7 @@ export default function RenderPage() {
         const swatch = await urlToDataUrl(selectedKeralitColor.thumbnailUrl);
         if (swatch) refUrls.push(await compressDataUrl(swatch, 1024, 0.82));
       }
-      const photoForApi = await compressDataUrl(
-        sourcePhoto,
-        provider === "hf" ? 896 : 1600,
-        provider === "hf" ? 0.75 : 0.85
-      );
+      const photoLarge = await compressDataUrl(sourcePhoto, 1600, 0.85);
 
       let productLabel: string;
       let productDescription: string;
@@ -560,37 +658,51 @@ export default function RenderPage() {
       } else {
         return;
       }
-      const endpoint = provider === "hf" ? "/api/render-hf" : "/api/render";
-      const payload = provider === "hf"
-        ? {
-            photoDataUrl: photoForApi,
-            prompt: effectivePrompt,
-            strength: 0.82,
-          }
-        : {
-            photoDataUrl: photoForApi,
-            referenceDataUrls: refUrls,
-            productLabel,
-            productDescription,
-            orientation,
-            panelWidthCm,
-            facadeWidthCm: facadeDims?.widthCm,
-            facadeHeightCm: facadeDims?.heightCm,
-            windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
-            door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
-              ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
-              : undefined,
-            prompt: effectivePrompt || undefined,
-            locale,
-          };
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = (await res.json()) as { renderDataUrl?: string; error?: string };
-      if (!res.ok || !json.renderDataUrl) {
-        setErrorMsg(json.error ?? t("render.error.failed"));
+      const payload = {
+        photoDataUrl: photoLarge,
+        referenceDataUrls: refUrls,
+        productLabel,
+        productDescription,
+        orientation,
+        panelWidthCm,
+        facadeWidthCm: facadeDims?.widthCm,
+        facadeHeightCm: facadeDims?.heightCm,
+        windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
+        door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
+          ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
+          : undefined,
+        prompt: effectivePrompt || undefined,
+        locale,
+      };
+
+      const MAX_ATTEMPTS = 3;
+      let renderDataUrl: string | null = null;
+      let lastError = "";
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        setAttemptCount(attempt);
+        const res = await fetch("/api/render", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = (await res.json()) as { renderDataUrl?: string; error?: string };
+        if (res.ok && data.renderDataUrl) {
+          renderDataUrl = data.renderDataUrl;
+          break;
+        }
+        const errorText = String(data.error ?? "");
+        const isRateLimit =
+          res.status === 429 ||
+          errorText.includes('"code":429') ||
+          /quota|rate.?limit|exhausted|too many/i.test(errorText);
+        lastError = errorText || `HTTP ${res.status}`;
+        if (!isRateLimit || attempt >= MAX_ATTEMPTS) break;
+        const m = errorText.match(/"retryDelay":\s*"(\d+)s"/);
+        const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
+        await new Promise((r) => setTimeout(r, delaySec * 1000));
+      }
+      if (!renderDataUrl) {
+        setErrorMsg(lastError || t("render.error.failed"));
         return;
       }
       const variant: RenderVariant = {
@@ -599,16 +711,15 @@ export default function RenderPage() {
         panelSku: panelSkuForVariant,
         orientation,
         prompt: effectivePrompt,
-        dataUrl: json.renderDataUrl,
+        dataUrl: renderDataUrl,
         createdAt: Date.now(),
-        provider,
       };
       setVariants((prev) => [variant, ...prev]);
-      const key = await sha256(`${photoForApi}|${panelSkuForVariant}|${orientation}|${effectivePrompt}|${variant.id}`);
-      await saveRender(key, json.renderDataUrl).catch(() => {});
+      const key = await sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${effectivePrompt}|${variant.id}`);
+      await saveRender(key, renderDataUrl).catch(() => {});
       if (targetHex) {
         try {
-          const check = await checkRenderColor(json.renderDataUrl, targetHex);
+          const check = await checkRenderColor(renderDataUrl, targetHex);
           if (check) {
             setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, colorCheck: check } : v)));
           }
@@ -695,6 +806,62 @@ export default function RenderPage() {
                 onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
               />
             </label>
+          </div>
+
+          <div className="mt-4">
+            <p className="mb-2 text-xs text-gray-500">
+              {locale === "nl" ? "Of kies een voorbeeldfoto" : "Or pick a sample photo"}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSampleTab(sampleTab === "houses" ? null : "houses")}
+                className={`rounded-xl border px-3 py-1.5 text-sm ${
+                  sampleTab === "houses" ? "border-black bg-black text-white" : "border-black bg-white"
+                }`}
+              >
+                Woningen ({houseSamples.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSampleTab(sampleTab === "woonboten" ? null : "woonboten")}
+                className={`rounded-xl border px-3 py-1.5 text-sm ${
+                  sampleTab === "woonboten" ? "border-black bg-black text-white" : "border-black bg-white"
+                }`}
+              >
+                Woonboten ({woonbootSamples.length})
+              </button>
+            </div>
+            {sampleTab && (
+              <div className="mt-3">
+                {(sampleTab === "houses" ? houseSamples : woonbootSamples).length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-black/40 p-4 text-center text-xs text-gray-500">
+                    {locale === "nl"
+                      ? `Nog geen voorbeeldfoto's. Plaats afbeeldingen in /public/samples/${sampleTab}/ en update index.json.`
+                      : `No samples yet. Drop images in /public/samples/${sampleTab}/ and update index.json.`}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {(sampleTab === "houses" ? houseSamples : woonbootSamples).map((s) => (
+                      <button
+                        key={s.file}
+                        type="button"
+                        onClick={() => loadSamplePhoto(sampleTab, s.file)}
+                        className="overflow-hidden rounded-xl border border-black bg-white text-left hover:bg-neutral-50"
+                      >
+                        <img
+                          src={`/samples/${sampleTab}/${s.file}`}
+                          alt={s.label}
+                          loading="lazy"
+                          className="block aspect-[4/3] w-full object-cover"
+                        />
+                        <p className="px-2 py-1 text-xs">{s.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {sourcePhoto && (
@@ -844,36 +1011,6 @@ export default function RenderPage() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="mb-1 block text-sm font-medium">Render engine</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setProvider("gemini")}
-                className={`rounded-xl border px-4 py-2 text-sm ${
-                  provider === "gemini" ? "border-black bg-black text-white" : "border-black bg-white"
-                }`}
-              >
-                Gemini
-              </button>
-              <button
-                type="button"
-                onClick={() => setProvider("hf")}
-                className={`rounded-xl border px-4 py-2 text-sm ${
-                  provider === "hf" ? "border-black bg-black text-white" : "border-black bg-white"
-                }`}
-              >
-                Hugging Face (test)
-              </button>
-            </div>
-            {provider === "hf" && (
-              <p className="mt-1 text-xs text-amber-700">
-                Experimenteel: img2img zonder mask via HF inference (instruct-pix2pix). Cold start kan 30-60 s duren. Geen
-                referentiebeeld, alleen tekst-prompt.
-              </p>
-            )}
-          </div>
-
           {selectedPanel && (
             <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-black p-4">
               {selectedPanel.imageUrl ? (
@@ -1000,8 +1137,33 @@ export default function RenderPage() {
           </div>
 
           {isGenerating && (
-            <div className="mt-3 flex aspect-[16/10] w-full items-center justify-center rounded-xl border border-black bg-neutral-100 text-sm font-medium">
-              {t("render.generating")}
+            <div className="mt-3 overflow-hidden rounded-xl border border-black">
+              <div className="relative aspect-[16/10] w-full animate-pulse bg-gradient-to-br from-neutral-200 via-neutral-100 to-neutral-200">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                  <div className="h-2 w-3/4 max-w-sm overflow-hidden rounded-full bg-white/70">
+                    <div
+                      className="h-full bg-black transition-[width] duration-200 ease-linear"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
+                  <p className="text-sm font-medium text-neutral-800">
+                    {progressMessage || t("render.generating")}
+                  </p>
+                  {attemptCount > 1 && (
+                    <p className="text-xs text-neutral-500">
+                      {locale === "nl"
+                        ? `Poging ${attemptCount}/3`
+                        : locale === "de"
+                        ? `Versuch ${attemptCount}/3`
+                        : locale === "fr"
+                        ? `Tentative ${attemptCount}/3`
+                        : locale === "es"
+                        ? `Intento ${attemptCount}/3`
+                        : `Attempt ${attemptCount}/3`}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1015,9 +1177,6 @@ export default function RenderPage() {
                 <img src={v.dataUrl} alt={v.panelLabel} className="block w-full" />
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] uppercase">
-                      {v.provider}
-                    </span>
                     {v.colorCheck && (
                       <span
                         className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${
