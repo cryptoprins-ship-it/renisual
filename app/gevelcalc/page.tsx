@@ -228,6 +228,30 @@ function SpanlThumb({ productId, productName }: { productId: string; productName
   );
 }
 
+function KeralitThumb({
+  productName,
+  selectedNumber,
+}: {
+  productName: string;
+  selectedNumber: number | null;
+}) {
+  // Prefer the user's currently picked colour; otherwise show a representative
+  // sample so the product card doesn't look empty before they pick a colour.
+  const color =
+    (selectedNumber != null
+      ? KERALIT_COLORS.find((c) => c.number === selectedNumber)
+      : null) ?? KERALIT_COLORS[0];
+  if (!color) return null;
+  return (
+    <img
+      src={color.thumbnailUrl}
+      alt={`${productName} — ${color.name}`}
+      loading="lazy"
+      className="block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+    />
+  );
+}
+
 function KeralitColorPicker({
   selectedNumber,
   onSelect,
@@ -353,6 +377,14 @@ export default function GevelCalcPage() {
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
+  const productsByCategory = useMemo(
+    () => products.filter((p) => categoryForType(p.type) === productCategory),
+    [productCategory]
+  );
+  const brandsForCategory = useMemo(
+    () => sortedBrandNames(Array.from(new Set(productsByCategory.map((p) => p.brand)))),
+    [productsByCategory]
+  );
   const { savePhoto, deletePhoto, loadAllPhotos, clearAllPhotos } = usePhotoStore();
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -630,18 +662,43 @@ export default function GevelCalcPage() {
         `${t("gc.profilesPrice")} ${vatLabel}: ${fmtMoney(materialResult?.profilePriceExVat ?? 0)}\n` +
         `${t("gc.subtotal")} ${vatLabel}: ${fmtMoney(materialResult?.subtotalExVat ?? 0)}\n` +
         `${t("gc.discountLine", { percent: totalDiscountPercent })}: -${fmtMoney(materialResult?.totalDiscount ?? 0)}\n` +
-        `${t("gc.totalAfterDiscount")} ${vatLabel}: ${fmtMoney(materialResult?.totalExVat ?? 0)}\n`
+        `${t("gc.totalAfterDiscount")} ${vatLabel}: ${fmtMoney(materialResult?.totalExVat ?? 0)}\n\n` +
+        `${t("gc.priceDisclaimer")}\n`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
 
-  function goToRender() {
+  async function goToRender() {
+    // 1. Make sure every photo currently in component state is also persisted
+    //    to IndexedDB. After importing a config file the writes were fire-and-forget,
+    //    so navigating before they completed left /render with no photo.
+    const sidesToSync = mode === "quick" ? [quickSide] : sides;
+    const sideIds = sidesToSync.map((s) => s.id);
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false)));
+      await Promise.all(
+        sideIds
+          .filter((id) => photos[id])
+          .map((id) => savePhoto(id, photos[id]))
+      );
     } catch {
       showToast(t("gc.toast.handoffFailed"), "error");
       return;
     }
+
+    // 2. Hand off the config plus an inline photo map. /render prefers IndexedDB
+    //    but falls back to this map if a side photo is missing there. Photos can
+    //    be large; if sessionStorage rejects the payload, retry without them.
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(true)));
+    } catch {
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false)));
+      } catch {
+        showToast(t("gc.toast.handoffFailed"), "error");
+        return;
+      }
+    }
+
     window.location.href = "/render";
   }
 
@@ -1057,18 +1114,10 @@ export default function GevelCalcPage() {
                   }}
                 >
                   <option value="">{t("gc.chooseProduct")}</option>
-                  {sortedBrandNames(
-                    Array.from(
-                      new Set(
-                        products
-                          .filter((p) => categoryForType(p.type) === productCategory)
-                          .map((p) => p.brand)
-                      )
-                    )
-                  ).map((brand) => (
+                  {brandsForCategory.map((brand) => (
                     <optgroup key={brand} label={brand}>
-                      {products
-                        .filter((p) => p.brand === brand && categoryForType(p.type) === productCategory)
+                      {productsByCategory
+                        .filter((p) => p.brand === brand)
                         .map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
@@ -1111,6 +1160,12 @@ export default function GevelCalcPage() {
                 {selectedProduct.brand === "Spanl" && (
                   <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
                 )}
+                {selectedProduct.brand === "Keralit" && (
+                  <KeralitThumb
+                    productName={selectedProduct.name}
+                    selectedNumber={keralitColorNumber}
+                  />
+                )}
                 <div className="flex-1">
                 <h3 className="font-semibold">
                   {selectedProduct.brand} - {selectedProduct.name}
@@ -1133,6 +1188,9 @@ export default function GevelCalcPage() {
                   <p className="mt-2 text-sm">{t("gc.pricePerM2", { price: selectedProduct.pricePerM2ExVat.toFixed(2) })}</p>
                 )}
                 <p className="mt-1 text-sm">{t("gc.wasteFactor", { percent: selectedProduct.wasteFactor })}</p>
+                <p className="mt-3 text-xs text-gray-400 border-t border-gray-200 pt-3">
+                  {t("gc.priceDisclaimer")}
+                </p>
                 </div>
               </div>
             )}
@@ -1254,14 +1312,20 @@ export default function GevelCalcPage() {
                 <p className="font-semibold pt-1 border-t border-black">
                   {t("gc.totalAfterDiscount")}: {fmtMoney(materialResult.totalExVat)}
                 </p>
+                <p className="mt-3 text-xs text-gray-400 border-t border-gray-200 pt-3">
+                  {t("gc.priceDisclaimer")}
+                </p>
               </div>
             </section>
           )}
 
           <div className="hidden print:block mt-6 pt-4 border-t border-gray-300 text-xs text-gray-400">
-            {t("gc.title")}
-            {projectName ? ` — ${projectName}` : ""}
-            {calcDate ? ` — ${formatDate(calcDate, locale)}` : ""}
+            <p>{t("gc.priceDisclaimer")}</p>
+            <p className="mt-2">
+              {t("gc.title")}
+              {projectName ? ` — ${projectName}` : ""}
+              {calcDate ? ` — ${formatDate(calcDate, locale)}` : ""}
+            </p>
           </div>
         </div>
 

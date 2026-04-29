@@ -207,21 +207,83 @@ export default function SubsidieClient() {
         </div>
       </section>
 
-      <section className="bg-black px-4 py-16 text-white">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold md:text-4xl">
-            Vraag offerte aan inclusief subsidieadvies
-          </h2>
-          <p className="mt-3 text-gray-400">
-            Onze partner-installateurs kennen de regionale regelingen en helpen je de
-            aanvraag in te dienen.
-          </p>
-          <Link
-            href="/offerte"
-            className="mt-8 inline-block rounded-2xl bg-white px-8 py-4 text-base font-bold text-black hover:bg-gray-100"
-          >
-            Offerte aanvragen →
-          </Link>
+      <section className="border-b border-black bg-[#f6f4ef] px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <div className="rounded-3xl border-2 border-black bg-white p-8 md:p-12">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-black px-3 py-1 text-xs font-medium">
+                Aanvraagservice
+              </span>
+              <h2 className="mt-4 text-3xl font-bold md:text-4xl">
+                Wij bereiden uw subsidieaanvraag voor — u dient in
+              </h2>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
+                <div className="text-2xl">📋</div>
+                <h3 className="mt-2 font-bold">Compleet pakket</h3>
+                <p className="mt-2 text-sm text-gray-700">
+                  Wij vullen alle formulieren in en leveren een kant-en-klaar
+                  aanvraagpakket.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
+                <div className="text-2xl">⚡</div>
+                <h3 className="mt-2 font-bold">U dient zelf in</h3>
+                <p className="mt-2 text-sm text-gray-700">
+                  Met uw DigiD via rvo.nl — duurt slechts 5 minuten.
+                  Stap-voor-stap begeleiding inbegrepen.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
+                <div className="text-2xl">💶</div>
+                <h3 className="mt-2 font-bold">€25 vaste prijs</h3>
+                <p className="mt-2 text-sm text-gray-700">
+                  Eenmalig €25 voor het complete aanvraagpakket. Niet
+                  tevreden = geld terug.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-lg font-bold">Hoe het werkt</h3>
+              <ol className="mt-4 space-y-3">
+                {[
+                  "U vraagt het aanvraagpakket aan (€25)",
+                  "Wij stellen alle documenten op binnen 2 werkdagen",
+                  "U dient in via DigiD op rvo.nl (5 minuten)",
+                  "RVO beoordeelt uw aanvraag (6–8 weken)",
+                  "Subsidie wordt uitbetaald op uw rekening",
+                ].map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
+                      {i + 1}
+                    </span>
+                    <span className="pt-0.5 text-sm">
+                      <strong>Stap {i + 1}:</strong> {step}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="mt-8 text-center">
+              <Link
+                href="/offerte?subsidie=true"
+                className="inline-block rounded-2xl bg-black px-8 py-4 text-base font-bold text-white hover:opacity-80"
+              >
+                Aanvraagpakket bestellen voor €25 →
+              </Link>
+            </div>
+
+            <p className="mt-6 text-xs text-gray-500">
+              Renisual stelt het aanvraagpakket op en begeleidt u bij de
+              indiening. De aanvraag wordt door u persoonlijk ingediend via
+              DigiD op rvo.nl. Renisual is niet verantwoordelijk voor de
+              uitkomst van de beoordeling door RVO.
+            </p>
+          </div>
         </div>
       </section>
 

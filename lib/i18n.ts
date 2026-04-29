@@ -186,6 +186,9 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "finish.wood": "Houtlook",
 
     "render.noReference": "geen referentiefoto",
+    "render.error.noPhoto": "Foto niet gevonden — upload opnieuw in de calculator.",
+    "gc.priceDisclaimer": "* Prijzen zijn indicatief en exclusief BTW, montage, profielen en overig materiaal. Actuele prijzen kunnen afwijken. Vraag een offerte aan voor exacte kosten.",
+    "offerte.advisorNote": "Onze adviseur neemt contact op met een exacte prijsopgave op basis van uw berekening.",
   },
 
   en: {
@@ -357,6 +360,9 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "finish.wood": "Wood look",
 
     "render.noReference": "no reference photo",
+    "render.error.noPhoto": "Photo not found — please upload it again in the calculator.",
+    "gc.priceDisclaimer": "* Prices are indicative and exclude VAT, installation, profiles and other materials. Actual prices may vary. Request a quote for exact costs.",
+    "offerte.advisorNote": "Our advisor will contact you with an exact quote based on your calculation.",
   },
 
   de: {
@@ -528,6 +534,9 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "finish.wood": "Holz-Optik",
 
     "render.noReference": "kein Referenzfoto",
+    "render.error.noPhoto": "Foto nicht gefunden — bitte erneut im Rechner hochladen.",
+    "gc.priceDisclaimer": "* Preise sind Richtwerte und exkl. MwSt., Montage, Profilen und sonstigem Material. Tatsächliche Preise können abweichen. Fordern Sie für genaue Kosten ein Angebot an.",
+    "offerte.advisorNote": "Unser Berater nimmt Kontakt mit Ihnen auf — mit einem exakten Kostenvoranschlag auf Basis Ihrer Berechnung.",
   },
 
   fr: {
@@ -699,6 +708,9 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "finish.wood": "Look bois",
 
     "render.noReference": "sans photo de référence",
+    "render.error.noPhoto": "Photo introuvable — veuillez la téléverser à nouveau dans la calculatrice.",
+    "gc.priceDisclaimer": "* Prix indicatifs, hors TVA, pose, profilés et autres matériaux. Les prix réels peuvent varier. Demandez un devis pour des coûts exacts.",
+    "offerte.advisorNote": "Notre conseiller vous contactera avec un devis exact basé sur votre calcul.",
   },
 
   es: {
@@ -870,6 +882,9 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "finish.wood": "Look madera",
 
     "render.noReference": "sin foto de referencia",
+    "render.error.noPhoto": "Foto no encontrada — vuélvela a subir en la calculadora.",
+    "gc.priceDisclaimer": "* Precios orientativos, sin IVA, montaje, perfiles ni otros materiales. Los precios reales pueden variar. Solicite un presupuesto para conocer el coste exacto.",
+    "offerte.advisorNote": "Nuestro asesor se pondrá en contacto con un presupuesto exacto basado en su cálculo.",
   },
 };
 

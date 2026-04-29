@@ -80,6 +80,9 @@ export default function OffertePage() {
               Vul het formulier in en wij nemen contact met u op met een vrijblijvende offerte
               op basis van uw gevelberekening.
             </p>
+            <p className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+              Onze adviseur neemt contact op met een exacte prijsopgave op basis van uw berekening.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

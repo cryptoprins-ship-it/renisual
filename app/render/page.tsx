@@ -32,6 +32,12 @@ type SavedConfig = {
   keralitColorNumber?: number | null;
   orientation?: Orientation;
   projectName?: string;
+  /**
+   * Inline fallback set by gevelcalc when an imported config carries photos
+   * that may not have flushed to IndexedDB yet. Optional and bypassed when
+   * IndexedDB already has the side photo.
+   */
+  photos?: Record<string, string>;
 };
 
 type RenderPanel = SpanlPanelEntry & {
@@ -559,11 +565,26 @@ export default function RenderPage() {
       if (ids.length === 0) return;
       loadAllPhotos(ids)
         .then((map) => {
-          setSavedPhotos(map);
-          const firstWithPhoto = ids.find((id) => map[id]);
-          if (firstWithPhoto) setSelectedSideId(firstWithPhoto);
+          // Merge IndexedDB photos with the inline photos in sessionStorage.
+          // IndexedDB wins where both exist; the inline map fills the gaps
+          // (e.g. right after importing a config file).
+          const merged: Record<string, string> = { ...(parsed.photos ?? {}), ...map };
+          setSavedPhotos(merged);
+          const firstWithPhoto = ids.find((id) => merged[id]);
+          if (firstWithPhoto) {
+            setSelectedSideId(firstWithPhoto);
+          } else {
+            setErrorMsg(t("render.error.noPhoto"));
+          }
         })
-        .catch(() => {});
+        .catch(() => {
+          // IndexedDB blew up — try the inline fallback alone.
+          const fallback = parsed.photos ?? {};
+          setSavedPhotos(fallback);
+          const firstWithPhoto = ids.find((id) => fallback[id]);
+          if (firstWithPhoto) setSelectedSideId(firstWithPhoto);
+          else setErrorMsg(t("render.error.noPhoto"));
+        });
     } catch {
       setErrorMsg(t("render.error.config"));
     }
