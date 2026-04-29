@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 
 export const metadata: Metadata = {
   title: "Renisual GevelCalc",
@@ -10,5 +11,12 @@ export default function GevelCalcLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <div className="fixed right-3 top-3 z-40 print:hidden">
+        <NavLocaleSwitcher />
+      </div>
+      {children}
+    </>
+  );
 }

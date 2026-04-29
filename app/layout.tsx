@@ -30,6 +30,20 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/icon-192.png", sizes: "192x192" }],
   },
+  // Single-URL multilingual setup: language is decided client-side via IP
+  // detection + localStorage, so each hreflang points at the same canonical
+  // URL. Search engines will treat this as language-neutral with declared
+  // alternates rather than as separate per-locale pages.
+  alternates: {
+    canonical: "https://renisual.com",
+    languages: {
+      nl: "https://renisual.com",
+      en: "https://renisual.com",
+      de: "https://renisual.com",
+      fr: "https://renisual.com",
+      es: "https://renisual.com",
+    },
+  },
 };
 
 export const viewport: Viewport = {

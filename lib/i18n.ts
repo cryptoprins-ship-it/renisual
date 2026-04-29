@@ -887,6 +887,7 @@ export function setGlobalLocale(loc: Locale) {
     try {
       localStorage.setItem(STORAGE_KEY, loc);
     } catch {}
+    syncHtmlLang(loc);
   }
   subscribers.forEach((fn) => fn());
 }
@@ -900,8 +901,35 @@ function fmt(template: string, params?: Record<string, string | number>): string
 }
 
 export function translate(locale: Locale, key: string, params?: Record<string, string | number>): string {
-  const value = TRANSLATIONS[locale]?.[key] ?? TRANSLATIONS.nl[key] ?? key;
+  // Fallback chain: requested locale → English → Dutch → key itself.
+  const value =
+    TRANSLATIONS[locale]?.[key] ??
+    TRANSLATIONS.en[key] ??
+    TRANSLATIONS.nl[key] ??
+    key;
   return fmt(value, params);
+}
+
+let ipDetectionFired = false;
+
+async function detectLocaleFromIp(): Promise<Locale | null> {
+  try {
+    const res = await fetch("/api/detect-locale", { cache: "default" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { locale?: string };
+    if (data?.locale && (SUPPORTED_LOCALES as string[]).includes(data.locale)) {
+      return data.locale as Locale;
+    }
+  } catch {
+    /* silent — fall back to default locale */
+  }
+  return null;
+}
+
+function syncHtmlLang(loc: Locale) {
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = loc;
+  }
 }
 
 export function useLocale() {
@@ -909,14 +937,37 @@ export function useLocale() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Manual preference (set by clicking the language switcher) wins over IP.
+    let savedManual: Locale | null = null;
     try {
       const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
-      if (saved && SUPPORTED_LOCALES.includes(saved) && saved !== currentLocale) {
-        currentLocale = saved;
-        setLocaleLocal(saved);
+      if (saved && SUPPORTED_LOCALES.includes(saved)) savedManual = saved;
+    } catch {}
+
+    if (savedManual) {
+      if (savedManual !== currentLocale) {
+        currentLocale = savedManual;
+        setLocaleLocal(savedManual);
         subscribers.forEach((fn) => fn());
       }
-    } catch {}
+      syncHtmlLang(savedManual);
+    } else if (!ipDetectionFired) {
+      ipDetectionFired = true;
+      // First visit, no manual choice yet — infer from IP. We do NOT persist
+      // the result so a future visit re-detects (cheap, browser-cached for a day)
+      // and so a manual pick remains the only thing in localStorage.
+      detectLocaleFromIp().then((loc) => {
+        const next = loc ?? currentLocale;
+        if (next !== currentLocale) {
+          currentLocale = next;
+          subscribers.forEach((fn) => fn());
+        }
+        syncHtmlLang(next);
+      });
+    } else {
+      syncHtmlLang(currentLocale);
+    }
 
     const update = () => setLocaleLocal(currentLocale);
     subscribers.add(update);

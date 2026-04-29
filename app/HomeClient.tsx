@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 
 const SPONSOR_MAILTO =
   "mailto:info@renisual.com?subject=Sponsoring%20Renisual";
@@ -101,6 +102,7 @@ export default function HomeClient() {
             <a href="#offerte" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
               Offerte aanvragen
             </a>
+            <NavLocaleSwitcher compact className="ml-1" />
           </div>
         </div>
       </nav>
