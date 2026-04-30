@@ -1,1 +1,167 @@
-[]
+[
+  {
+    "name": "K-VISION Cube",
+    "sku": "k-vision-cube",
+    "brand": "kommerling",
+    "slug": "k-vision-cube",
+    "url": "https://www.kommerling.nl/producten/kozijnen/k-vision-cube",
+    "folder": "/samples/kozijnen/kommerling/k-vision-cube",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.kommerling.nl/images/producten/kozijnen/K-VISION_Cube.jpg#joomlaImage://local-images/producten/kozijnen/K-VISION_Cube.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/40/13/ccb4e23c8aa216f1e96d31ab209c036b_2_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/40/13/ccb4e23c8aa216f1e96d31ab209c036b_3_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/40/13/ccb4e23c8aa216f1e96d31ab209c036b_4_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "K-VISION Cube-City",
+    "sku": "k-vision-cube-city",
+    "brand": "kommerling",
+    "slug": "k-vision-cube-city",
+    "url": "https://www.kommerling.nl/producten/kozijnen/k-vision-cube-city",
+    "folder": "/samples/kozijnen/kommerling/k-vision-cube-city",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.kommerling.nl/images/producten/kozijnen/K-VISION_Cube-City.jpg#joomlaImage://local-images/producten/kozijnen/K-VISION_Cube-City.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube-city/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/41/13/6f43b5263fbba79c5962514b85d34738_3_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube-city/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/41/13/6f43b5263fbba79c5962514b85d34738_2_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-cube-city/variant-02.jpg"
+      }
+    ]
+  },
+  {
+    "name": "K-VISION Trend",
+    "sku": "k-vision-trend",
+    "brand": "kommerling",
+    "slug": "k-vision-trend",
+    "url": "https://www.kommerling.nl/producten/kozijnen/k-vision-trend",
+    "folder": "/samples/kozijnen/kommerling/k-vision-trend",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.kommerling.nl/images/producten/kozijnen/K-VISION_Trend.jpg#joomlaImage://local-images/producten/kozijnen/K-VISION_Trend.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-trend/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/42/13/19f9cefdfb07230a68581d617885a3af_3_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-trend/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/42/13/19f9cefdfb07230a68581d617885a3af_4_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-trend/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/42/13/19f9cefdfb07230a68581d617885a3af_2_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-trend/variant-03.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/42/13/19f9cefdfb07230a68581d617885a3af_5_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-trend/variant-04.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://kommerling.nl/media/acfgallery/content/42/13/19f9cefdfb07230a68581d617885a3af_6_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-trend/variant-05.jpg"
+      }
+    ]
+  },
+  {
+    "name": "K-VISION Classic",
+    "sku": "k-vision-classic",
+    "brand": "kommerling",
+    "slug": "k-vision-classic",
+    "url": "https://www.kommerling.nl/producten/kozijnen/k-vision-classic",
+    "folder": "/samples/kozijnen/kommerling/k-vision-classic",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.kommerling.nl/images/producten/kozijnen/K-VISION_Classic.jpg#joomlaImage://local-images/producten/kozijnen/K-VISION_Classic.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-classic/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/43/13/8b6e33345ac8d5ffd9cf0d107a7d9e9d_3_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-classic/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/43/13/8b6e33345ac8d5ffd9cf0d107a7d9e9d_4_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-classic/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/43/13/8b6e33345ac8d5ffd9cf0d107a7d9e9d_2_XL_thumb.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-classic/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "K-VISION Edge",
+    "sku": "k-vision-edge",
+    "brand": "kommerling",
+    "slug": "k-vision-edge",
+    "url": "https://www.kommerling.nl/producten/kozijnen/k-vision-edge",
+    "folder": "/samples/kozijnen/kommerling/k-vision-edge",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.kommerling.nl/images/producten/kozijnen/K-VISION_Edge.jpg#joomlaImage://local-images/producten/kozijnen/K-VISION_Edge.jpg",
+        "local": "/samples/kozijnen/kommerling/k-vision-edge/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/44/13/kommerling_horizon_9_thumb.png",
+        "local": "/samples/kozijnen/kommerling/k-vision-edge/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/44/13/kommerling_horizon_2_thumb.png",
+        "local": "/samples/kozijnen/kommerling/k-vision-edge/variant-02.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/44/13/kommerling_horizon_1_thumb.png",
+        "local": "/samples/kozijnen/kommerling/k-vision-edge/variant-03.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/44/13/kommerling_horizon_10_thumb.png",
+        "local": "/samples/kozijnen/kommerling/k-vision-edge/variant-04.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.kommerling.nl/media/acfgallery/content/44/13/kommerling_horizon_11_thumb.png",
+        "local": "/samples/kozijnen/kommerling/k-vision-edge/variant-05.png"
+      }
+    ]
+  }
+]

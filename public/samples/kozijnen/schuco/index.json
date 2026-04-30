@@ -1,1 +1,462 @@
-[]
+[
+  {
+    "name": "Het verschil zit in de details",
+    "sku": "het-verschil-zit-in-de-details",
+    "brand": "schuco",
+    "slug": "het-verschil-zit-in-de-details",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/aluminium-kozijnen",
+    "folder": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/3977684/m10-page-intro/xs/1/woning-rhoon-17-20230403fotobvanhoek.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351800/m26-slider-navigation-1-1/xs/2/highlight-energy-img.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351804/m26-slider-navigation-1-1/xs/4/highlight-design-img.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351808/m26-slider-navigation-1-1/xs/2/highlight-comfort-img.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-03.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351812/m26-slider-navigation-1-1/xs/2/highlight-security-img.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-04.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351816/m13a-gallery-fullsize-5-portrait/xs/3/windows-standardwindow5-image.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-05.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3977682/m13a-gallery-fullsize-5-landscape/xs/1/woning-rhoon-01-20230403fotobvanhoek.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-06.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351824/m13a-gallery-fullsize-5-square/xs/3/windows-standardwindow3-image.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-07.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3471698/m13a-gallery-fullsize-5-square/xs/1/01-klein.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-08.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3471700/m13a-gallery-fullsize-5-landscape/xs/1/28805vrijheid.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-09.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3038026/m11-text-media-1-3/xs/2/aws-75-si-plus-s-1-.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-10.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3038024/m11-text-media-1-3/xs/2/aws-70-hi-s-daemmkeil.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-11.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3473760/m11-text-media-1-3/xs/1/beeld-blok-veiligheid-aws75-pd-si.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-12.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/het-verschil-zit-in-de-details/variant-13.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Slank design",
+    "sku": "slank-design",
+    "brand": "schuco",
+    "slug": "slank-design",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/panorama-design",
+    "folder": "/samples/kozijnen/schuco/slank-design",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/351874/m11-text-media-1-2/xs/4/schueco-blockwindows-img.jpg",
+        "local": "/samples/kozijnen/schuco/slank-design/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/3279742/m11-text-media-1-3/xs/3/woning-schimmert-20220930-36fotobvanhoek.jpg",
+        "local": "/samples/kozijnen/schuco/slank-design/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351878/m11-text-media-1-3/xs/3/windows-designwindows-products-aws-70-bs-hi-image.jpg",
+        "local": "/samples/kozijnen/schuco/slank-design/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/slank-design/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Barrièrevrij bouwen is vooruitzien",
+    "sku": "barrierevrij-bouwen-is-vooruitzien",
+    "brand": "schuco",
+    "slug": "barrierevrij-bouwen-is-vooruitzien",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/barri%C3%A8revrije-deuren",
+    "folder": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/351922/m11-text-media-1-3/xs/2/windows-barrierfreeteracedoor-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351926/m11-text-media-1-3/xs/2/windows-barrierfreeteracedoor-zerolevelthreshold-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351930/m11-text-media-1-3/xs/2/windows-barrierfreeteracedoor-20mm-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351956/m13a-gallery-fullsize-5-portrait/xs/2/windows-barrierfreeteracedoor2-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-03.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351958/m13a-gallery-fullsize-5-landscape/xs/2/windows-barrierfreeteracedoor4-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-04.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351960/m13a-gallery-fullsize-5-square/xs/2/windows-barrierfreeteracedoor1-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-05.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351962/m13a-gallery-fullsize-5-square/xs/2/windows-barrierfreeteracedoor5-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-06.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351966/m13a-gallery-fullsize-5-landscape/xs/2/windows-barrierfreeteracedoor3-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-07.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351974/m11-text-media-1-3/xs/2/windows-barrierfreeterracedoor-products-aws-75-si-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-08.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351970/m11-text-media-1-3/xs/2/windows-barrierfreeterracedoor-products-aws-70-hi-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-09.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351978/m11-text-media-1-3/xs/2/windows-barrierfree-products-schueco-living-aluinside-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-10.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351982/m11-text-media-1-3/xs/2/windows-barrierfree-products-schueco-living-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-11.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351986/m11-text-media-1-3/xs/2/windows-barrierfreeterracedoor-products-schueco-corona-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-12.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/barrierevrij-bouwen-is-vooruitzien/variant-13.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Transparante leefruimten",
+    "sku": "transparante-leefruimten",
+    "brand": "schuco",
+    "slug": "transparante-leefruimten",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/aluminium-kozijnen-valbescherming",
+    "folder": "/samples/kozijnen/schuco/transparante-leefruimten",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/352018/m11-text-media-1-3/xs/2/windows-safetybarrier-products-glas-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/352022/m11-text-media-1-3/xs/2/windows-safetybarrier-products-stange-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/352026/m11-text-media-1-3/xs/2/windows-safetybarrier-products-glas-stange-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/352032/m13a-gallery-fullsize-4-landscape/xs/2/windows-safetybarrier1-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-03.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/352034/m13a-gallery-fullsize-4-landscape/xs/2/windows-safetybarrier4-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-04.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/352036/m13a-gallery-fullsize-4-landscape/xs/2/windows-safetybarrier2-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-05.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/352038/m13a-gallery-fullsize-4-landscape/xs/2/windows-safetybarrier3-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-06.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/transparante-leefruimten/variant-07.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Kozijnen met een eigen identiteit en functionaliteit",
+    "sku": "kozijnen-met-een-eigen-identiteit-en-functionaliteit",
+    "brand": "schuco",
+    "slug": "kozijnen-met-een-eigen-identiteit-en-functionaliteit",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/slank-en-slim",
+    "folder": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/1486592/m26-slider-navigation-1-1/xs/6/highlight-energy-img.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1486596/m26-slider-navigation-1-1/xs/4/highlight-design-img.png",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1486600/m26-slider-navigation-1-1/xs/4/highlight-comfort-img.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1515682/m26-slider-navigation-1-1/xs/3/highlight2-energy-img.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-03.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1515686/m26-slider-navigation-1-1/xs/3/highlight2-design-img.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-04.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1515690/m26-slider-navigation-1-1/xs/3/highlight2-comfort-img.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-05.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1486612/m11-text-media-1-2/xs/6/entrancedoors-aluminium1-image.png",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-06.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1522976/m11-text-media-1-2/xs/16/entrancedoors-aluminium1-image-1-.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-07.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1522980/m11-text-media-1-2/xs/3/entrancedoors-aluminium3-image3.png",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-08.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1522990/m11-text-media-1-2/xs/6/entrancedoors-aluminium1-image4.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-09.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1524498/m11-text-media-1-2/xs/7/entrancedoors-aluminium1-image4.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-10.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1525790/m11-text-media-1-2/xs/5/entrancedoors-aluminium2-image6-1-.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-11.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1526200/m11-text-media-1-2/xs/5/entrancedoors-aluminium1-image6.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-12.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1526206/m11-text-media-1-2/xs/4/entrancedoors-aluminium1-image6.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-13.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1519240/m26-slider-navigation-1-1/xs/4/highlight3-energy-img.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-14.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1519244/m26-slider-navigation-1-1/xs/4/highlight3-design-img.png",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-15.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1519248/m26-slider-navigation-1-1/xs/3/highlight3-comfort-img.png",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-16.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1526212/m11-text-media-1-2/xs/5/entrancedoors-aluminium1-image6.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-17.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/1486626/m11-text-media-1-3/xs/3/slanke-aluminium-kozijnen-image.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-18.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/kozijnen-met-een-eigen-identiteit-en-functionaliteit/variant-19.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Het renoveren van een jaren 50 woning met aluminium kozijnen",
+    "sku": "het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen",
+    "brand": "schuco",
+    "slug": "het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/kozijnen-renoveren",
+    "folder": "/samples/kozijnen/schuco/het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/2256770/m10-page-intro/xs/3/kozijnen-renoveren-start-foto.jpg",
+        "local": "/samples/kozijnen/schuco/het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/blob/2256764/dba9d0fc72a5e385de962e91acd5c7ff/kozijnen-renoveren-data.webp",
+        "local": "/samples/kozijnen/schuco/het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen/variant-01.webp"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/blob/2256774/8a9df2f040211314c001692e6435721e/kozijnen-renoveren-1-data.webp",
+        "local": "/samples/kozijnen/schuco/het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen/variant-02.webp"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/het-renoveren-van-een-jaren-50-woning-met-aluminium-kozijnen/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Reinigen",
+    "sku": "reinigen",
+    "brand": "schuco",
+    "slug": "reinigen",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/aluminium-schoonmaken",
+    "folder": "/samples/kozijnen/schuco/reinigen",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/blob/2166128/8054fa73d964408eed8f101ab6388d78/aluminium-schoonmaken-data.webp",
+        "local": "/samples/kozijnen/schuco/reinigen/main.webp"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/reinigen/variant-01.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Lange levensduur",
+    "sku": "lange-levensduur",
+    "brand": "schuco",
+    "slug": "lange-levensduur",
+    "url": "https://www.schueco.com/nl/particulieren/raamsystemen/kunststof-kozijnen",
+    "folder": "/samples/kozijnen/schuco/lange-levensduur",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.schueco.com/resource/responsive-image/351748/m26-slider-navigation-1-1/xs/2/highlight-energie-img.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351752/m26-slider-navigation-1-1/xs/2/highlight-design-img.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351756/m26-slider-navigation-1-1/xs/2/highlight-komfort-img.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351760/m26-slider-navigation-1-1/xs/2/highlight-sicherheit.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-03.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351764/m13a-gallery-fullsize-2-square/xs/2/windows-pvc1-image.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-04.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351768/m13a-gallery-fullsize-2-square/xs/2/windows-pvc3-image.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-05.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351776/m11-text-media-1-3/xs/2/fenster-standardfenster-produkte-schueco-living-aluinside-image.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-06.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351780/m11-text-media-1-3/xs/2/fenster-kunststoff-produkte-schueco-living-image.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-07.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/351784/m11-text-media-1-3/xs/2/fenster-kunststoff-produkte-schueco-corona-image.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-08.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.schueco.com/resource/responsive-image/340600/m12a-teaser-text-image/xs/3/service-teaser-image.jpg",
+        "local": "/samples/kozijnen/schuco/lange-levensduur/variant-09.jpg"
+      }
+    ]
+  }
+]

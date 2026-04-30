@@ -1,1 +1,182 @@
-[]
+[
+  {
+    "name": "Elegant ThermoFibra Infinity",
+    "sku": "elegant-thermofibra-infinity",
+    "brand": "deceuninck",
+    "slug": "elegant-thermofibra-infinity",
+    "url": "https://www.deceuninck.nl/nl-nl/producten/kunststof-kozijnen-deuren/elegant-thermofibra-infinity",
+    "folder": "/samples/kozijnen/deceuninck/elegant-thermofibra-infinity",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.deceuninck.nl/app/uploads/47-Windows-Elegant-Origin-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-thermofibra-infinity/main.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/49-Windows-Elegant-Infinity-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-thermofibra-infinity/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/rolluiken-in-pvc.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-thermofibra-infinity/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/luiken-1.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-thermofibra-infinity/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Elegant Origin",
+    "sku": "elegant-origin",
+    "brand": "deceuninck",
+    "slug": "elegant-origin",
+    "url": "https://www.deceuninck.nl/nl-nl/producten/kunststof-kozijnen-deuren/elegant-origin",
+    "folder": "/samples/kozijnen/deceuninck/elegant-origin",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.deceuninck.nl/app/uploads/45-Windows-Elegant-ThermoFibra-Infinity-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-origin/main.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/49-Windows-Elegant-Infinity-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-origin/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/luiken-1.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-origin/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/rolluiken-in-pvc.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-origin/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Elegant Infinity",
+    "sku": "elegant-infinity",
+    "brand": "deceuninck",
+    "slug": "elegant-infinity",
+    "url": "https://www.deceuninck.nl/nl-nl/producten/kunststof-kozijnen-deuren/elegant-infinity",
+    "folder": "/samples/kozijnen/deceuninck/elegant-infinity",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.deceuninck.nl/app/uploads/45-Windows-Elegant-ThermoFibra-Infinity-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-infinity/main.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/47-Windows-Elegant-Origin-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-infinity/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/luiken-1.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-infinity/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/rolluiken-in-pvc.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-infinity/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Elegant Autentica",
+    "sku": "elegant-autentica",
+    "brand": "deceuninck",
+    "slug": "elegant-autentica",
+    "url": "https://www.deceuninck.nl/nl-nl/producten/kunststof-kozijnen-deuren/elegant-autentica",
+    "folder": "/samples/kozijnen/deceuninck/elegant-autentica",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.deceuninck.nl/app/uploads/55-Doors-Elegant-ThermoFibra-Infinity-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-autentica/main.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/59-Sliding-windows-Elegant-Monorail-1.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-autentica/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/luiken-1.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-autentica/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/rolluiken-in-pvc.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-autentica/variant-03.jpg"
+      }
+    ]
+  },
+  {
+    "name": "Elegant schuifpuien",
+    "sku": "elegant-schuifpuien",
+    "brand": "deceuninck",
+    "slug": "elegant-schuifpuien",
+    "url": "https://www.deceuninck.nl/nl-nl/producten/kunststof-kozijnen-deuren/elegant-schuifpuien",
+    "folder": "/samples/kozijnen/deceuninck/elegant-schuifpuien",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.deceuninck.nl/app/uploads/rolluiken-in-pvc.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-schuifpuien/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/luiken-1.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-schuifpuien/variant-01.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/P1340-DECEUNINCK-Elegant-Autentica-SO_cam-3_20200901-660x380.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-schuifpuien/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/55-Doors-Elegant-ThermoFibra-Infinity-115-X.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-schuifpuien/variant-03.png"
+      }
+    ]
+  },
+  {
+    "name": "Elegant deuren",
+    "sku": "elegant-deuren",
+    "brand": "deceuninck",
+    "slug": "elegant-deuren",
+    "url": "https://www.deceuninck.nl/nl-nl/producten/kunststof-kozijnen-deuren/elegant-deuren",
+    "folder": "/samples/kozijnen/deceuninck/elegant-deuren",
+    "images": [
+      {
+        "type": "main",
+        "source": "https://www.deceuninck.nl/app/uploads/P1340-DECEUNINCK-Elegant-Autentica-SO_cam-3_20200901-660x380.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-deuren/main.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/59-Sliding-windows-Elegant-Monorail-1.png",
+        "local": "/samples/kozijnen/deceuninck/elegant-deuren/variant-01.png"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/rolluiken-in-pvc.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-deuren/variant-02.jpg"
+      },
+      {
+        "type": "variant",
+        "source": "https://www.deceuninck.nl/app/uploads/luiken-1.jpg",
+        "local": "/samples/kozijnen/deceuninck/elegant-deuren/variant-03.jpg"
+      }
+    ]
+  }
+]

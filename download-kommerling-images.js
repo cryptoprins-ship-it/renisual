@@ -3,17 +3,26 @@ import fs from "fs";
 import path from "path";
 import * as cheerio from "cheerio";
 
-const START_URL = "https://www.kommerling.nl/profielsystemen/";
+const START_URL = "https://www.kommerling.nl/producten/kozijnen";
 const BRAND_SLUG = "kommerling";
 const OUTPUT_ROOT = `./public/samples/kozijnen/${BRAND_SLUG}`;
 const INDEX_FILE = `${OUTPUT_ROOT}/index.json`;
 const HOST = new URL(START_URL).host;
+// /producten/kozijnen/k-vision-cube etc. — exactly one segment under the
+// kozijnen category. Deeper paths are accessoiretabbladen, shallower is
+// the category index itself.
+const PRODUCT_PATH_RE = /^\/producten\/kozijnen\/[^/]+\/?$/i;
 
 fs.mkdirSync(OUTPUT_ROOT, { recursive: true });
 
 const http = axios.create({
   timeout: 30000,
-  headers: { "User-Agent": "Mozilla/5.0 Renisual Image Scraper" },
+  maxRedirects: 5,
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    "Accept-Language": "nl-NL,nl;q=0.9,en;q=0.7",
+  },
 });
 
 function slugify(text) {
@@ -74,8 +83,8 @@ async function getProductLinks() {
     if (!href) return;
     const u = new URL(href);
     if (u.host !== HOST) return;
-    if (/\/(profielsysteem|kozijn|raam|product|systeem)/i.test(u.pathname)) {
-      links.add(href);
+    if (PRODUCT_PATH_RE.test(u.pathname)) {
+      links.add(`${u.origin}${u.pathname}`);
     }
   });
   return [...links];
