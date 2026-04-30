@@ -26,6 +26,7 @@ import {
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale, type Locale } from "@/lib/i18n";
 import DynamicMetadata from "@/components/DynamicMetadata";
+import SiteNav from "@/components/SiteNav";
 
 const MAX_SIDES = 10;
 const STORAGE_KEY = "renisual-gevelcalc-v1";
@@ -320,11 +321,13 @@ function RenderingPanel({
   keralitColorNumber,
   zoomHint,
   emptyText,
+  emptyHint,
 }: {
   selectedProduct: (typeof products)[number] | undefined;
   keralitColorNumber: number | null;
   zoomHint: string;
   emptyText: string;
+  emptyHint: string;
 }) {
   const isSpanl = selectedProduct?.brand === "Spanl";
   const spanlSku = isSpanl ? selectedProduct!.id.replace(/^spanl-/, "") : "";
@@ -346,7 +349,7 @@ function RenderingPanel({
   }
 
   return (
-    <div className="relative h-full min-h-[40vh] overflow-hidden rounded border border-black bg-gray-50 lg:min-h-0 print-hidden">
+    <div className="relative h-full min-h-[40vh] overflow-hidden bg-stone-50 lg:min-h-0 print-hidden">
       {src ? (
         <TransformWrapper
           initialScale={1}
@@ -357,11 +360,11 @@ function RenderingPanel({
         >
           {({ zoomIn, zoomOut, resetTransform }) => (
             <>
-              <div className="absolute right-2 top-2 z-10 flex gap-1">
+              <div className="absolute right-3 top-3 z-10 flex gap-1">
                 <button
                   type="button"
                   onClick={() => zoomIn()}
-                  className="h-7 w-7 border border-black bg-white text-sm leading-none"
+                  className="h-8 w-8 border border-stone-200 bg-paper text-sm leading-none text-ink hover:bg-stone-100"
                   aria-label="zoom in"
                 >
                   +
@@ -369,7 +372,7 @@ function RenderingPanel({
                 <button
                   type="button"
                   onClick={() => zoomOut()}
-                  className="h-7 w-7 border border-black bg-white text-sm leading-none"
+                  className="h-8 w-8 border border-stone-200 bg-paper text-sm leading-none text-ink hover:bg-stone-100"
                   aria-label="zoom out"
                 >
                   −
@@ -377,7 +380,7 @@ function RenderingPanel({
                 <button
                   type="button"
                   onClick={() => resetTransform()}
-                  className="h-7 border border-black bg-white px-2 text-xs"
+                  className="h-8 border border-stone-200 bg-paper px-3 font-mono text-[10px] uppercase tracking-[0.15em] text-ink hover:bg-stone-100"
                 >
                   Reset
                 </button>
@@ -392,12 +395,20 @@ function RenderingPanel({
           )}
         </TransformWrapper>
       ) : (
-        <div className="grid h-full place-items-center px-4 text-center text-sm text-stone-600">
-          {emptyText}
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            VISUALISATIE
+          </p>
+          <p className="font-display text-xl italic leading-snug text-ink">
+            {emptyText}
+          </p>
+          <p className="max-w-xs text-xs leading-relaxed text-stone-500">
+            {emptyHint}
+          </p>
         </div>
       )}
       {src && (
-        <p className="pointer-events-none absolute left-2 top-2 z-10 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600/90">
+        <p className="pointer-events-none absolute left-3 top-3 z-10 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600/90">
           {zoomHint}
         </p>
       )}
@@ -918,13 +929,28 @@ export default function GevelCalcPage() {
 
       {toast && <Toast message={toast.message} type={toast.type} />}
 
-      <main className="min-h-screen bg-[#f6f4ef] text-black lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden print:!h-auto print:!min-h-0 print:!overflow-visible">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-4 lg:h-full lg:grid-cols-12 lg:p-6 print:!block print:!h-auto">
-          <div className="space-y-3 lg:col-span-5 lg:h-full lg:overflow-y-auto lg:pr-1 print:!h-auto print:!overflow-visible">
-          <section className="rounded-2xl border border-black bg-white p-6 text-center print-hidden">
-            <h1 className="text-3xl font-bold">{t("gc.title")}</h1>
-            <p className="mt-2">{t("gc.subtitle")}</p>
-          </section>
+      <main className="min-h-[100dvh] bg-paper text-ink print:!h-auto print:!min-h-0 print:!overflow-visible">
+        <SiteNav />
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 md:px-12 lg:grid-cols-12 lg:gap-8 lg:px-20 lg:py-10 print:!block print:!h-auto">
+          <div className="space-y-10 lg:col-span-5 print:!h-auto print:!overflow-visible">
+          <header className="border-b border-stone-200 pb-8 print-hidden">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              {t("home.nav.calculator")}
+            </p>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+              <h1 className="font-display text-4xl tracking-tight text-ink md:text-5xl">
+                {t("gc.title")}
+              </h1>
+              <button
+                type="button"
+                onClick={() => setMode(mode === "quick" ? "advanced" : "quick")}
+                className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600 underline-offset-4 transition-colors hover:text-ink hover:underline"
+              >
+                {mode === "quick" ? t("gc.mode.advanced") : t("gc.mode.quick")} →
+              </button>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-stone-600">{t("gc.subtitle")}</p>
+          </header>
 
           <div className="hidden print:block mb-4">
             <h1 className="text-2xl font-bold">{t("gc.title")}</h1>
@@ -932,39 +958,15 @@ export default function GevelCalcPage() {
             {calcDate && <p className="text-sm text-gray-500 mt-1">{t("gc.dateLabel", { date: formatDate(calcDate, locale) })}</p>}
           </div>
 
-          <section className="rounded-2xl border border-black bg-white p-4 print-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold">{t("gc.mode")}</h2>
-              <div className="inline-flex rounded-xl border border-black p-1">
-                <button
-                  type="button"
-                  onClick={() => setMode("quick")}
-                  className={`rounded-lg px-4 py-1.5 text-sm font-medium ${
-                    mode === "quick" ? "bg-black text-white" : "bg-white text-black"
-                  }`}
-                >
-                  {t("gc.mode.quick")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode("advanced")}
-                  className={`rounded-lg px-4 py-1.5 text-sm font-medium ${
-                    mode === "advanced" ? "bg-black text-white" : "bg-white text-black"
-                  }`}
-                >
-                  {t("gc.mode.advanced")}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-black bg-white p-4 print-hidden">
-            <h2 className="text-lg font-semibold">{t("gc.projectSettings")}</h2>
-            <div className="mt-4 space-y-3">
+          <section className="print-hidden">
+            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              01 — {t("gc.projectSettings")}
+            </p>
+            <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm font-medium">{t("gc.projectName")}</label>
+                <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.projectName")}</label>
                 <input
-                  className="w-full rounded-xl border border-black p-3"
+                  className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder={t("gc.projectNamePlaceholder")}
@@ -1584,7 +1586,28 @@ export default function GevelCalcPage() {
               selectedProduct={selectedProduct}
               keralitColorNumber={keralitColorNumber}
               zoomHint={t("zoom_hint")}
-              emptyText={t("gc.chooseProduct")}
+              emptyText={
+                locale === "nl"
+                  ? "Selecteer een paneel om te visualiseren"
+                  : locale === "de"
+                  ? "Wähle ein Paneel zur Visualisierung"
+                  : locale === "fr"
+                  ? "Sélectionne un panneau à visualiser"
+                  : locale === "es"
+                  ? "Selecciona un panel para visualizar"
+                  : "Select a panel to visualise"
+              }
+              emptyHint={
+                locale === "nl"
+                  ? "Upload een foto en kies een product. De rendering verschijnt hier."
+                  : locale === "de"
+                  ? "Lade ein Foto hoch und wähle ein Produkt. Das Rendering erscheint hier."
+                  : locale === "fr"
+                  ? "Téléverse une photo et choisis un produit. Le rendu apparaît ici."
+                  : locale === "es"
+                  ? "Sube una foto y elige un producto. La visualización aparecerá aquí."
+                  : "Upload a photo and pick a product. The rendering appears here."
+              }
             />
           </aside>
         </div>

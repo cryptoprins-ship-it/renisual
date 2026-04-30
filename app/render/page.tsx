@@ -16,6 +16,7 @@ import { useLocale } from "@/lib/i18n";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import RenderingLoader from "@/components/RenderingLoader";
+import SiteNav from "@/components/SiteNav";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 const MAX_VARIANTS = 3;
@@ -761,25 +762,34 @@ export default function RenderPage() {
   const localeForDate = locale === "nl" ? "nl-NL" : locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : "en-GB";
 
   return (
-    <main className="min-h-screen bg-[#f6f4ef] p-4 pb-28 text-black md:p-6">
+    <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="render" />
-      <div className="mx-auto max-w-5xl space-y-6">
-        <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black bg-white p-6">
+      <SiteNav />
+      <div className="mx-auto max-w-[1400px] px-6 py-12 pb-28 md:px-12 md:py-16 lg:px-20">
+        <header className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b border-stone-200 pb-8">
           <div>
-            <h1 className="text-2xl font-bold">{t("render.title")}</h1>
-            {savedConfig?.projectName ? (
-              <p className="mt-1 text-sm text-gray-500">{savedConfig.projectName}</p>
-            ) : (
-              <p className="mt-1 text-sm text-gray-500">{t("render.subtitleStandalone")}</p>
-            )}
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              {t("home.nav.render")}
+            </p>
+            <h1 className="mt-3 font-display text-4xl tracking-tight text-ink md:text-5xl">
+              {t("render.title")}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-stone-600">
+              {savedConfig?.projectName ?? t("render.subtitleStandalone")}
+            </p>
           </div>
-          <Link href="/gevelcalc" className="rounded-xl border border-black px-4 py-2 text-sm">
-            {t("nav.toCalc")}
+          <Link
+            href="/gevelcalc"
+            className="border border-ink px-6 py-2.5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-paper"
+          >
+            {t("nav.toCalc")} →
           </Link>
-        </section>
-
-        <section className="rounded-2xl border border-black bg-white p-4">
-          <h2 className="text-lg font-semibold">{t("render.section.photo")}</h2>
+        </header>
+        <div className="space-y-12">
+        <section>
+          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            01 — {t("render.section.photo")}
+          </p>
 
           {sidesWithPhoto.length > 0 && (
             <div className="mt-3">
@@ -807,25 +817,45 @@ export default function RenderPage() {
           )}
 
           <div
-            className="mt-3 rounded-2xl border-2 border-dashed border-black p-4 text-center"
+            className="mt-3 border border-dashed border-stone-300 bg-stone-50 p-8 text-center"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
               handleUpload(e.dataTransfer.files?.[0] ?? null);
             }}
           >
-            <label className="inline-flex cursor-pointer flex-col items-center gap-2">
-              <span className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white">
-                {photoOverride ? t("render.changePhoto") : t("render.uploadOwn")}
-              </span>
-              <span className="text-xs text-gray-400">{t("render.dropOrDrag")}</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
-              />
-            </label>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-wrap justify-center gap-2">
+                <label className="cursor-pointer">
+                  <span className="block bg-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800">
+                    {photoOverride ? t("render.changePhoto") : t("render.uploadOwn")}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                {/* Mobile-only camera capture — uses the rear camera via
+                    the "environment" capture hint. Hidden on md+ where a
+                    physical camera button would only confuse desktop
+                    users. */}
+                <label className="cursor-pointer md:hidden">
+                  <span className="block border border-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-paper">
+                    {locale === "nl" ? "Maak foto" : locale === "de" ? "Foto aufnehmen" : locale === "fr" ? "Prendre une photo" : locale === "es" ? "Tomar foto" : "Take photo"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+              </div>
+              <span className="text-xs text-stone-500">{t("render.dropOrDrag")}</span>
+            </div>
           </div>
 
           <div className="mt-4">
@@ -906,10 +936,12 @@ export default function RenderPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-black bg-white p-4">
-          <h2 className="text-lg font-semibold">{t("render.section.panel")}</h2>
+        <section>
+          <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            02 — {t("render.section.panel")}
+          </p>
 
-          <div className="mt-3 mb-4 flex gap-2">
+          <div className="mb-4 flex gap-2">
             <button
               type="button"
               onClick={() => setBrand("spanl")}
@@ -1078,10 +1110,12 @@ export default function RenderPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-black bg-white p-4">
-          <h2 className="text-lg font-semibold">{t("render.frames.heading")}</h2>
-          <p className="mt-1 text-xs text-gray-500">{t("render.frames.subtitle")}</p>
-          <div className="mt-3 grid gap-4 md:grid-cols-3">
+        <section>
+          <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            03 — {t("render.frames.heading")}
+          </p>
+          <p className="mb-4 text-xs text-stone-500">{t("render.frames.subtitle")}</p>
+          <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className="mb-1 block text-sm font-medium">{t("render.frames.windowMaterial")}</label>
               <select
@@ -1135,16 +1169,22 @@ export default function RenderPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-black bg-white p-4">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">{t("render.section.prompt")}</h2>
+        <section>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              04 — {t("render.section.prompt")}
+            </p>
             {promptTouched && (
-              <button type="button" onClick={resetPrompt} className="text-xs underline">
+              <button
+                type="button"
+                onClick={resetPrompt}
+                className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 underline-offset-4 hover:text-ink hover:underline"
+              >
                 {t("render.promptReset")}
               </button>
             )}
           </div>
-          <p className="mt-1 text-xs text-gray-500">{t("render.promptHint")}</p>
+          <p className="mb-3 text-xs text-stone-500">{t("render.promptHint")}</p>
           <textarea
             value={effectivePrompt}
             onChange={(e) => {
@@ -1153,13 +1193,15 @@ export default function RenderPage() {
             }}
             rows={6}
             placeholder={defaultPrompt || t("render.promptPlaceholder")}
-            className="mt-3 w-full rounded-xl border border-black p-3 font-mono text-xs"
+            className="w-full border border-stone-200 bg-paper p-3 font-mono text-xs text-ink"
           />
         </section>
 
-        <section className="rounded-2xl border border-black bg-white p-4">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">{t("render.section.renders")}</h2>
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              05 — {t("render.section.renders")}
+            </p>
             <span
               className={`text-xs font-medium ${
                 variants.length >= MAX_VARIANTS ? "text-amber-700" : "text-gray-500"
@@ -1259,6 +1301,7 @@ export default function RenderPage() {
             </div>
           )}
         </section>
+        </div>
       </div>
 
       {toast && (
@@ -1267,8 +1310,8 @@ export default function RenderPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3">
-        <div className="mx-auto flex max-w-5xl items-center justify-end gap-2">
+      <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-paper/95 p-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-2 px-6 md:px-12 lg:px-20">
           <button
             type="button"
             onClick={handleGenerate}
@@ -1278,7 +1321,7 @@ export default function RenderPage() {
               variants.length >= MAX_VARIANTS ||
               (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
             }
-            className="rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white disabled:opacity-40"
+            className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
           >
             {variants.length >= MAX_VARIANTS
               ? t("render.cap.btnLabel")

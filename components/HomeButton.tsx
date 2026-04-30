@@ -5,7 +5,19 @@ import { usePathname } from "next/navigation";
 
 export default function HomeButton() {
   const path = usePathname() ?? "/";
+  // Pages that mount <SiteNav> already provide a Renisual logo / home
+  // link in the top bar. Suppress the floating button there to avoid
+  // double "back to home" affordances.
   if (path === "/") return null;
+  if (
+    path.startsWith("/gevelcalc") ||
+    path.startsWith("/render") ||
+    path.startsWith("/offerte") ||
+    path.startsWith("/subsidie") ||
+    path.startsWith("/wachten")
+  ) {
+    return null;
+  }
   return (
     <Link
       href="/"
