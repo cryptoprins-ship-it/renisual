@@ -156,15 +156,19 @@ export default function HomeClient() {
         </div>
       </nav>
 
-      {/* Editorial hero — full-bleed image, bottom-left text */}
-      <section className="relative h-[calc(100vh-4rem)] min-h-[640px] w-full overflow-hidden">
+      {/* Editorial hero — solid architectural gradient until we have a
+          curated hero photograph. Plain stone tones with a deeper inkwash
+          on the left so the white-on-dark text reads cleanly. */}
+      <section className="relative h-[calc(100vh-4rem)] min-h-[640px] w-full overflow-hidden bg-ink">
         <div
           aria-hidden
-          className="absolute inset-0 bg-cover bg-center brightness-90 contrast-105"
-          style={{ backgroundImage: "url(/samples/houses/woning-2.jpg)" }}
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse at top right, rgba(184,89,58,0.18), transparent 55%), linear-gradient(135deg, #1a1816 0%, #0a0a0a 100%)",
+          }}
         />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink/60 via-ink/30 to-transparent" />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
 
         <div className="relative z-10 mx-auto flex h-full max-w-[1400px] flex-col justify-end px-6 pb-16 md:px-12 md:pb-20 lg:px-20 lg:pb-24">
           <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-paper/80">

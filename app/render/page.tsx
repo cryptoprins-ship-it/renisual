@@ -859,28 +859,32 @@ export default function RenderPage() {
           </div>
 
           <div className="mt-4">
-            <p className="mb-2 text-xs text-gray-500">
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
               {locale === "nl" ? "Of kies een voorbeeldfoto" : "Or pick a sample photo"}
             </p>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSampleTab(sampleTab === "houses" ? null : "houses")}
-                className={`rounded-xl border px-3 py-1.5 text-sm ${
-                  sampleTab === "houses" ? "border-black bg-black text-white" : "border-black bg-white"
-                }`}
-              >
-                {t("woningen")} ({houseSamples.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setSampleTab(sampleTab === "woonboten" ? null : "woonboten")}
-                className={`rounded-xl border px-3 py-1.5 text-sm ${
-                  sampleTab === "woonboten" ? "border-black bg-black text-white" : "border-black bg-white"
-                }`}
-              >
-                {t("woonboten")} ({woonbootSamples.length})
-              </button>
+              {houseSamples.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSampleTab(sampleTab === "houses" ? null : "houses")}
+                  className={`border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] ${
+                    sampleTab === "houses" ? "border-ink bg-ink text-paper" : "border-stone-200 bg-paper text-ink hover:bg-stone-50"
+                  }`}
+                >
+                  {t("woningen")} ({houseSamples.length})
+                </button>
+              )}
+              {woonbootSamples.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSampleTab(sampleTab === "woonboten" ? null : "woonboten")}
+                  className={`border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] ${
+                    sampleTab === "woonboten" ? "border-ink bg-ink text-paper" : "border-stone-200 bg-paper text-ink hover:bg-stone-50"
+                  }`}
+                >
+                  {t("woonboten")} ({woonbootSamples.length})
+                </button>
+              )}
             </div>
             {sampleTab && (
               <div className="mt-3">
