@@ -183,6 +183,14 @@ export async function POST(request: Request) {
   }
 
   const defaultPrompt = [
+    // OUTPUT-MODE INSTRUCTIONS COME FIRST. Gemini Flash Image otherwise
+    // tends to drift into sketch / line-drawing / B&W illustration mode
+    // when the body of the prompt is dense with material-specification
+    // language. Photorealism must dominate every other constraint.
+    "OUTPUT TYPE — PHOTOREALISTIC COLOUR PHOTOGRAPH.",
+    "The output MUST be a full-colour photographic render of the building, indistinguishable from a real DSLR photo. ABSOLUTELY NOT a sketch, line drawing, pencil drawing, illustration, watercolour, blueprint, technical drawing, architectural plan, black-and-white image, greyscale image, or stylised art. Preserve full natural colour, real-world lighting, surface textures, sky and surroundings exactly as in the source photo.",
+    "If you cannot honour every other instruction below while staying photographic, drop the other instructions — never sacrifice photographic realism.",
+    "",
     "Je bent een gevelvisualisatie-assistent voor Renisual.",
     `Vervang uitsluitend het gevelmateriaal van het hoofdgebouw op de eerste foto door ${productLine}, ${orientationLabel} aangebracht${panelSize}.`,
     panelWidth ? `Paneelmaat: ${panelWidth} breed.` : "",
@@ -191,16 +199,16 @@ export async function POST(request: Request) {
     ralColourLine,
     ralMetallicWarning,
     referenceParts.length >= 2
-      ? "Gebruik beide referentieafbeeldingen (afbeelding 2 en 3): close-up én toepassing — combineer voor kleur én plankritme."
+      ? "Gebruik beide referentieafbeeldingen (afbeelding 2 en 3) UITSLUITEND als referentie voor kleur, motief en plankritme van het gevelmateriaal — NIET voor de stijl van de output. De output blijft een fotorealistische foto van het gebouw uit afbeelding 1."
       : referenceParts.length === 1
-      ? "KRITISCH: gebruik de TWEEDE afbeelding als exacte visuele referentie voor kleur, motief, plankverdeling en oppervlaktestructuur."
+      ? "Gebruik de TWEEDE afbeelding UITSLUITEND als kleur- en motiefreferentie voor het gevelmateriaal. NIET voor de stijl van de output — de output blijft een fotorealistische foto van het gebouw uit afbeelding 1."
       : "",
     "KRITISCH MOTIEF: het paneeloppervlak mag niet egaal zijn — toon individuele panelen met duidelijke naden ertussen.",
     "Do NOT add any black lines, dark stripes, or shadows between panels. Panel seams must be the same colour as the panels, only slightly darker. Maximum seam width 3mm. Do not add any new dark elements that were not in the original photo.",
     body.windowFrame?.material ? `Also replace all window frames with ${body.windowFrame.material}.` : "",
     body.door?.material && body.door?.colour ? `Replace all doors with ${body.door.material} in ${body.door.colour}.` : "",
     `Behoud raamopeningen${body.windowFrame?.material ? " (vervang alléén de kozijnen zoals beschreven)" : ", kozijnen"}, deuropeningen${body.door?.material ? " (vervang alléén het deurblad zoals beschreven)" : ", deuren"}, dakgoten, dakranden, regenpijpen, beglazing, omgeving (lucht, planten, straat, voertuigen), perspectief en belichting van de originele foto exact.`,
-    "Lever één fotorealistische compositie van de volledige gevel als output.",
+    "FINAL CHECK before producing output: is this a photographic, full-colour image with realistic lighting that looks like a DSLR photo of an actual house? If not, regenerate.",
   ]
     .filter(Boolean)
     .join(" ");
