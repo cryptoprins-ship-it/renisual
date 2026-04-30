@@ -187,9 +187,10 @@ export async function POST(request: Request) {
     // tends to drift into sketch / line-drawing / B&W illustration mode
     // when the body of the prompt is dense with material-specification
     // language. Photorealism must dominate every other constraint.
-    "OUTPUT TYPE — PHOTOREALISTIC COLOUR PHOTOGRAPH.",
-    "The output MUST be a full-colour photographic render of the building, indistinguishable from a real DSLR photo. ABSOLUTELY NOT a sketch, line drawing, pencil drawing, illustration, watercolour, blueprint, technical drawing, architectural plan, black-and-white image, greyscale image, or stylised art. Preserve full natural colour, real-world lighting, surface textures, sky and surroundings exactly as in the source photo.",
-    "If you cannot honour every other instruction below while staying photographic, drop the other instructions — never sacrifice photographic realism.",
+    "TASK: edit the first attached photograph and return another photograph.",
+    "The output is a JPEG-style photographic image of the same building from the same angle, with only the facade cladding swapped. Treat this as a photo edit, not as an illustration task.",
+    "FORBIDDEN OUTPUT STYLES: sketch, pencil drawing, line drawing, ink drawing, watercolour, painting, blueprint, technical drawing, architectural plan view, isometric drawing, CGI render with plastic look, cartoon, anime, illustration, stylised art, black-and-white, greyscale, sepia, monochrome. If the source photo is in colour, the output must also be in colour, with the same lighting, sky, ground and surroundings.",
+    "If you cannot honour the cladding-replacement instructions below while staying photographic, drop those instructions — never sacrifice photographic realism.",
     "",
     "Je bent een gevelvisualisatie-assistent voor Renisual.",
     `Vervang uitsluitend het gevelmateriaal van het hoofdgebouw op de eerste foto door ${productLine}, ${orientationLabel} aangebracht${panelSize}.`,
@@ -225,6 +226,11 @@ export async function POST(request: Request) {
       contents: parts,
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
+        // Keep the model close to the source photo. Higher temperatures
+        // let Gemini Flash Image drift into illustration / sketch /
+        // greyscale styles, which is exactly the failure mode we keep
+        // seeing on facade renders.
+        temperature: 0.3,
       },
     });
 
