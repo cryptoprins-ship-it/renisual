@@ -122,7 +122,7 @@ export default function HomeClient() {
   }
 
   return (
-    <main className="min-h-screen bg-paper text-ink">
+    <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="home" />
 
       {/* Slim architectural header */}
@@ -159,7 +159,7 @@ export default function HomeClient() {
       {/* Editorial hero — solid architectural gradient until we have a
           curated hero photograph. Plain stone tones with a deeper inkwash
           on the left so the white-on-dark text reads cleanly. */}
-      <section className="relative h-[calc(100vh-4rem)] min-h-[640px] w-full overflow-hidden bg-ink">
+      <section className="relative h-[calc(100dvh-4rem)] min-h-[640px] w-full overflow-hidden bg-ink">
         <div
           aria-hidden
           className="absolute inset-0"

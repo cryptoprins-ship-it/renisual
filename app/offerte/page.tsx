@@ -47,7 +47,7 @@ export default function OffertePage() {
 
   if (status === "ok") {
     return (
-      <main className="min-h-screen bg-[#f6f4ef] p-4 pb-16 text-black md:p-8">
+      <main className="min-h-[100dvh] bg-paper p-4 pb-16 text-ink md:p-8">
         <DynamicMetadata page="offerte" />
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border border-black bg-white p-8 text-center space-y-4">
@@ -71,7 +71,7 @@ export default function OffertePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f4ef] p-4 pb-16 text-black md:p-8">
+    <main className="min-h-[100dvh] bg-paper p-4 pb-16 text-ink md:p-8">
       <DynamicMetadata page="offerte" />
       <div className="mx-auto max-w-2xl space-y-6">
 

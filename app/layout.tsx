@@ -72,9 +72,9 @@ export default function RootLayout({
   return (
     <html
       lang="nl"
-      className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink">
+      <body className="min-h-[100dvh] flex flex-col bg-paper text-ink">
         {/* Plausible analytics — cookieless, no PII, GDPR-exempt by
             design. Mirrors the BrainArena setup so both sites report
             into the same Plausible account. */}

@@ -77,7 +77,7 @@ export default function SubsidieClient() {
   }, [kindId, m2]);
 
   return (
-    <main className="min-h-screen bg-[#f6f4ef] text-black">
+    <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="subsidie" />
       <nav className="border-b border-black bg-white px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
