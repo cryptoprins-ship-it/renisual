@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import DynamicMetadata from "@/components/DynamicMetadata";
 import {
   type Board,
   type Direction,
@@ -148,6 +149,7 @@ export default function WachtenClient() {
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] text-black">
+      <DynamicMetadata page="wachten" />
       <nav className="border-b border-black bg-white px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <Link href="/" className="text-xl font-bold tracking-tight">

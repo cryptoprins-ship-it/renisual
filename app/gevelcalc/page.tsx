@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { products, categoryForType, type Orientation, type ProductCategory } from "@/lib/productCatalog";
 import { useSpanlImage } from "@/lib/spanlImageCatalog";
 import {
@@ -24,6 +25,7 @@ import {
 } from "@/lib/calcEngine";
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale, type Locale } from "@/lib/i18n";
+import DynamicMetadata from "@/components/DynamicMetadata";
 
 const MAX_SIDES = 10;
 const STORAGE_KEY = "renisual-gevelcalc-v1";
@@ -313,6 +315,163 @@ function KeralitColorPicker({
   );
 }
 
+function RenderingPanel({
+  selectedProduct,
+  keralitColorNumber,
+  zoomHint,
+  emptyText,
+}: {
+  selectedProduct: (typeof products)[number] | undefined;
+  keralitColorNumber: number | null;
+  zoomHint: string;
+  emptyText: string;
+}) {
+  const isSpanl = selectedProduct?.brand === "Spanl";
+  const spanlSku = isSpanl ? selectedProduct!.id.replace(/^spanl-/, "") : "";
+  const spanlName = isSpanl ? selectedProduct!.name : "";
+  const spanlSrc = useSpanlImage(spanlSku, spanlName);
+
+  let src: string | null = null;
+  let alt = "";
+  if (isSpanl) {
+    src = spanlSrc;
+    alt = spanlName;
+  } else if (selectedProduct?.brand === "Keralit") {
+    const color =
+      (keralitColorNumber != null
+        ? KERALIT_COLORS.find((c) => c.number === keralitColorNumber)
+        : null) ?? KERALIT_COLORS[0];
+    src = color?.thumbnailUrl ?? null;
+    alt = `${selectedProduct.name} — ${color?.name ?? ""}`;
+  }
+
+  return (
+    <div className="relative h-full min-h-[40vh] overflow-hidden rounded border border-black bg-gray-50 lg:min-h-0 print-hidden">
+      {src ? (
+        <TransformWrapper
+          initialScale={1}
+          minScale={0.5}
+          maxScale={5}
+          wheel={{ step: 0.1 }}
+          doubleClick={{ mode: "reset" }}
+        >
+          {({ zoomIn, zoomOut, resetTransform }) => (
+            <>
+              <div className="absolute right-2 top-2 z-10 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => zoomIn()}
+                  className="h-7 w-7 border border-black bg-white text-sm leading-none"
+                  aria-label="zoom in"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => zoomOut()}
+                  className="h-7 w-7 border border-black bg-white text-sm leading-none"
+                  aria-label="zoom out"
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  onClick={() => resetTransform()}
+                  className="h-7 border border-black bg-white px-2 text-xs"
+                >
+                  Reset
+                </button>
+              </div>
+              <TransformComponent
+                wrapperClass="!w-full !h-full"
+                contentClass="!w-full !h-full flex items-center justify-center"
+              >
+                <img src={src} alt={alt} className="max-h-full max-w-full object-contain" />
+              </TransformComponent>
+            </>
+          )}
+        </TransformWrapper>
+      ) : (
+        <div className="grid h-full place-items-center px-4 text-center text-sm text-stone-600">
+          {emptyText}
+        </div>
+      )}
+      {src && (
+        <p className="pointer-events-none absolute left-2 top-2 z-10 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600/90">
+          {zoomHint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ProductCard({
+  product,
+  selected,
+  onSelect,
+}: {
+  product: (typeof products)[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const isSpanl = product.brand === "Spanl";
+  const spanlSku = isSpanl ? product.id.replace(/^spanl-/, "") : "";
+  const spanlSrc = useSpanlImage(spanlSku, product.name);
+
+  let thumb: React.ReactNode;
+  if (isSpanl && spanlSrc) {
+    thumb = (
+      <img
+        src={spanlSrc}
+        alt={product.name}
+        loading="lazy"
+        className="block aspect-[4/3] w-full object-cover"
+      />
+    );
+  } else if (product.brand === "Keralit") {
+    const ref = KERALIT_COLORS[0];
+    thumb = ref ? (
+      <img
+        src={ref.thumbnailUrl}
+        alt={product.name}
+        loading="lazy"
+        className="block aspect-[4/3] w-full object-cover"
+      />
+    ) : (
+      <div className="flex aspect-[4/3] w-full items-center justify-center bg-stone-100 text-[10px] uppercase tracking-[0.15em] text-stone-400">
+        Keralit
+      </div>
+    );
+  } else {
+    thumb = (
+      <div className="flex aspect-[4/3] w-full items-center justify-center bg-stone-100 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+        {product.brand}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      title={`${product.brand} — ${product.name}`}
+      className={`group block overflow-hidden border text-left transition ${
+        selected
+          ? "border-ink ring-1 ring-ink"
+          : "border-stone-200 hover:border-stone-400"
+      }`}
+    >
+      {thumb}
+      <div className="border-t border-stone-200 p-2">
+        <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-stone-500">
+          {product.brand}
+        </p>
+        <p className="mt-0.5 truncate text-xs font-medium text-ink">{product.name}</p>
+      </div>
+    </button>
+  );
+}
+
 function Toast({ message, type }: { message: string; type: "ok" | "error" }) {
   return (
     <div
@@ -460,6 +619,16 @@ export default function GevelCalcPage() {
   }, [selectedProduct, orientation, activeSides, totalDiscountPercent]);
 
   const totals = materialResult?.totals ?? { gross: 0, openings: 0, net: 0 };
+  const adviesPrijs = materialResult?.totalExVat ?? 0;
+
+  // Kozijnen and Isolatie tabs only become available once a Gevelbekleding
+  // calculation produced an advice price. Revert to gevelbekleding if the
+  // user is currently on a now-locked tab.
+  useEffect(() => {
+    if (adviesPrijs <= 0 && productCategory !== "gevelbekleding") {
+      setProductCategory("gevelbekleding");
+    }
+  }, [adviesPrijs, productCategory]);
 
   function fmtMoney(amount: number) {
     const value = showInclVat ? round2(amount * VAT) : amount;
@@ -726,6 +895,7 @@ export default function GevelCalcPage() {
 
   return (
     <>
+      <DynamicMetadata page="gevelcalc" />
       <style>{`
         @media print {
           input[type="file"], button, label, .print-hidden { display: none !important; }
@@ -748,8 +918,9 @@ export default function GevelCalcPage() {
 
       {toast && <Toast message={toast.message} type={toast.type} />}
 
-      <main className="min-h-screen bg-[#f6f4ef] p-4 pb-40 text-black md:p-6">
-        <div className="mx-auto max-w-6xl space-y-6">
+      <main className="min-h-screen bg-[#f6f4ef] text-black lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden print:!h-auto print:!min-h-0 print:!overflow-visible">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-4 lg:h-full lg:grid-cols-12 lg:p-6 print:!block print:!h-auto">
+          <div className="space-y-3 lg:col-span-5 lg:h-full lg:overflow-y-auto lg:pr-1 print:!h-auto print:!overflow-visible">
           <section className="rounded-2xl border border-black bg-white p-6 text-center print-hidden">
             <h1 className="text-3xl font-bold">{t("gc.title")}</h1>
             <p className="mt-2">{t("gc.subtitle")}</p>
@@ -1091,54 +1262,64 @@ export default function GevelCalcPage() {
                   productCategory === "gevelbekleding" ? "bg-black text-white" : "bg-white text-black"
                 }`}
               >
-                Gevelbekleding
+                {t("gevelbekleding")}
               </button>
-              <button
-                type="button"
-                onClick={() => setProductCategory("kozijnen")}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  productCategory === "kozijnen" ? "bg-black text-white" : "bg-white text-black"
-                }`}
-              >
-                Kozijnen
-              </button>
-              <button
-                type="button"
-                onClick={() => setProductCategory("isolatie")}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  productCategory === "isolatie" ? "bg-black text-white" : "bg-white text-black"
-                }`}
-              >
-                Isolatie
-              </button>
+              {adviesPrijs > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setProductCategory("kozijnen")}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                      productCategory === "kozijnen" ? "bg-black text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    {t("kozijnen")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProductCategory("isolatie")}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                      productCategory === "isolatie" ? "bg-black text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    {t("isolatie")}
+                  </button>
+                </>
+              )}
             </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t("gc.product")}</label>
-                <select
-                  className="w-full rounded-xl border border-black p-3"
-                  value={selectedProductId}
-                  onChange={(e) => {
-                    const product = products.find((p) => p.id === e.target.value);
-                    setSelectedProductId(e.target.value);
-                    if (product?.orientations[0]) setOrientation(product.orientations[0]);
-                    if (product?.brand !== "Keralit") setKeralitColorNumber(null);
-                  }}
-                >
-                  <option value="">{t("gc.chooseProduct")}</option>
-                  {brandsForCategory.map((brand) => (
-                    <optgroup key={brand} label={brand}>
-                      {productsByCategory
-                        .filter((p) => p.brand === brand)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
+            <div className="mt-4 print-hidden">
+              <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600">
+                {t("product")}
+              </label>
+              <div className="space-y-5">
+                {brandsForCategory.map((brand) => {
+                  const items = productsByCategory.filter((p) => p.brand === brand);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={brand}>
+                      <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                        {brand}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                        {items.map((p) => (
+                          <ProductCard
+                            key={p.id}
+                            product={p}
+                            selected={selectedProductId === p.id}
+                            onSelect={() => {
+                              setSelectedProductId(p.id);
+                              if (p.orientations[0]) setOrientation(p.orientations[0]);
+                              if (p.brand !== "Keralit") setKeralitColorNumber(null);
+                            }}
+                          />
                         ))}
-                    </optgroup>
-                  ))}
-                </select>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
               {selectedProduct && (
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
@@ -1397,6 +1578,15 @@ export default function GevelCalcPage() {
               </button>
             </div>
           </div>
+          </div>
+          <aside className="flex h-[50vh] flex-col lg:col-span-7 lg:h-full print-hidden">
+            <RenderingPanel
+              selectedProduct={selectedProduct}
+              keralitColorNumber={keralitColorNumber}
+              zoomHint={t("zoom_hint")}
+              emptyText={t("gc.chooseProduct")}
+            />
+          </aside>
         </div>
       </main>
     </>

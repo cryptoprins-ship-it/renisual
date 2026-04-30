@@ -14,6 +14,8 @@ import {
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale } from "@/lib/i18n";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
+import DynamicMetadata from "@/components/DynamicMetadata";
+import RenderingLoader from "@/components/RenderingLoader";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 const MAX_VARIANTS = 3;
@@ -453,8 +455,6 @@ export default function RenderPage() {
     const id = window.setTimeout(() => setToast(null), 3500);
     return () => window.clearTimeout(id);
   }, [toast]);
-  const [progressPct, setProgressPct] = useState(0);
-  const [progressMessage, setProgressMessage] = useState("");
   const [attemptCount, setAttemptCount] = useState(0);
   const [windowMaterial, setWindowMaterial] = useState<WindowMaterial | "">("");
   const [doorMaterial, setDoorMaterial] = useState<DoorMaterial | "">("");
@@ -615,62 +615,6 @@ export default function RenderPage() {
     setErrorMsg("");
   }, [sourcePhoto]);
 
-  useEffect(() => {
-    if (!isGenerating) {
-      setProgressPct(0);
-      setProgressMessage("");
-      return;
-    }
-    const start = Date.now();
-    const messageSets: Record<string, string[]> = {
-      nl: [
-        "AI analyseert uw gevel...",
-        "Materiaal wordt toegepast...",
-        "Details worden verfijnd...",
-        "Bijna klaar...",
-      ],
-      en: [
-        "AI is analysing your facade...",
-        "Applying material...",
-        "Refining details...",
-        "Almost done...",
-      ],
-      de: [
-        "KI analysiert Ihre Fassade...",
-        "Material wird angewendet...",
-        "Details werden verfeinert...",
-        "Fast fertig...",
-      ],
-      fr: [
-        "L'IA analyse votre façade...",
-        "Application du matériau...",
-        "Affinage des détails...",
-        "Presque terminé...",
-      ],
-      es: [
-        "La IA analiza su fachada...",
-        "Aplicando el material...",
-        "Refinando los detalles...",
-        "Casi listo...",
-      ],
-    };
-    const texts = messageSets[locale] ?? messageSets.en;
-    const messages: Array<{ at: number; text: string }> = [
-      { at: 0, text: texts[0] },
-      { at: 5000, text: texts[1] },
-      { at: 10000, text: texts[2] },
-      { at: 15000, text: texts[3] },
-    ];
-    const TOTAL_MS = 20000;
-    const id = window.setInterval(() => {
-      const elapsed = Date.now() - start;
-      const cyclical = elapsed % TOTAL_MS;
-      setProgressPct(Math.min(95, (cyclical / TOTAL_MS) * 100));
-      const current = [...messages].reverse().find((m) => cyclical >= m.at);
-      if (current) setProgressMessage(current.text);
-    }, 200);
-    return () => window.clearInterval(id);
-  }, [isGenerating, locale]);
 
   async function handleUpload(file: File | null) {
     if (!file || !file.type.startsWith("image/")) return;
@@ -818,6 +762,7 @@ export default function RenderPage() {
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] p-4 pb-28 text-black md:p-6">
+      <DynamicMetadata page="render" />
       <div className="mx-auto max-w-5xl space-y-6">
         <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black bg-white p-6">
           <div>
@@ -895,7 +840,7 @@ export default function RenderPage() {
                   sampleTab === "houses" ? "border-black bg-black text-white" : "border-black bg-white"
                 }`}
               >
-                Woningen ({houseSamples.length})
+                {t("woningen")} ({houseSamples.length})
               </button>
               <button
                 type="button"
@@ -904,7 +849,7 @@ export default function RenderPage() {
                   sampleTab === "woonboten" ? "border-black bg-black text-white" : "border-black bg-white"
                 }`}
               >
-                Woonboten ({woonbootSamples.length})
+                {t("woonboten")} ({woonbootSamples.length})
               </button>
             </div>
             {sampleTab && (
@@ -935,6 +880,17 @@ export default function RenderPage() {
                     ))}
                   </div>
                 )}
+                <p className="mt-2 text-[11px] text-gray-400">
+                  Sample images:{" "}
+                  <a
+                    href="https://unsplash.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gray-600"
+                  >
+                    Unsplash
+                  </a>
+                </p>
               </div>
             )}
           </div>
@@ -1222,37 +1178,12 @@ export default function RenderPage() {
 
           {isGenerating && (
             <div className="mt-3 overflow-hidden rounded-xl border border-black">
-              <div className="relative aspect-[16/10] w-full animate-pulse bg-gradient-to-br from-neutral-200 via-neutral-100 to-neutral-200">
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-                  <div className="h-2 w-3/4 max-w-sm overflow-hidden rounded-full bg-white/70">
-                    <div
-                      className="h-full bg-black transition-[width] duration-200 ease-linear"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                  <p className="text-sm font-medium text-neutral-800">
-                    {progressMessage || t("render.generating")}
-                  </p>
-                  {attemptCount > 1 && (
-                    <p className="text-xs text-neutral-500">
-                      {locale === "nl"
-                        ? `Poging ${attemptCount}/3`
-                        : locale === "de"
-                        ? `Versuch ${attemptCount}/3`
-                        : locale === "fr"
-                        ? `Tentative ${attemptCount}/3`
-                        : locale === "es"
-                        ? `Intento ${attemptCount}/3`
-                        : `Attempt ${attemptCount}/3`}
-                    </p>
-                  )}
-                </div>
-              </div>
+              <RenderingLoader attempt={attemptCount} />
             </div>
           )}
 
-          {!isGenerating && variants.length === 0 && (
-            <p className="mt-3 text-sm text-gray-500">{t("render.empty")}</p>
+          {!isGenerating && variants.length === 0 && !errorMsg && (
+            <p className="mt-3 text-sm text-gray-500">{t("rendering_empty_state")}</p>
           )}
 
           <div className="mt-4 space-y-4">
@@ -1314,7 +1245,19 @@ export default function RenderPage() {
             ))}
           </div>
 
-          {errorMsg && <p className="mt-3 text-sm text-red-700">{errorMsg}</p>}
+          {errorMsg && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+              <span className="flex-1">{errorMsg}</span>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={isGenerating || !sourcePhoto}
+                className="rounded-lg border border-red-400 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+              >
+                {t("rendering_retry_button")}
+              </button>
+            </div>
+          )}
         </section>
       </div>
 

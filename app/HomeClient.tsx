@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
+import DynamicMetadata from "@/components/DynamicMetadata";
 import { useLocale } from "@/lib/i18n";
 
 const SPONSOR_MAILTO =
@@ -118,108 +119,122 @@ export default function HomeClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f4ef] text-black">
-      <nav className="border-b border-black bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <span className="text-xl font-bold tracking-tight">Renisual</span>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={calcHref} className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
-              {t("home.nav.calculator")}
-            </Link>
-            <Link href="/render" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
-              {t("home.nav.render")}
-            </Link>
-            <a href="#roi" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
-              {t("home.nav.roi")}
-            </a>
-            {showSubsidies && (
-              <Link href="/subsidie" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
-                {t("home.nav.subsidies")}
+    <main className="min-h-screen bg-paper text-ink">
+      <DynamicMetadata page="home" />
+
+      {/* Slim architectural header */}
+      <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md">
+        <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
+          <Link href="/" className="font-display text-xl tracking-tight">
+            Renisual
+          </Link>
+          <div className="flex items-center gap-6">
+            <div className="hidden items-center gap-6 font-mono text-xs uppercase tracking-[0.15em] text-stone-600 md:flex">
+              <Link href={calcHref} className="hover:text-ink transition-colors">
+                {t("home.nav.calculator")}
               </Link>
-            )}
-            <a href="#offerte" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
-              {t("home.nav.offerte")}
-            </a>
+              <Link href="/render" className="hover:text-ink transition-colors">
+                {t("home.nav.render")}
+              </Link>
+              <a href="#roi" className="hover:text-ink transition-colors">
+                {t("home.nav.roi")}
+              </a>
+              {showSubsidies && (
+                <Link href="/subsidie" className="hover:text-ink transition-colors">
+                  {t("home.nav.subsidies")}
+                </Link>
+              )}
+              <a href="#offerte" className="hover:text-ink transition-colors">
+                {t("home.nav.offerte")}
+              </a>
+            </div>
             <NavLocaleSwitcher compact className="ml-1" />
           </div>
         </div>
       </nav>
 
-      <section className="border-b border-black bg-white px-4 py-16 md:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid gap-12 md:grid-cols-2 md:items-center">
-            <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-black px-3 py-1 text-xs font-medium">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                {t("home.hero.badge")}
+      {/* Editorial hero — full-bleed image, bottom-left text */}
+      <section className="relative h-[calc(100vh-4rem)] min-h-[640px] w-full overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center brightness-90 contrast-105"
+          style={{ backgroundImage: "url(/samples/houses/woning-2.jpg)" }}
+        />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink/60 via-ink/30 to-transparent" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent" />
+
+        <div className="relative z-10 mx-auto flex h-full max-w-[1400px] flex-col justify-end px-6 pb-16 md:px-12 md:pb-20 lg:px-20 lg:pb-24">
+          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-paper/80">
+            {t("home.hero.eyebrow")}
+          </p>
+          <h1 className="font-display text-4xl leading-[1.05] tracking-tight text-paper md:text-6xl lg:text-7xl">
+            {t("home.hero.tagline")}
+          </h1>
+          <p className="mt-8 max-w-xl text-base leading-relaxed text-paper/80 md:text-lg">
+            {t("home.hero.subtitle")}
+          </p>
+          <div className="mt-10 flex items-center gap-6">
+            <Link
+              href={calcHref}
+              className="bg-paper px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100"
+            >
+              {t("home.hero.cta")}
+            </Link>
+            <Link
+              href={proHref}
+              className="font-mono text-xs uppercase tracking-[0.15em] text-paper/70 transition-colors hover:text-paper"
+            >
+              {t("home.hero.proLink")} →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Two primary tools — visible architectural cards */}
+      <section className="border-b border-stone-200 bg-paper px-6 py-20 md:px-12 md:py-28 lg:px-20">
+        <div className="mx-auto max-w-[1400px]">
+          <div className="grid gap-px bg-stone-200 md:grid-cols-2">
+            <Link
+              href="/render"
+              className="group relative flex flex-col justify-between bg-paper p-8 transition-colors hover:bg-stone-50 md:p-12 lg:p-16"
+            >
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                  01 — {t("home.nav.render")}
+                </p>
+                <h2 className="mt-6 font-display text-4xl tracking-tight text-ink md:text-5xl lg:text-6xl">
+                  {t("home.cards.render.title")}
+                </h2>
+                <p className="mt-5 max-w-md text-base leading-relaxed text-stone-600">
+                  {t("home.cards.render.desc")}
+                </p>
               </div>
-              <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-                {t("home.hero.titleLine1")}
-                <br />
-                <span className="italic">{t("home.hero.titleLine2")}</span>
-              </h1>
-              <p className="mt-6 text-lg leading-relaxed text-gray-600">
-                {t("home.hero.subtitle")}
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  href={calcHref}
-                  className="rounded-2xl bg-black px-6 py-3 text-base font-semibold text-white hover:opacity-80"
-                >
-                  {t("home.hero.btnQuick")}
-                </Link>
-                <Link
-                  href="/render"
-                  className="rounded-2xl border-2 border-black bg-white px-6 py-3 text-base font-semibold hover:bg-gray-50"
-                >
-                  {t("home.hero.btnRender")}
-                </Link>
+              <div className="mt-12 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-ink">
+                <span>{t("home.hero.cta")}</span>
+                <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
               </div>
-              <Link
-                href={proHref}
-                className="mt-4 inline-flex text-sm font-medium text-gray-700 underline underline-offset-4 hover:text-black"
-              >
-                {t("home.hero.proLink")}
-              </Link>
+            </Link>
 
-              <p className="mt-4 text-sm text-gray-400">
-                {t("home.hero.bullets")}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                href="/render"
-                className="col-span-2 rounded-2xl border-2 border-black bg-[#f6f4ef] p-5 hover:bg-white"
-              >
-                <div className="mb-2 text-3xl">🏠</div>
-                <div className="font-semibold">{t("home.card.render.title")}</div>
-                <div className="mt-1 text-sm text-gray-500">
-                  {t("home.card.render.desc")}
-                </div>
-              </Link>
-              <Link
-                href={calcHref}
-                className="rounded-2xl border border-black bg-[#f6f4ef] p-4 hover:bg-white"
-              >
-                <div className="mb-2 text-2xl">📐</div>
-                <div className="text-sm font-semibold">{t("home.card.calc.title")}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {t("home.card.calc.desc")}
-                </div>
-              </Link>
-              <a
-                href="#roi"
-                className="rounded-2xl border border-black bg-[#f6f4ef] p-4 hover:bg-white"
-              >
-                <div className="mb-2 text-2xl">💰</div>
-                <div className="text-sm font-semibold">{t("home.card.roi.title")}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {t("home.card.roi.desc")}
-                </div>
-              </a>
-            </div>
+            <Link
+              href={calcHref}
+              className="group relative flex flex-col justify-between bg-paper p-8 transition-colors hover:bg-stone-50 md:p-12 lg:p-16"
+            >
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                  02 — {t("home.nav.calculator")}
+                </p>
+                <h2 className="mt-6 font-display text-4xl tracking-tight text-ink md:text-5xl lg:text-6xl">
+                  {t("home.cards.calc.title")}
+                </h2>
+                <p className="mt-5 max-w-md text-base leading-relaxed text-stone-600">
+                  {t("home.cards.calc.desc")}
+                </p>
+              </div>
+              <div className="mt-12 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-ink">
+                <span>{t("home.hero.cta")}</span>
+                <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

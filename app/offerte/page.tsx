@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import DynamicMetadata from "@/components/DynamicMetadata";
 
 export default function OffertePage() {
   const [form, setForm] = useState({
@@ -44,6 +45,7 @@ export default function OffertePage() {
   if (status === "ok") {
     return (
       <main className="min-h-screen bg-[#f6f4ef] p-4 pb-16 text-black md:p-8">
+        <DynamicMetadata page="offerte" />
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border border-black bg-white p-8 text-center space-y-4">
             <div className="text-4xl">✓</div>
@@ -67,6 +69,7 @@ export default function OffertePage() {
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] p-4 pb-16 text-black md:p-8">
+      <DynamicMetadata page="offerte" />
       <div className="mx-auto max-w-2xl space-y-6">
 
         <div className="flex items-center justify-between">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import DynamicMetadata from "@/components/DynamicMetadata";
 
 type IsdeIsolationKind = {
   id: string;
@@ -77,6 +78,7 @@ export default function SubsidieClient() {
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] text-black">
+      <DynamicMetadata page="subsidie" />
       <nav className="border-b border-black bg-white px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link href="/" className="text-xl font-bold tracking-tight">

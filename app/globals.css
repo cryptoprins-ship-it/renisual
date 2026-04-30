@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Architectural palette — single warm accent on stone neutrals */
+  --color-paper: #FAFAF7;
+  --color-ink: #0A0A0A;
+
+  --color-stone-50:  #F5F4F0;
+  --color-stone-100: #E8E6DF;
+  --color-stone-200: #D4D1C7;
+  --color-stone-400: #9C9789;
+  --color-stone-600: #5C584F;
+  --color-stone-800: #2E2C26;
+
+  --color-accent: #B8593A;        /* burnt sienna */
+
+  /* Type stack — display serif, body sans, technical mono */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Default page palette + body type */
+html, body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  letter-spacing: -0.005em;     /* slightly tighter Inter tracking */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Default heading treatment — editorial serif, tight tracking, snug leading */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-weight: 500;             /* Fraunces optical sizing prefers medium */
+  font-optical-sizing: auto;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Selection in the accent so it feels intentional */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-paper);
 }
