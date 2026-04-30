@@ -20,14 +20,29 @@ type Limiter = {
   limit: (key: string) => Promise<{ success: boolean; reset: number; remaining: number }>;
 };
 
-function buildRedis(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
-  return new Redis({ url, token });
+// Upstash REST URLs must be lowercase `https://...`; some hosting panels
+// upper-case env-var values on paste, which crashes the client at construct
+// time. Normalize defensively rather than asking the operator to remember.
+function normalizeUpstashUrl(raw: string): string {
+  const trimmed = raw.trim();
+  const m = /^(https?):\/\/(.+)$/i.exec(trimmed);
+  if (!m) return trimmed;
+  return `${m[1].toLowerCase()}://${m[2]}`;
 }
 
-const redis = buildRedis();
+let _redis: Redis | null | undefined;
+function getRedis(): Redis | null {
+  if (_redis !== undefined) return _redis;
+  const rawUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!rawUrl || !token) return (_redis = null);
+  try {
+    _redis = new Redis({ url: normalizeUpstashUrl(rawUrl), token: token.trim() });
+  } catch {
+    _redis = null;
+  }
+  return _redis;
+}
 
 function inMemoryLimiter(maxRequests: number, windowMs: number): Limiter {
   const buckets = new Map<string, { count: number; resetAt: number }>();
@@ -50,21 +65,36 @@ function inMemoryLimiter(maxRequests: number, windowMs: number): Limiter {
 }
 
 function build(name: string, maxReq: number, window: `${number} ${"s" | "m" | "h"}`): Limiter {
-  if (!redis) {
-    const ms =
-      window.endsWith("s")
-        ? Number(window.split(" ")[0]) * 1000
-        : window.endsWith("m")
-        ? Number(window.split(" ")[0]) * 60_000
-        : Number(window.split(" ")[0]) * 3_600_000;
-    return inMemoryLimiter(maxReq, ms);
-  }
-  return new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(maxReq, window),
-    analytics: false,
-    prefix: `ratelimit:renisual:${name}`,
-  });
+  const ms =
+    window.endsWith("s")
+      ? Number(window.split(" ")[0]) * 1000
+      : window.endsWith("m")
+      ? Number(window.split(" ")[0]) * 60_000
+      : Number(window.split(" ")[0]) * 3_600_000;
+  const memory = inMemoryLimiter(maxReq, ms);
+
+  // Lazily resolve Upstash on first call. This keeps module load free of
+  // network/URL validation so Next's static-page-data pass can import the
+  // route handlers even if env vars are absent or malformed.
+  let upstash: Limiter | null = null;
+  let resolved = false;
+  return {
+    async limit(key: string) {
+      if (!resolved) {
+        const redis = getRedis();
+        if (redis) {
+          upstash = new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(maxReq, window),
+            analytics: false,
+            prefix: `ratelimit:renisual:${name}`,
+          });
+        }
+        resolved = true;
+      }
+      return (upstash ?? memory).limit(key);
+    },
+  };
 }
 
 export const renderLimit = build("render", 5, "1 m");
