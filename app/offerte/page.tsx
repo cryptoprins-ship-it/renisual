@@ -12,6 +12,9 @@ export default function OffertePage() {
     postcode: "",
     type: "",
     opmerking: "",
+    // Honeypot field — invisible to humans, scraping bots fill it.
+    // Server silently drops submissions where this is non-empty.
+    website: "",
   });
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -89,6 +92,18 @@ export default function OffertePage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Honeypot — never visible to a real user. Off-screen, no
+                tabstop, marked aria-hidden so screen readers skip it. */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={form.website}
+              onChange={handleChange}
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+            />
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium">Naam *</label>

@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { apiLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
+import { verifyOrigin } from "@/lib/verifyOrigin";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -24,39 +28,50 @@ function topN(): LeaderboardEntry[] {
   return [...store.entries].sort((a, b) => b.score - a.score).slice(0, MAX_ENTRIES);
 }
 
-function sanitizeName(raw: unknown): string {
-  if (typeof raw !== "string") return "";
-  return raw.trim().slice(0, MAX_NAME_LEN).replace(/[<>]/g, "");
-}
+const entrySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(MAX_NAME_LEN)
+    .transform((s) => s.replace(/[<>]/g, "")),
+  score: z.number().finite().min(0).max(1_000_000),
+  maxTile: z.number().finite().min(0).max(65536),
+});
 
 export async function GET() {
   return NextResponse.json({ entries: topN() });
 }
 
 export async function POST(req: NextRequest) {
-  let body: { name?: unknown; score?: unknown; maxTile?: unknown } = {};
+  const forbidden = verifyOrigin(req);
+  if (forbidden) return forbidden;
+
+  const ip = clientKeyFromRequest(req);
+  const { success, reset } = await apiLimit.limit(ip);
+  if (!success) return rateLimitResponse(reset);
+
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
+    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const name = sanitizeName(body.name);
-  const score = Number(body.score);
-  const maxTileVal = Number(body.maxTile);
-
-  if (!name) return NextResponse.json({ error: "Naam vereist." }, { status: 400 });
-  if (!Number.isFinite(score) || score < 0 || score > 1_000_000) {
-    return NextResponse.json({ error: "Ongeldige score." }, { status: 400 });
+  const parsed = entrySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid_input", issues: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
-  if (!Number.isFinite(maxTileVal) || maxTileVal < 0 || maxTileVal > 65536) {
-    return NextResponse.json({ error: "Ongeldige max tile." }, { status: 400 });
-  }
+  const data = parsed.data;
+  if (!data.name) return NextResponse.json({ error: "name_required" }, { status: 400 });
 
   const entry: LeaderboardEntry = {
-    name,
-    score: Math.floor(score),
-    maxTile: Math.floor(maxTileVal),
+    name: data.name,
+    score: Math.floor(data.score),
+    maxTile: Math.floor(data.maxTile),
     at: new Date().toISOString(),
   };
 
@@ -67,5 +82,6 @@ export async function POST(req: NextRequest) {
       .slice(0, 100);
   }
 
+  logger.info({ name: entry.name, score: entry.score }, "leaderboard_post");
   return NextResponse.json({ ok: true, entries: topN() });
 }

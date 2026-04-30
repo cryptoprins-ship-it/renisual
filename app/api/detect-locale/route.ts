@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,9 +53,14 @@ function countryToLocale(country: string | null | undefined): Locale {
 }
 
 export async function GET(req: NextRequest) {
+  // GET endpoint, but we still want to throttle abusive callers — public
+  // anyway because the response is intentionally cacheable per visitor.
+  const { success, reset } = await apiLimit.limit(clientKeyFromRequest(req));
+  if (!success) return rateLimitResponse(reset);
+
   const ip = pickClientIp(req);
   let country: string | null = null;
-  let lookupError: string | null = null;
+  let lookupError = false;
 
   if (ip && !isPrivateOrLoopback(ip)) {
     try {
@@ -65,21 +72,23 @@ export async function GET(req: NextRequest) {
         const data = (await res.json()) as { country_code?: string; country?: string };
         country = data.country_code ?? data.country ?? null;
       } else {
-        lookupError = `ipapi ${res.status}`;
+        lookupError = true;
+        logger.warn({ status: res.status }, "detect_locale_ipapi_status");
       }
-    } catch (e) {
-      lookupError = e instanceof Error ? e.message : "lookup failed";
+    } catch (err) {
+      lookupError = true;
+      logger.warn({ err }, "detect_locale_ipapi_failed");
     }
   }
 
   const locale = countryToLocale(country);
 
+  // Don't echo the raw IP back to the client — leaks the upstream
+  // forwarding chain. Country code is fine; locale is the actual answer.
   return NextResponse.json(
-    { locale, country, ip, ...(lookupError ? { error: lookupError } : {}) },
+    { locale, country, ...(lookupError ? { degraded: true } : {}) },
     {
       headers: {
-        // Per-visitor cache: each browser caches its own result for a day.
-        // `private` keeps shared CDNs from serving one visitor's lookup to another.
         "Cache-Control": "private, max-age=86400",
       },
     }

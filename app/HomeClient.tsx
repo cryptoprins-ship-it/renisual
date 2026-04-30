@@ -90,6 +90,9 @@ export default function HomeClient() {
   }, []);
 
   const [waitEmail, setWaitEmail] = useState("");
+  // Honeypot — invisible field that real users never fill. Bots that
+  // populate every input land here and the server silently drops them.
+  const [waitHoney, setWaitHoney] = useState("");
   const [waitState, setWaitState] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [waitError, setWaitError] = useState("");
 
@@ -102,7 +105,7 @@ export default function HomeClient() {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: waitEmail.trim(), topic: "Roadmap" }),
+        body: JSON.stringify({ email: waitEmail.trim(), topic: "Roadmap", website: waitHoney }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
@@ -409,6 +412,16 @@ export default function HomeClient() {
               onSubmit={submitWaitlist}
               className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-stretch"
             >
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={waitHoney}
+                onChange={(e) => setWaitHoney(e.target.value)}
+                style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+              />
               <input
                 type="email"
                 required

@@ -1,27 +1,48 @@
 import { GoogleGenAI, Modality } from "@google/genai";
+import { z } from "zod";
+import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
+import { verifyOrigin } from "@/lib/verifyOrigin";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-type RenderBody = {
-  photoDataUrl?: string;
-  referenceDataUrl?: string;
-  referenceDataUrls?: string[];
-  productLabel?: string;
-  productDescription?: string;
-  orientation?: "horizontal" | "vertical";
-  panelLength?: number;
-  panelVisibleHeight?: number;
-  panelWidthCm?: number;
-  facadeWidthCm?: number;
-  facadeHeightCm?: number;
-  windowFrame?: { material?: string };
-  door?: { material?: string; colour?: string };
-  prompt?: string;
-  locale?: string;
-};
-
 type InlinePart = { inlineData: { mimeType: string; data: string } };
+
+// Hard cap on inbound image bytes to keep one bad caller from blowing the
+// 4MB Vercel body limit AND stop someone funneling huge files into Gemini.
+// 8 MB base64 ≈ 6 MB raw — enough for a phone photo, modest for an SLR.
+const MAX_DATA_URL_LEN = 8 * 1024 * 1024;
+
+const dataUrl = z
+  .string()
+  .max(MAX_DATA_URL_LEN, "image_too_large")
+  .regex(/^data:image\/(png|jpe?g|webp);base64,/, "not_image_data_url");
+
+const renderSchema = z.object({
+  photoDataUrl: dataUrl,
+  referenceDataUrl: dataUrl.optional(),
+  referenceDataUrls: z.array(dataUrl).max(5).optional(),
+  productLabel: z.string().max(200).optional(),
+  productDescription: z.string().max(2000).optional(),
+  orientation: z.enum(["horizontal", "vertical"]).optional(),
+  panelLength: z.number().finite().positive().max(10000).optional(),
+  panelVisibleHeight: z.number().finite().positive().max(10000).optional(),
+  panelWidthCm: z.number().finite().positive().max(10000).optional(),
+  facadeWidthCm: z.number().finite().positive().max(100000).optional(),
+  facadeHeightCm: z.number().finite().positive().max(100000).optional(),
+  windowFrame: z.object({ material: z.string().max(200).optional() }).optional(),
+  door: z
+    .object({
+      material: z.string().max(200).optional(),
+      colour: z.string().max(100).optional(),
+    })
+    .optional(),
+  prompt: z.string().max(4000).optional(),
+  locale: z.string().max(10).optional(),
+});
+
+type RenderBody = z.infer<typeof renderSchema>;
 
 function dataUrlToInlinePart(dataUrl: string): InlinePart | null {
   const m = /^data:([^;,]+);base64,(.+)$/.exec(dataUrl);
@@ -40,7 +61,7 @@ function readEnvCaseInsensitive(name: string): string | undefined {
   return undefined;
 }
 
-function resolveGeminiKey(): { key?: string; diag: Record<string, unknown> } {
+function resolveGeminiKey(): string | undefined {
   const candidates = [
     "GEMINI_API_KEY",
     "Gemini_API_Key",
@@ -49,54 +70,52 @@ function resolveGeminiKey(): { key?: string; diag: Record<string, unknown> } {
     "GOOGLE_API_KEY",
     "Google_API_Key",
   ];
-  const tried: Record<string, string> = {};
   for (const name of candidates) {
     const raw = process.env[name];
-    if (typeof raw === "string") {
-      tried[name] = `len=${raw.length}, trim=${raw.trim().length}`;
-      if (raw.trim().length > 0) return { key: raw.trim(), diag: { matchedDirect: name, tried } };
-    } else {
-      tried[name] = "undefined";
-    }
+    if (typeof raw === "string" && raw.trim().length > 0) return raw.trim();
   }
-  const ci = readEnvCaseInsensitive("GEMINI_API_KEY");
-  if (ci) return { key: ci.trim(), diag: { matchedCaseInsensitive: true, tried } };
-
-  const allMatching = Object.keys(process.env).filter((k) => /gemini|google/i.test(k));
-  const valuesProbe = allMatching.map((k) => {
-    const v = process.env[k];
-    return { name: k, type: typeof v, len: typeof v === "string" ? v.length : null };
-  });
-  return { diag: { tried, allMatching, valuesProbe } };
+  return readEnvCaseInsensitive("GEMINI_API_KEY")?.trim();
 }
 
 export async function POST(request: Request) {
-  const { key: apiKey, diag } = resolveGeminiKey();
+  const forbidden = verifyOrigin(request);
+  if (forbidden) return forbidden;
+
+  const ip = clientKeyFromRequest(request);
+  const { success, reset } = await renderLimit.limit(ip);
+  if (!success) {
+    logger.warn({ ip }, "render_rate_limited");
+    return rateLimitResponse(reset);
+  }
+
+  const apiKey = resolveGeminiKey();
   if (!apiKey) {
-    console.error("[render] No usable Gemini API key found. Diagnostic:", JSON.stringify(diag));
+    // Don't echo env-var diagnostics back to the caller — that information
+    // is operationally useful but leaks our infra to attackers. Server log
+    // captures the detail for an operator looking at the dashboard.
+    logger.error("render_missing_gemini_key");
+    return Response.json({ error: "internal_error" }, { status: 500 });
+  }
+
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const parsed = renderSchema.safeParse(raw);
+  if (!parsed.success) {
     return Response.json(
-      {
-        error: "Gemini API key missing or empty on server.",
-        hint: "Add GEMINI_API_KEY in Vercel → Settings → Environment Variables (Production scope) with a non-empty value, then redeploy. Mixed-case names like 'Gemini_API_Key' also work.",
-        diag,
-      },
-      { status: 500 }
+      { error: "invalid_input", issues: parsed.error.flatten() },
+      { status: 400 }
     );
   }
-  console.log(`[render] Gemini key resolved (length=${apiKey.length}, prefix=${apiKey.slice(0, 4)}…), diag=${JSON.stringify(diag)}`);
+  const body: RenderBody = parsed.data;
 
-  let body: RenderBody;
-  try {
-    body = (await request.json()) as RenderBody;
-  } catch (err) {
-    console.error("[render] JSON parse failed:", err);
-    return Response.json({ error: "Invalid JSON in request." }, { status: 400 });
-  }
-
-  const photoPart = body.photoDataUrl ? dataUrlToInlinePart(body.photoDataUrl) : null;
+  const photoPart = dataUrlToInlinePart(body.photoDataUrl);
   if (!photoPart) {
-    console.error("[render] photoDataUrl missing or malformed. Body keys:", Object.keys(body));
-    return Response.json({ error: "Valid photoDataUrl missing." }, { status: 400 });
+    return Response.json({ error: "invalid_input" }, { status: 400 });
   }
 
   const referenceUrls = body.referenceDataUrls?.length
@@ -203,14 +222,14 @@ export async function POST(request: Request) {
 
     const imagePart = response.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
     if (!imagePart?.inlineData?.data) {
-      return Response.json({ error: "Geen afbeelding ontvangen van het model." }, { status: 502 });
+      logger.warn("render_no_image_returned");
+      return Response.json({ error: "upstream_no_image" }, { status: 502 });
     }
 
     const mime = imagePart.inlineData.mimeType ?? "image/png";
     return Response.json({ renderDataUrl: `data:${mime};base64,${imagePart.inlineData.data}` });
   } catch (err) {
-    console.error("[render] Gemini call failed:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return Response.json({ error: `Gemini call failed: ${message}` }, { status: 502 });
+    logger.error({ err }, "render_gemini_failed");
+    return Response.json({ error: "upstream_error" }, { status: 502 });
   }
 }
