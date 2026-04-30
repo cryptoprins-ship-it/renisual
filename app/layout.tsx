@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import HomeButton from "@/components/HomeButton";
@@ -74,6 +75,15 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
+        {/* Plausible analytics — cookieless, no PII, GDPR-exempt by
+            design. Mirrors the BrainArena setup so both sites report
+            into the same Plausible account. */}
+        <Script
+          defer
+          data-domain="renisual.com"
+          src="https://plausible.io/js/script.js"
+          strategy="afterInteractive"
+        />
         <ServiceWorkerRegister />
         <HomeButton />
         <LanguageSwitcher />
