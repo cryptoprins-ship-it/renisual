@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import Link from "next/link";
 import { products, categoryForType, type Orientation, type ProductCategory } from "@/lib/productCatalog";
 import { useSpanlImage } from "@/lib/spanlImageCatalog";
 import {
@@ -319,15 +319,21 @@ function KeralitColorPicker({
 function RenderingPanel({
   selectedProduct,
   keralitColorNumber,
-  zoomHint,
   emptyText,
   emptyHint,
+  selectedLabel,
+  ctaTitle,
+  ctaBody,
+  ctaButton,
 }: {
   selectedProduct: (typeof products)[number] | undefined;
   keralitColorNumber: number | null;
-  zoomHint: string;
   emptyText: string;
   emptyHint: string;
+  selectedLabel: string;
+  ctaTitle: string;
+  ctaBody: string;
+  ctaButton: string;
 }) {
   const isSpanl = selectedProduct?.brand === "Spanl";
   const spanlSku = isSpanl ? selectedProduct!.id.replace(/^spanl-/, "") : "";
@@ -336,9 +342,11 @@ function RenderingPanel({
 
   let src: string | null = null;
   let alt = "";
+  let skuLine = "";
   if (isSpanl) {
     src = spanlSrc;
     alt = spanlName;
+    skuLine = spanlSku.toUpperCase();
   } else if (selectedProduct?.brand === "Keralit") {
     const color =
       (keralitColorNumber != null
@@ -346,54 +354,47 @@ function RenderingPanel({
         : null) ?? KERALIT_COLORS[0];
     src = color?.thumbnailUrl ?? null;
     alt = `${selectedProduct.name} — ${color?.name ?? ""}`;
+    skuLine = color ? `${selectedProduct.brand} · ${color.name}` : selectedProduct.brand;
   }
 
   return (
-    <div className="relative h-full min-h-[40vh] overflow-hidden bg-stone-50 lg:min-h-0 print-hidden">
-      {src ? (
-        <TransformWrapper
-          initialScale={1}
-          minScale={0.5}
-          maxScale={5}
-          wheel={{ step: 0.1 }}
-          doubleClick={{ mode: "reset" }}
-        >
-          {({ zoomIn, zoomOut, resetTransform }) => (
-            <>
-              <div className="absolute right-3 top-3 z-10 flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => zoomIn()}
-                  className="h-8 w-8 border border-stone-200 bg-paper text-sm leading-none text-ink hover:bg-stone-100"
-                  aria-label="zoom in"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  onClick={() => zoomOut()}
-                  className="h-8 w-8 border border-stone-200 bg-paper text-sm leading-none text-ink hover:bg-stone-100"
-                  aria-label="zoom out"
-                >
-                  −
-                </button>
-                <button
-                  type="button"
-                  onClick={() => resetTransform()}
-                  className="h-8 border border-stone-200 bg-paper px-3 font-mono text-[10px] uppercase tracking-[0.15em] text-ink hover:bg-stone-100"
-                >
-                  Reset
-                </button>
-              </div>
-              <TransformComponent
-                wrapperClass="!w-full !h-full"
-                contentClass="!w-full !h-full flex items-center justify-center"
-              >
-                <img src={src} alt={alt} className="max-h-full max-w-full object-contain" />
-              </TransformComponent>
-            </>
-          )}
-        </TransformWrapper>
+    <div className="relative h-full min-h-[40vh] overflow-y-auto bg-stone-50 lg:min-h-0 print-hidden">
+      {src && selectedProduct ? (
+        // Compact preview + next-step CTA. The aside grants this panel the
+        // full column height; previously the image stretched into all of
+        // it which read as "broken layout". Constrain to a centered column
+        // with a fixed aspect-square thumbnail and explicit hand-off to
+        // /render so the user knows the calc step is done.
+        <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-6 py-12">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
+              {selectedLabel}
+            </p>
+            <div className="mt-3 aspect-square overflow-hidden border border-stone-200 bg-paper">
+              <img src={src} alt={alt} className="h-full w-full object-contain p-4" />
+            </div>
+            <p className="mt-3 font-display text-lg leading-tight text-ink">
+              {selectedProduct.name}
+            </p>
+            {skuLine && (
+              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-500">
+                {skuLine}
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-stone-200 pt-6">
+            <p className="font-display text-base text-ink">{ctaTitle}</p>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">{ctaBody}</p>
+            <Link
+              href={`/render?product=${encodeURIComponent(selectedProduct.id)}`}
+              className="mt-5 inline-flex items-center gap-2 bg-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
+            >
+              <span>{ctaButton}</span>
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
@@ -406,11 +407,6 @@ function RenderingPanel({
             {emptyHint}
           </p>
         </div>
-      )}
-      {src && (
-        <p className="pointer-events-none absolute left-3 top-3 z-10 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600/90">
-          {zoomHint}
-        </p>
       )}
     </div>
   );
@@ -1585,7 +1581,10 @@ export default function GevelCalcPage() {
             <RenderingPanel
               selectedProduct={selectedProduct}
               keralitColorNumber={keralitColorNumber}
-              zoomHint={t("zoom_hint")}
+              selectedLabel={t("gc.selectedProduct")}
+              ctaTitle={t("gc.calcCompleteTitle")}
+              ctaBody={t("gc.calcCompleteBody")}
+              ctaButton={t("gc.goToRendering")}
               emptyText={
                 locale === "nl"
                   ? "Selecteer een paneel om te visualiseren"
