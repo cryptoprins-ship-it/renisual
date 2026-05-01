@@ -292,7 +292,7 @@ export default function MobileGevelcalcPage() {
                     onClick={() => cameraRef.current?.click()}
                     className="min-h-[48px] w-full rounded-xl border border-black bg-white text-base font-medium"
                   >
-                    Foto opnieuw maken
+                    Foto wijzigen
                   </button>
                 </div>
               ) : (
@@ -302,15 +302,14 @@ export default function MobileGevelcalcPage() {
                   className="flex min-h-[120px] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-black bg-neutral-50 text-base font-semibold"
                 >
                   <span aria-hidden className="text-3xl">📷</span>
-                  <span>Foto maken</span>
-                  <span className="text-xs font-normal text-gray-600">of uit galerij kiezen</span>
+                  <span>Foto kiezen</span>
+                  <span className="text-xs font-normal text-gray-600">Camera of galerij</span>
                 </button>
               )}
               <input
                 ref={cameraRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="hidden"
                 onChange={(e) => handlePhotoFile(e.target.files?.[0] ?? null)}
               />
