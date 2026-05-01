@@ -607,6 +607,22 @@ export default function GevelCalcPage() {
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
+  // Right-column overview thumbnail. Hook called unconditionally — returns
+  // empty string when sku/name are empty so it's safe across product changes.
+  const overviewSpanlSku = selectedProduct?.brand === "Spanl"
+    ? selectedProduct.id.replace(/^spanl-/, "")
+    : "";
+  const overviewSpanlSrc = useSpanlImage(overviewSpanlSku, selectedProduct?.name);
+  const overviewThumbSrc = (() => {
+    if (selectedProduct?.brand === "Spanl") return overviewSpanlSrc;
+    if (selectedProduct?.brand === "Keralit") {
+      const c = keralitColorNumber != null
+        ? KERALIT_COLORS.find((x) => x.number === keralitColorNumber)
+        : null;
+      return c?.thumbnailUrl ?? KERALIT_COLORS[0]?.thumbnailUrl ?? "";
+    }
+    return "";
+  })();
   const productsByCategory = useMemo(
     () => products.filter((p) => categoryForType(p.type) === productCategory),
     [productCategory]
@@ -1020,8 +1036,8 @@ export default function GevelCalcPage() {
 
       <main className="min-h-[100dvh] bg-paper text-ink print:!h-auto print:!min-h-0 print:!overflow-visible">
         <SiteNav />
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 md:px-12 lg:grid-cols-12 lg:gap-8 lg:px-20 lg:py-10 print:!block print:!h-auto">
-          <div className="space-y-10 lg:col-span-5 print:!h-auto print:!overflow-visible">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 md:px-12 lg:grid-cols-[1fr_500px] lg:gap-12 lg:px-20 lg:py-10 print:!block print:!h-auto">
+          <div className="space-y-10 print:!h-auto print:!overflow-visible">
           <header className="border-b border-stone-200 pb-8 print-hidden">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
               {t("home.nav.calculator")}
@@ -1522,23 +1538,7 @@ export default function GevelCalcPage() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-black bg-white p-4">
-            <h2 className="text-lg font-semibold">{t("gc.totalsOverview")}</h2>
-            <div className="metrics-row mt-4 grid grid-cols-3 gap-2">
-              <div className="rounded-xl border border-black p-3">
-                <div className="text-xs text-gray-500">{t("gc.totalGross")}</div>
-                <div className="text-base font-semibold">{totals.gross.toFixed(2)} m²</div>
-              </div>
-              <div className="rounded-xl border border-black p-3">
-                <div className="text-xs text-gray-500">{t("gc.totalOpenings")}</div>
-                <div className="text-base font-semibold">{totals.openings.toFixed(2)} m²</div>
-              </div>
-              <div className="rounded-xl border border-black p-3">
-                <div className="text-xs text-gray-500">{t("gc.totalNet")}</div>
-                <div className="text-base font-semibold">{totals.net.toFixed(2)} m²</div>
-              </div>
-            </div>
-          </section>
+          {/* Totals card moved to right-column 04 — OVERZICHT (sticky). */}
 
           {selectedProduct && materialResult && (
             <section className="rounded-2xl border border-black bg-white p-4">
@@ -1636,17 +1636,7 @@ export default function GevelCalcPage() {
 
         <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3 print:hidden">
           <div className="mx-auto max-w-6xl">
-            <button
-              type="button"
-              onClick={goToRender}
-              className="flex items-center justify-center w-full rounded-xl border-2 border-black bg-white text-black px-4 py-2.5 text-sm font-semibold mb-2 hover:bg-black hover:text-white transition-colors"
-            >
-              {t("gc.viewRender")}
-            </button>
-            {!hasPhotos && (
-              <p className="text-[11px] text-center text-gray-400 -mt-1 mb-2">{t("gc.uploadHint")}</p>
-            )}
-
+            {/* "View render" CTA moved to right-column 04 — OVERZICHT. */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {mode === "advanced" && (
                 <button
@@ -1691,37 +1681,115 @@ export default function GevelCalcPage() {
             </div>
           </div>
           </div>
-          <aside className="flex flex-col lg:col-span-7 lg:sticky lg:top-20 lg:self-start print-hidden">
-            <RenderingPanel
-              selectedProduct={selectedProduct}
-              keralitColorNumber={keralitColorNumber}
-              selectedLabel={t("gc.selectedProduct")}
-              ctaTitle={t("gc.calcCompleteTitle")}
-              ctaBody={t("gc.calcCompleteBody")}
-              ctaButton={t("gc.goToRendering")}
-              emptyText={
-                locale === "nl"
-                  ? "Selecteer een paneel om te visualiseren"
-                  : locale === "de"
-                  ? "Wähle ein Paneel zur Visualisierung"
-                  : locale === "fr"
-                  ? "Sélectionne un panneau à visualiser"
-                  : locale === "es"
-                  ? "Selecciona un panel para visualizar"
-                  : "Select a panel to visualise"
-              }
-              emptyHint={
-                locale === "nl"
-                  ? "Upload een foto en kies een product. De rendering verschijnt hier."
-                  : locale === "de"
-                  ? "Lade ein Foto hoch und wähle ein Produkt. Das Rendering erscheint hier."
-                  : locale === "fr"
-                  ? "Téléverse une photo et choisis un produit. Le rendu apparaît ici."
-                  : locale === "es"
-                  ? "Sube una foto y elige un producto. La visualización aparecerá aquí."
-                  : "Upload a photo and pick a product. The rendering appears here."
-              }
-            />
+          <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto print-hidden">
+            <header>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
+                04 — {t("gc.totalsOverview")}
+              </p>
+            </header>
+
+            {/* Totals: gross / openings / net */}
+            <div className="border border-stone-200 bg-paper p-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                    {t("gc.totalGross")}
+                  </p>
+                  <p className="mt-1 font-display text-lg text-ink">{totals.gross.toFixed(2)}<span className="ml-1 font-mono text-xs text-stone-500">m²</span></p>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                    {t("gc.totalOpenings")}
+                  </p>
+                  <p className="mt-1 font-display text-lg text-ink">{totals.openings.toFixed(2)}<span className="ml-1 font-mono text-xs text-stone-500">m²</span></p>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                    {t("gc.totalNet")}
+                  </p>
+                  <p className="mt-1 font-display text-lg text-ink">{totals.net.toFixed(2)}<span className="ml-1 font-mono text-xs text-stone-500">m²</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Material summary — visible only when product selected */}
+            {selectedProduct && materialResult && (
+              <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-stone-600">{t("gc.netWithWaste")}</span>
+                  <span className="font-semibold text-ink">{materialResult.netWithWaste.toFixed(2)} m²</span>
+                </div>
+                {selectedProduct.type === "panel" && (
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
+                    <span className="font-semibold text-ink">{materialResult.panelCount}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-stone-600">{t("gc.materialPrice")}</span>
+                  <span className="font-semibold text-ink">{fmtMoney(materialResult.materialPriceExVat)}</span>
+                </div>
+                {materialResult.profileItems.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">{t("gc.profilesPrice")}</span>
+                    <span className="font-semibold text-ink">{fmtMoney(materialResult.profilePriceExVat)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-stone-200 pt-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600">{t("gc.totalAfterDiscount")}</span>
+                  <span className="font-display text-base text-ink">{fmtMoney(materialResult.totalExVat)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Product preview + CTA when selected */}
+            {selectedProduct ? (
+              <div className="border border-stone-200 bg-paper p-4">
+                <div className="flex items-center gap-3">
+                  {overviewThumbSrc ? (
+                    <img
+                      src={overviewThumbSrc}
+                      alt={selectedProduct.name}
+                      loading="lazy"
+                      className="block h-16 w-16 flex-shrink-0 border border-stone-200 object-cover"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 flex-shrink-0 border border-stone-200 bg-stone-100" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                      {t("gc.selectedProduct")}
+                    </p>
+                    <p className="truncate font-display text-sm text-ink">{selectedProduct.name}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={goToRender}
+                  className="mt-4 flex w-full items-center justify-center gap-2 bg-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
+                >
+                  <span>{t("gc.goToRendering")}</span>
+                  <span aria-hidden>→</span>
+                </button>
+                {!hasPhotos && (
+                  <p className="mt-2 text-[11px] text-stone-500">{t("gc.uploadHint")}</p>
+                )}
+              </div>
+            ) : (
+              <div className="border border-dashed border-stone-300 p-6 text-center">
+                <p className="text-xs text-stone-500">
+                  {locale === "nl"
+                    ? "Selecteer een paneel om te visualiseren"
+                    : locale === "de"
+                    ? "Wähle ein Paneel zur Visualisierung"
+                    : locale === "fr"
+                    ? "Sélectionne un panneau à visualiser"
+                    : locale === "es"
+                    ? "Selecciona un panel para visualizar"
+                    : "Select a panel to visualise"}
+                </p>
+              </div>
+            )}
           </aside>
         </div>
       </main>
