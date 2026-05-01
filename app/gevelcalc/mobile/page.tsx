@@ -12,6 +12,7 @@ import {
   toNumber,
 } from "@/lib/calcEngine";
 import { usePhotoStore } from "@/lib/usePhotoStore";
+import { useLocale } from "@/lib/i18n";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 const MAX_SIDES = 10;
@@ -54,6 +55,7 @@ function fmtEur(n: number): string {
 }
 
 export default function MobileGevelcalcPage() {
+  const { t } = useLocale();
   const [sides, setSides] = useState<CalcSide[]>(() => [makeSide(0)]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [selectedProductId, setSelectedProductId] = useState<string>(products[0]?.id ?? "");
@@ -185,7 +187,9 @@ export default function MobileGevelcalcPage() {
     <div className="flex min-h-[100dvh] flex-col bg-[#f6f4ef] pb-24">
       <header className="sticky top-0 z-10 border-b border-black bg-white px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Renisual — gevelcalc</h1>
+          <Link href="/" aria-label="Home" className="text-lg font-semibold">
+            Renisual — gevelcalc
+          </Link>
           <Link href="/gevelcalc" className="text-xs text-gray-600 underline">
             Desktop
           </Link>
@@ -303,7 +307,7 @@ export default function MobileGevelcalcPage() {
                 >
                   <span aria-hidden className="text-3xl">📷</span>
                   <span>Foto kiezen</span>
-                  <span className="text-xs font-normal text-gray-600">Camera of galerij</span>
+                  <span className="text-xs font-normal text-gray-600">{t("photo_upload_subtitle")}</span>
                 </button>
               )}
               <input

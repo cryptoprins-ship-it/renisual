@@ -43,7 +43,15 @@
       "Bash(git *)",
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth status)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npm audit *)",
+      "Bash(curl -i -s http://localhost:3000/api/test-db)",
+      "Bash(taskkill *)",
+      "Bash(curl -s -o /tmp/testdb.json -w \"HTTP %{http_code} size=%{size_download} type=%{content_type}\\\\n\" http://localhost:3000/api/test-db)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl *)",
+      "Bash(npx supabase *)"
     ]
   }
 }

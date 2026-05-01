@@ -1,208 +1,208 @@
-[
+﻿[
   {
     "name": "b10 01a",
-    "sku": "b10-01a",
+    "sku": "b10-01",
     "category": "panels",
     "group": "panels",
-    "slug": "b10-01a",
+    "slug": "b10-01",
     "url": "",
-    "folder": "/samples/spanl/panels/b10-01a",
+    "folder": "/samples/spanl/panels/b10-01",
     "images": [
       {
         "type": "main",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/main.jpg"
+        "local": "/samples/spanl/panels/b10-01/main.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-01.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-01.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-02.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-02.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-03.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-03.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-04.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-04.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-05.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-05.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-06.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-06.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-07.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-07.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-08.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-08.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-09.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-09.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-10.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-10.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-11.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-11.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-12.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-12.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-13.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-13.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-14.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-14.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-15.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-15.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-01a/variant-16.jpg"
+        "local": "/samples/spanl/panels/b10-01/variant-16.jpg"
       }
     ]
   },
   {
     "name": "b10 02a",
-    "sku": "b10-02a",
+    "sku": "b10-02",
     "category": "panels",
     "group": "panels",
-    "slug": "b10-02a",
+    "slug": "b10-02",
     "url": "",
-    "folder": "/samples/spanl/panels/b10-02a",
+    "folder": "/samples/spanl/panels/b10-02",
     "images": [
       {
         "type": "main",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/main.jpg"
+        "local": "/samples/spanl/panels/b10-02/main.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-01.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-01.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-02.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-02.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-03.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-03.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-04.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-04.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-05.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-05.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-06.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-06.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-07.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-07.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-08.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-08.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-09.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-09.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-10.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-10.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-11.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-11.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-12.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-12.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-13.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-13.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-14.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-14.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-15.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-15.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-16.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-16.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-17.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-17.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-18.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-18.jpg"
       },
       {
         "type": "variant",
         "source": "",
-        "local": "/samples/spanl/panels/b10-02a/variant-19.jpg"
+        "local": "/samples/spanl/panels/b10-02/variant-19.jpg"
       }
     ]
   },

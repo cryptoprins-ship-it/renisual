@@ -78,6 +78,7 @@ function build(name: string, maxReq: number, window: `${number} ${"s" | "m" | "h
   // route handlers even if env vars are absent or malformed.
   let upstash: Limiter | null = null;
   let resolved = false;
+  let warned = false;
   return {
     async limit(key: string) {
       if (!resolved) {
@@ -92,7 +93,25 @@ function build(name: string, maxReq: number, window: `${number} ${"s" | "m" | "h
         }
         resolved = true;
       }
-      return (upstash ?? memory).limit(key);
+      if (upstash) {
+        try {
+          return await upstash.limit(key);
+        } catch (err) {
+          // Upstash credentials present but invalid (WRONGPASS) or the
+          // service is unreachable. Fail-open to in-memory limiting for
+          // the rest of this process so we don't drop traffic. Log once
+          // so the operator notices but the log isn't spammed.
+          if (!warned) {
+            warned = true;
+            console.warn(
+              `[ratelimit:${name}] upstash unavailable, falling back to in-memory:`,
+              err
+            );
+          }
+          upstash = null;
+        }
+      }
+      return memory.limit(key);
     },
   };
 }

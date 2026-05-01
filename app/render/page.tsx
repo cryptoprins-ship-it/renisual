@@ -13,7 +13,10 @@ import {
 } from "@/lib/keralitColorCatalog";
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale } from "@/lib/i18n";
+import { useProjectStore } from "@/lib/projectStore";
+import { getPhotoUrl } from "@/lib/photoStorage";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
@@ -231,207 +234,6 @@ const RAL_HEX: Record<string, { hex: string; description: string }> = {
   "9010": { hex: "#F1ECE1", description: "warm off-white" },
 };
 
-const METALLIC_RALS = new Set(["9006", "9007"]);
-
-function metallicWarning(ral: string): string {
-  if (ral === "9006") {
-    return "CRITICAL COLOUR WARNING: RAL 9006 is WHITE ALUMINIUM — a metallic silver-grey colour, NOT white. The rendered facade MUST look distinctly grey-silver, like brushed metal. If the output looks white or cream, it is WRONG.";
-  }
-  if (ral === "9007") {
-    return "CRITICAL COLOUR WARNING: RAL 9007 is GREY ALUMINIUM — a darker metallic silver-grey, NOT plain grey paint. The rendered facade MUST read as anodised aluminium with a clear metallic sheen. If the output looks like flat matte grey, it is WRONG.";
-  }
-  return "";
-}
-
-function describeColor(panel: RenderPanel): string {
-  if (panel.ral && RAL_HEX[panel.ral]) {
-    const { hex, description } = RAL_HEX[panel.ral];
-    return `${panel.colorEn} — RAL ${panel.ral} (${description}, hex ${hex})`;
-  }
-  if (panel.ral) return `${panel.colorEn} (RAL ${panel.ral})`;
-  return panel.colorEn;
-}
-
-function isLightPanel(panel: RenderPanel): boolean {
-  if (panel.ral === "9010" || panel.ral === "9006") return true;
-  const c = panel.colorEn.toLowerCase();
-  return c.includes("white") || c.includes("silver") || c.includes("beige");
-}
-
-function describeSeam(panel: RenderPanel): string {
-  const light = isLightPanel(panel);
-  const lightShadowRule = light
-    ? "SHADOW RULE FOR LIGHT/WHITE PANELS: the seam shadow MUST be very pale grey (e.g. RGB ~210,210,210), NEVER black, NEVER dark grey. On a white wall a normal-strength shadow reads as a stark black stripe — that is wrong. Render the seam as an almost-imperceptible tonal break. If you cannot render a sufficiently subtle shadow, render NO seam line rather than a black/dark line."
-    : "";
-  switch (panel.finish) {
-    case "monoFlat":
-      return `Seam style: very narrow hairline seam between panels — NOT a dark gap, NOT a black line. The seam is essentially the same colour as the panel itself, only slightly darker by a thin shadow on one side. Adjacent panels read as one continuous coloured surface with subtle dividers. ${lightShadowRule}`;
-    case "monoGroove":
-      return `Seam style: a deep V-groove between panels. The groove sits a few millimeters back from the panel face and casts a clean shadow line, but its colour is still the panel colour — not pure black. ${lightShadowRule}`;
-    case "strip":
-      return `Seam style: thin horizontal/vertical shadow lines between narrow planks. The seam is a fine soft shadow, never a black gap; the planks themselves remain the panel colour edge-to-edge. ${lightShadowRule}`;
-    case "brick":
-      return "Seam style: thin mortar line between individual bricks — light grey mortar, NOT dark. Each brick keeps its full colour and surface texture.";
-    case "spanishTile":
-      return "Seam style: 3D tile overlap — each curved tile partially covers the next. Shadows fall under each tile lip, but no pure-black gaps.";
-    case "wood":
-      return `Seam style: tongue-and-groove plank seam, soft shadow line between planks; never a dark gap. ${lightShadowRule}`;
-    default:
-      return "";
-  }
-}
-
-function buildKeralitPrompt(opts: {
-  productName: string;
-  panelWidthCm: number;
-  finishEn: string;
-  colorName: string;
-  colorNumber: number;
-  orientation: Orientation;
-  refCount: number;
-  facade?: { widthCm?: number; heightCm?: number };
-  openings?: { windowFrame?: string; doorMaterial?: string; doorColour?: string };
-}): string {
-  const { productName, panelWidthCm, finishEn, colorName, colorNumber, orientation, refCount, facade, openings } = opts;
-  const isVertical = orientation === "vertical";
-
-  let seamCountLine = "";
-  if (isVertical && facade?.widthCm && facade.widthCm > 0) {
-    const count = Math.max(2, Math.round(facade.widthCm / panelWidthCm));
-    seamCountLine = `The facade is approximately ${(facade.widthCm / 100).toFixed(1)} m wide, so exactly ${count} vertical panels must be visible side-by-side.`;
-  } else if (!isVertical && facade?.heightCm && facade.heightCm > 0) {
-    const count = Math.max(2, Math.round(facade.heightCm / panelWidthCm));
-    seamCountLine = `The facade is approximately ${(facade.heightCm / 100).toFixed(1)} m tall, so exactly ${count} horizontal panels must be visible stacked vertically.`;
-  } else {
-    seamCountLine = `Seams visible at a regular interval of ${panelWidthCm} cm across the entire facade.`;
-  }
-
-  const orientationLine = isVertical
-    ? `PLACEMENT: VERTICAL — panels stand upright, seams are straight TOP-TO-BOTTOM lines, horizontal distance between adjacent seams = ${panelWidthCm} cm.`
-    : `PLACEMENT: HORIZONTAL — panels lie on their long edge, seams are straight LEFT-TO-RIGHT lines parallel to the ground, vertical distance between adjacent seams = ${panelWidthCm} cm.`;
-
-  const refLine = refCount === 1
-    ? "REFERENCE: image 2 is the official Keralit color thumbnail. Sample its underlying tone for the facade colour."
-    : "";
-
-  const windowLine = openings?.windowFrame ? `Also replace all window frames with ${openings.windowFrame}.` : "";
-  const doorLine = openings?.doorMaterial && openings?.doorColour
-    ? `Replace all doors with ${openings.doorMaterial} in ${openings.doorColour}.`
-    : "";
-
-  const lines = [
-    "You are a facade visualisation assistant for Renisual.",
-    "OUTPUT REQUIREMENT: the result MUST differ visibly from the input.",
-    `TASK: replace the existing facade material on the main building with Keralit ${productName} (PVC cladding, fully maintenance-free), ${finishEn}.`,
-    `COLOUR: Keralit color number ${colorNumber} — "${colorName}". Match this colour exactly. The Keralit ${finishEn} surface texture must be visible.`,
-    `TEXTURE: ${
-      finishEn.includes("Pure matt")
-        ? "completely smooth, matt finish, no wood grain, no relief"
-        : finishEn.includes("Modern oak")
-        ? "soft, even oak wood texture with subtle grain"
-        : "fine wood-grain texture across each panel face, like Classic Keralit profile"
-    }.`,
-    `STEP — ERASE: discard every seam, plank, brick joint, slat or board division of the OLD facade — they belong to the existing material and must NOT survive in the output.`,
-    `STEP — APPLY: install Keralit panels at ${panelWidthCm} cm visible width.`,
-    orientationLine,
-    seamCountLine,
-    refLine,
-    "Do NOT add any black lines, dark stripes, or shadows between panels. Panel seams must be the same colour as the panels, only slightly darker. Maximum seam width 3mm.",
-    "UNIFORMITY: every seam line identical to every other seam — same colour, width, intensity. Treat the entire facade as one continuous panelled surface.",
-    windowLine,
-    doorLine,
-    `PRESERVE EXACTLY (do NOT change position, size or shape of): window openings${
-      windowLine ? " (replace only the FRAMES as instructed above)" : ", window frames"
-    }, door openings${
-      doorLine ? " (replace only the door leaf as instructed above)" : ", doors, door frames"
-    }, gutters, roof edges, downspouts, glazing, sky, plants, street, vehicles, camera angle, perspective, lighting and shadows.`,
-    "OUTPUT: one photorealistic image of the full facade.",
-  ];
-  return lines.filter(Boolean).join(" ");
-}
-
-function buildDefaultPrompt(
-  panel: RenderPanel | undefined,
-  orientation: Orientation,
-  refCount: number,
-  facade?: { widthCm?: number; heightCm?: number },
-  openings?: { windowFrame?: string; doorMaterial?: string; doorColour?: string }
-): string {
-  if (!panel) return "";
-  const colorDesc = describeColor(panel);
-  const seamStyle = describeSeam(panel);
-  const isVertical = orientation === "vertical";
-
-  const windowLine = openings?.windowFrame
-    ? `Also replace all window frames with ${openings.windowFrame}.`
-    : "";
-  const doorLine = openings?.doorMaterial && openings?.doorColour
-    ? `Replace all doors with ${openings.doorMaterial} in ${openings.doorColour}.`
-    : "";
-
-  let seamCountLine = "";
-  if (isVertical && facade?.widthCm && facade.widthCm > 0) {
-    const count = Math.max(2, Math.round(facade.widthCm / panel.panelWidthCm));
-    seamCountLine = `The facade is approximately ${(facade.widthCm / 100).toFixed(1)} m wide, so exactly ${count} vertical panels must be visible side-by-side, producing ${count - 1} evenly-spaced vertical seam lines across the wall.`;
-  } else if (!isVertical && facade?.heightCm && facade.heightCm > 0) {
-    const count = Math.max(2, Math.round(facade.heightCm / panel.panelWidthCm));
-    seamCountLine = `The facade is approximately ${(facade.heightCm / 100).toFixed(1)} m tall, so exactly ${count} horizontal panels must be visible stacked vertically, producing ${count - 1} evenly-spaced horizontal seam lines across the wall.`;
-  } else {
-    seamCountLine = `Seams must be clearly visible at a regular interval of ${panel.panelWidthCm} cm across the entire facade.`;
-  }
-
-  const orientationBlock = isVertical
-    ? [
-        "PLACEMENT: VERTICAL CLADDING.",
-        "- Panels stand upright; long edge runs from the ground line up to the roof line.",
-        "- Seams between adjacent panels are STRAIGHT VERTICAL LINES (perpendicular to the ground).",
-        `- Horizontal distance between two consecutive vertical seams = ${panel.panelWidthCm} cm in reality.`,
-        "- All seams parallel, evenly spaced, running unbroken from bottom of wall to top of wall (interrupted only by openings).",
-        "VERIFY: looking at the output, you should see a row of evenly-spaced TOP-TO-BOTTOM seam lines across the entire facade.",
-      ].join(" ")
-    : [
-        "PLACEMENT: HORIZONTAL CLADDING.",
-        "- Panels lie on their long edge; long edge runs LEFT-TO-RIGHT across the wall.",
-        "- Seams between adjacent panels are STRAIGHT HORIZONTAL LINES (parallel to the ground).",
-        `- Vertical distance between two consecutive horizontal seams = ${panel.panelWidthCm} cm in reality. So across a 3-meter-tall wall there must be ~${Math.max(2, Math.round(300 / panel.panelWidthCm)) - 1} horizontal seam lines, evenly stacked.`,
-        "- All seams parallel, evenly spaced, running unbroken from the left edge of the wall to the right edge (interrupted only by openings).",
-        "VERIFY: looking at the output, you should see a stack of evenly-spaced LEFT-TO-RIGHT seam lines across the entire facade. If the output has no visible horizontal seam lines, it is wrong — redo it.",
-        "DO NOT keep the original facade material. DO NOT output a near-identical copy of the input photo. The cladding must clearly read as horizontal panels.",
-      ].join(" ");
-
-  const refLine =
-    refCount >= 2
-      ? "REFERENCES: image 2 is a close-up swatch (use for exact colour and surface texture). Image 3 shows installation context (use for plank rhythm and seam depth). The references are SWATCHES, not compositions — do not paste them; sample them."
-      : refCount === 1
-      ? "REFERENCE: use image 2 as a colour/texture/finish swatch — sample its colour and material, do not paste it as a layer."
-      : "NO REFERENCE IMAGE PROVIDED: render the material entirely from the colour and finish description above.";
-
-  const lines = [
-    "You are a facade visualisation assistant for Renisual.",
-    "OUTPUT REQUIREMENT: the result MUST differ visibly from the input. If your output looks identical to the input, the answer is incorrect.",
-    "STEP 1 — ERASE: in your mind, FIRST replace the entire existing facade with a smooth blank coloured wall. Discard every seam, plank line, weatherboard rabat, brick joint, slat edge, mortar line, board division and any other small-scale rhythm visible on the building. These belong to the OLD cladding and MUST NOT survive into the output. The output must NOT inherit the spacing of the existing planks/boards/bricks visible in the photo.",
-    `STEP 2 — APPLY: onto that blank wall, install Spanl panel ${panel.sku}. Finish/profile: ${finishEn(panel.finish)}. Each new panel has a visible width of ${panel.panelWidthCm} cm — this is typically MUCH wider than narrow weatherboard rabat (~15 cm) you may see in the input. The new panel rhythm must override the old one entirely.`,
-    `COLOUR (CRITICAL): ${colorDesc}. The cladding colour MUST exactly match this RAL value. Do NOT lighten the colour. Do NOT desaturate to white or pale grey. Reference photos may have been shot under bright studio lighting that makes them look paler — sample the underlying tone, not the highlights. The final wall must read as the stated colour at midday daylight.`,
-    panel.ral && METALLIC_RALS.has(panel.ral) ? metallicWarning(panel.ral) : "",
-    seamStyle,
-    orientationBlock,
-    seamCountLine,
-    refLine,
-    "TEXTURE: surface must NOT be a flat uniform colour — render each panel with its seam, plank rhythm and surface structure matching the finish (deep groove / narrow strip / brick face / Spanish-tile relief / wood grain).",
-    "UNIFORMITY (CRITICAL): every seam line must look IDENTICAL to every other seam line on the facade — same colour, same width, same intensity, same shadow direction. Do NOT render some seams as dark stripes and others as faint lines. Do NOT skip seams in the middle of the wall and only draw them near the edges. Treat the entire facade as one continuous panelled surface with a perfectly uniform seam pattern, broken only by openings (windows/doors).",
-    "Do NOT add any black lines, dark stripes, or shadows between panels. Panel seams must be the same colour as the panels, only slightly darker. Maximum seam width 3mm. Do not add any new dark elements that were not in the original photo.",
-    windowLine,
-    doorLine,
-    `PRESERVE EXACTLY (do NOT change position, size or shape of): window openings${
-      windowLine ? " (replace only the FRAMES as instructed above; keep glazing, opening size and position identical)" : ", window frames"
-    }, door openings${
-      doorLine ? " (replace only the door leaf/material as instructed above; keep opening size and position identical)" : ", doors, door frames"
-    }, gutters, roof edges, downspouts, glazing, sky, plants, street, vehicles, camera angle, perspective, lighting direction and shadows.`,
-    "OUTPUT: one photorealistic image of the full facade.",
-  ];
-  return lines.filter(Boolean).join(" ");
-}
-
 export default function RenderPage() {
   const { t, locale } = useLocale();
   const [savedConfig, setSavedConfig] = useState<SavedConfig | null>(null);
@@ -444,7 +246,6 @@ export default function RenderPage() {
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
 
   const [customPrompt, setCustomPrompt] = useState<string>("");
-  const [promptTouched, setPromptTouched] = useState<boolean>(false);
 
   const [variants, setVariants] = useState<RenderVariant[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -466,6 +267,9 @@ export default function RenderPage() {
   const [sampleTab, setSampleTab] = useState<"houses" | "woonboten" | null>(null);
   const [houseSamples, setHouseSamples] = useState<Array<{ file: string; label: string }>>([]);
   const [woonbootSamples, setWoonbootSamples] = useState<Array<{ file: string; label: string }>>([]);
+
+  const includeBoeideel = useProjectStore((s) => s.includeBoeideel);
+  const setIncludeBoeideel = useProjectStore((s) => s.setIncludeBoeideel);
 
   useEffect(() => {
     fetch("/samples/houses/index.json")
@@ -512,6 +316,27 @@ export default function RenderPage() {
     () => (selectedSku ? panels.find((p) => p.sku === selectedSku) : undefined),
     [panels, selectedSku]
   );
+
+  // Allowed orientations per product. Spanl: monoFlat/monoGroove support
+  // both, all other finishes (brick, spanishTile, wood, strip) horizontal-only.
+  // Keralit: read directly from the catalog row.
+  const allowedOrientations = useMemo<Orientation[]>(() => {
+    if (brand === "keralit") {
+      return selectedKeralitProduct?.orientations ?? ["horizontal", "vertical"];
+    }
+    if (!selectedPanel) return ["horizontal", "vertical"];
+    return selectedPanel.finish === "monoFlat" || selectedPanel.finish === "monoGroove"
+      ? ["horizontal", "vertical"]
+      : ["horizontal"];
+  }, [brand, selectedKeralitProduct, selectedPanel]);
+
+  // If the product changes and the current orientation is no longer allowed,
+  // snap to the first allowed value.
+  useEffect(() => {
+    if (allowedOrientations.length > 0 && !allowedOrientations.includes(orientation)) {
+      setOrientation(allowedOrientations[0]);
+    }
+  }, [allowedOrientations, orientation]);
   const sourcePhoto = photoOverride || (selectedSideId ? savedPhotos[selectedSideId] : "");
   const sidesWithPhoto = useMemo(
     () => (savedConfig?.sides ?? []).filter((s) => savedPhotos[s.id]),
@@ -528,8 +353,6 @@ export default function RenderPage() {
     return { widthCm, heightCm };
   }, [selectedSideId, savedConfig]);
 
-  const refCount = selectedPanel ? (selectedPanel.variantUrl ? 2 : selectedPanel.imageUrl ? 1 : 0) : 0;
-
   const openingsForPrompt = useMemo(
     () => ({
       windowFrame: windowMaterial ? WINDOW_MATERIAL_EN[windowMaterial] : undefined,
@@ -539,25 +362,9 @@ export default function RenderPage() {
     [windowMaterial, doorMaterial, doorColour]
   );
 
-  const keralitRefCount = brand === "keralit" && selectedKeralitColor ? 1 : 0;
-
-  const defaultPrompt = useMemo(() => {
-    if (brand === "keralit" && selectedKeralitProduct && selectedKeralitColor) {
-      return buildKeralitPrompt({
-        productName: selectedKeralitProduct.name,
-        panelWidthCm: selectedKeralitProduct.panelWorkSize / 10,
-        finishEn: KERALIT_FINISH_LABEL_EN[selectedKeralitColor.finish],
-        colorName: selectedKeralitColor.name,
-        colorNumber: selectedKeralitColor.number,
-        orientation,
-        refCount: keralitRefCount,
-        facade: facadeDims,
-        openings: openingsForPrompt,
-      });
-    }
-    return buildDefaultPrompt(selectedPanel, orientation, refCount, facadeDims, openingsForPrompt);
-  }, [brand, selectedKeralitProduct, selectedKeralitColor, selectedPanel, orientation, refCount, keralitRefCount, facadeDims, openingsForPrompt]);
-  const effectivePrompt = promptTouched ? customPrompt : defaultPrompt;
+  // Prompt construction now happens server-side in /api/render. The textarea
+  // here is for OPTIONAL user notes only — appended to the server prompt.
+  const effectivePrompt = customPrompt;
 
   useEffect(() => {
     loadSpanlImageIndex()
@@ -611,6 +418,39 @@ export default function RenderPage() {
     }
   }, [loadAllPhotos, t]);
 
+  // Hydrate from the cross-page project store: photo uploaded in
+  // /gevelcalc lives in Supabase Storage, the path is in zustand.
+  // Resolve a signed URL and feed it into photoOverride so the rest
+  // of the rendering pipeline uses it as the source photo.
+  useEffect(() => {
+    const path = useProjectStore.getState().photoStoragePath;
+    if (!path) return;
+    getPhotoUrl(path).then((url) => {
+      if (url) {
+        setPhotoOverride(url);
+        setSelectedSideId("");
+        setErrorMsg("");
+      }
+    });
+  }, []);
+
+  // Pre-select the product chosen in /gevelcalc.
+  useEffect(() => {
+    const stored = useProjectStore.getState().selectedProduct;
+    if (!stored) return;
+    if (stored.supplier_slug === "keralit") {
+      setBrand("keralit");
+      setSelectedKeralitProductId(stored.id);
+    } else if (stored.supplier_slug === "spanl") {
+      // productCatalog.id is built as `spanl-${sku.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+      // so reversing is: strip prefix, uppercase. Holds for the current
+      // panel catalog where every SKU is uppercase A–Z, digits, and hyphens.
+      setBrand("spanl");
+      const sku = stored.id.replace(/^spanl-/, "").toUpperCase();
+      setSelectedSku(sku);
+    }
+  }, []);
+
   useEffect(() => {
     setVariants([]);
     setErrorMsg("");
@@ -657,6 +497,7 @@ export default function RenderPage() {
       }
       const photoLarge = await compressDataUrl(sourcePhoto, 1600, 0.85);
 
+      let productSku: string | undefined;
       let productLabel: string;
       let productDescription: string;
       let panelWidthCm: number;
@@ -670,6 +511,7 @@ export default function RenderPage() {
         targetHex = undefined;
       } else if (selectedPanel) {
         const ralPart = selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : "";
+        productSku = selectedPanel.sku;
         productLabel = `Spanl ${selectedPanel.sku} — ${selectedPanel.colorEn}${ralPart}, ${finishEn(selectedPanel.finish)}`;
         productDescription = `Color: ${selectedPanel.colorEn}${ralPart}. Finish: ${finishEn(selectedPanel.finish)}. Visible panel width: ${selectedPanel.panelWidthCm} cm.`;
         panelWidthCm = selectedPanel.panelWidthCm;
@@ -681,6 +523,7 @@ export default function RenderPage() {
       const payload = {
         photoDataUrl: photoLarge,
         referenceDataUrls: refUrls,
+        productSku,
         productLabel,
         productDescription,
         orientation,
@@ -691,7 +534,11 @@ export default function RenderPage() {
         door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
           ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
           : undefined,
-        prompt: effectivePrompt || undefined,
+        // The textarea is now treated server-side as APPENDED notes to a
+        // simplified base prompt, not a full replacement. Send only when
+        // the user actually wrote notes — server builds the base prompt.
+        prompt: customPrompt.trim() ? customPrompt.trim() : undefined,
+        includeBoeideel,
         locale,
       };
 
@@ -752,11 +599,6 @@ export default function RenderPage() {
     } finally {
       setIsGenerating(false);
     }
-  }
-
-  function resetPrompt() {
-    setPromptTouched(false);
-    setCustomPrompt("");
   }
 
   const localeForDate = locale === "nl" ? "nl-NL" : locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : "en-GB";
@@ -988,12 +830,17 @@ export default function RenderPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
                   <select
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-black p-3 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
                     value={orientation}
                     onChange={(e) => setOrientation(e.target.value as Orientation)}
+                    disabled={allowedOrientations.length <= 1}
                   >
-                    <option value="horizontal">{t("render.horizontal")}</option>
-                    <option value="vertical">{t("render.vertical")}</option>
+                    <option value="horizontal" disabled={!allowedOrientations.includes("horizontal")}>
+                      {t("render.horizontal")}
+                    </option>
+                    <option value="vertical" disabled={!allowedOrientations.includes("vertical")}>
+                      {t("render.vertical")}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -1040,12 +887,17 @@ export default function RenderPage() {
             <div>
               <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
               <select
-                className="w-full rounded-xl border border-black p-3"
+                className="w-full rounded-xl border border-black p-3 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
                 value={orientation}
                 onChange={(e) => setOrientation(e.target.value as Orientation)}
+                disabled={allowedOrientations.length <= 1}
               >
-                <option value="horizontal">{t("render.horizontal")}</option>
-                <option value="vertical">{t("render.vertical")}</option>
+                <option value="horizontal" disabled={!allowedOrientations.includes("horizontal")}>
+                  {t("render.horizontal")}
+                </option>
+                <option value="vertical" disabled={!allowedOrientations.includes("vertical")}>
+                  {t("render.vertical")}
+                </option>
               </select>
             </div>
 
@@ -1174,29 +1026,60 @@ export default function RenderPage() {
         </section>
 
         <section>
+          <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            04 — {t("boeideel_section_title")}
+          </p>
+          <p className="mb-4 text-xs text-stone-500">{t("boeideel_explanation")}</p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setIncludeBoeideel(true)}
+              aria-pressed={includeBoeideel}
+              className={`flex-1 bg-paper px-4 py-3 text-left text-ink transition-colors ${
+                includeBoeideel
+                  ? "border-2 border-ink"
+                  : "border border-stone-300 hover:border-stone-500"
+              }`}
+            >
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
+                {t("boeideel_include")}
+              </p>
+              <p className="text-[11px] leading-tight text-stone-500">
+                {t("boeideel_include_hint")}
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIncludeBoeideel(false)}
+              aria-pressed={!includeBoeideel}
+              className={`flex-1 bg-paper px-4 py-3 text-left text-ink transition-colors ${
+                !includeBoeideel
+                  ? "border-2 border-ink"
+                  : "border border-stone-300 hover:border-stone-500"
+              }`}
+            >
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
+                {t("boeideel_exclude")}
+              </p>
+              <p className="text-[11px] leading-tight text-stone-500">
+                {t("boeideel_exclude_hint")}
+              </p>
+            </button>
+          </div>
+        </section>
+
+        <section>
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-              04 — {t("render.section.prompt")}
+              05 — {t("render.section.prompt")}
             </p>
-            {promptTouched && (
-              <button
-                type="button"
-                onClick={resetPrompt}
-                className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 underline-offset-4 hover:text-ink hover:underline"
-              >
-                {t("render.promptReset")}
-              </button>
-            )}
           </div>
           <p className="mb-3 text-xs text-stone-500">{t("render.promptHint")}</p>
           <textarea
-            value={effectivePrompt}
-            onChange={(e) => {
-              setPromptTouched(true);
-              setCustomPrompt(e.target.value);
-            }}
-            rows={6}
-            placeholder={defaultPrompt || t("render.promptPlaceholder")}
+            value={customPrompt}
+            onChange={(e) => setCustomPrompt(e.target.value)}
+            rows={3}
+            placeholder={t("render.promptPlaceholder")}
             className="w-full border border-stone-200 bg-paper p-3 font-mono text-xs text-ink"
           />
         </section>
@@ -1204,7 +1087,7 @@ export default function RenderPage() {
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-              05 — {t("render.section.renders")}
+              06 — {t("render.section.renders")}
             </p>
             <span
               className={`text-xs font-medium ${
@@ -1235,7 +1118,33 @@ export default function RenderPage() {
           <div className="mt-4 space-y-4">
             {variants.map((v) => (
               <article key={v.id} className="overflow-hidden rounded-xl border border-black">
-                <img src={v.dataUrl} alt={v.panelLabel} className="block w-full" />
+                {/* Fixed-size viewport so the zoom transform stays inside its
+                    box (otherwise scaling pushes content outside the article
+                    border and the user sees a white gap). centerOnInit fits
+                    the image to the box on first paint; double-click resets. */}
+                <div className="relative h-56 w-full overflow-hidden bg-stone-100">
+                  <TransformWrapper
+                    minScale={1}
+                    maxScale={6}
+                    initialScale={1}
+                    centerOnInit
+                    doubleClick={{ mode: "reset" }}
+                    wheel={{ step: 0.15 }}
+                    pinch={{ step: 5 }}
+                    limitToBounds
+                  >
+                    <TransformComponent
+                      wrapperStyle={{ width: "100%", height: "100%" }}
+                      contentStyle={{ width: "100%", height: "100%" }}
+                    >
+                      <img
+                        src={v.dataUrl}
+                        alt={v.panelLabel}
+                        className="h-full w-full object-contain"
+                      />
+                    </TransformComponent>
+                  </TransformWrapper>
+                </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     {v.colorCheck && (

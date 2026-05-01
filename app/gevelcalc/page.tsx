@@ -25,8 +25,15 @@ import {
 } from "@/lib/calcEngine";
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale, type Locale } from "@/lib/i18n";
+import { useProjectStore } from "@/lib/projectStore";
+import { uploadPhoto, UploadError } from "@/lib/photoStorage";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import SiteNav from "@/components/SiteNav";
+
+// Permissive accept hint so Android/iOS pickers offer Camera + Gallery +
+// Files. Real type/size validation happens in lib/photoStorage.ts after
+// the user picks; the bucket policy rejects non-images server-side too.
+const PHOTO_ACCEPT = "image/*";
 
 const MAX_SIDES = 10;
 const STORAGE_KEY = "renisual-gevelcalc-v1";
@@ -335,6 +342,9 @@ function RenderingPanel({
   ctaBody: string;
   ctaButton: string;
 }) {
+  const { t } = useLocale();
+  const includeBoeideel = useProjectStore((s) => s.includeBoeideel);
+  const setIncludeBoeideel = useProjectStore((s) => s.setIncludeBoeideel);
   const isSpanl = selectedProduct?.brand === "Spanl";
   const spanlSku = isSpanl ? selectedProduct!.id.replace(/^spanl-/, "") : "";
   const spanlName = isSpanl ? selectedProduct!.name : "";
@@ -388,6 +398,51 @@ function RenderingPanel({
                 {skuLine}
               </p>
             )}
+          </div>
+
+          <div className="border-t border-stone-200 pt-6">
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
+              {t("boeideel_section_title")}
+            </p>
+            <p className="mb-4 text-xs leading-relaxed text-stone-600">
+              {t("boeideel_explanation")}
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setIncludeBoeideel(true)}
+                aria-pressed={includeBoeideel}
+                className={`flex-1 bg-paper px-4 py-3 text-left text-ink transition-colors ${
+                  includeBoeideel
+                    ? "border-2 border-ink"
+                    : "border border-stone-300 hover:border-stone-500"
+                }`}
+              >
+                <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
+                  {t("boeideel_include")}
+                </p>
+                <p className="text-[11px] leading-tight text-stone-500">
+                  {t("boeideel_include_hint")}
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncludeBoeideel(false)}
+                aria-pressed={!includeBoeideel}
+                className={`flex-1 bg-paper px-4 py-3 text-left text-ink transition-colors ${
+                  !includeBoeideel
+                    ? "border-2 border-ink"
+                    : "border border-stone-300 hover:border-stone-500"
+                }`}
+              >
+                <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
+                  {t("boeideel_exclude")}
+                </p>
+                <p className="text-[11px] leading-tight text-stone-500">
+                  {t("boeideel_exclude_hint")}
+                </p>
+              </button>
+            </div>
           </div>
 
           <div className="border-t border-stone-200 pt-6">
@@ -547,6 +602,8 @@ export default function GevelCalcPage() {
   const [projectName, setProjectName] = useState("");
   const [calcDate, setCalcDate] = useState<string>("");
   const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
@@ -708,13 +765,35 @@ export default function GevelCalcPage() {
   }
 
   async function handleImageUpload(sideId: string, file: File | null) {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
     try {
+      // Local IndexedDB save keeps the per-side gallery + offline preview
+      // working even if Supabase Storage is unreachable.
       const dataUrl = await fileToDataUrl(file);
       await savePhoto(sideId, dataUrl);
       setPhotos((prev) => ({ ...prev, [sideId]: dataUrl }));
-    } catch {
+
+      // Upload to Supabase Storage so /render can hydrate via the
+      // shared project store. Last upload wins as the "primary" photo.
+      const { path, fileName } = await uploadPhoto(file);
+      useProjectStore.getState().setPhoto(path, fileName);
+    } catch (err) {
+      if (err instanceof UploadError) {
+        const messageKey = {
+          too_large: "upload_error_too_large",
+          wrong_type: "upload_error_wrong_type",
+          compression_failed: "upload_error_compression",
+          upload_failed: "upload_error_failed",
+        }[err.code];
+        setUploadError(t(messageKey));
+      } else {
+        setUploadError(t("upload_error_unknown"));
+      }
       showToast(t("gc.toast.uploadFailed"), "error");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -907,6 +986,13 @@ export default function GevelCalcPage() {
   const quickNetM2 = Math.max(0, quickTotalAreaM2 - quickOpeningsM2);
   const quickNetDisplay = m2ToUnit(quickNetM2, unit).toFixed(2);
 
+  // Mirror totalArea / openings into the cross-page project store so /render
+  // can show them. Run at component-render time; zustand's set() is a no-op
+  // when the values are unchanged.
+  useEffect(() => {
+    useProjectStore.getState().setCalculation(quickTotalAreaM2, quickOpeningsM2);
+  }, [quickTotalAreaM2, quickOpeningsM2]);
+
   return (
     <>
       <DynamicMetadata page="gevelcalc" />
@@ -1065,12 +1151,22 @@ export default function GevelCalcPage() {
                   <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept={PHOTO_ACCEPT}
                     className="hidden"
                     onChange={(e) => handleImageUpload(QUICK_SIDE_ID, e.target.files?.[0] ?? null)}
                   />
                 </label>
               </div>
+
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 print-hidden">
+                {t("upload_hint")}
+              </p>
+              {uploading && (
+                <p className="mt-2 text-sm text-stone-500 print-hidden">{t("uploading_photo")}</p>
+              )}
+              {uploadError && (
+                <p className="mt-2 text-sm text-red-600 print-hidden">{uploadError}</p>
+              )}
 
               {photos[QUICK_SIDE_ID] && (
                 <div className="mt-3 text-center">
@@ -1167,12 +1263,16 @@ export default function GevelCalcPage() {
                       <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={PHOTO_ACCEPT}
                         className="hidden"
                         onChange={(e) => handleImageUpload(side.id, e.target.files?.[0] ?? null)}
                       />
                     </label>
                   </div>
+
+                  <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 print-hidden">
+                    {t("upload_hint")}
+                  </p>
 
                   {photo && (
                     <div className="mt-3 text-center">
@@ -1315,6 +1415,13 @@ export default function GevelCalcPage() {
                               setSelectedProductId(p.id);
                               if (p.orientations[0]) setOrientation(p.orientations[0]);
                               if (p.brand !== "Keralit") setKeralitColorNumber(null);
+                              useProjectStore.getState().setProduct({
+                                id: p.id,
+                                sku: p.id,
+                                name: p.name,
+                                supplier_slug: p.brand.toLowerCase(),
+                                image_url: null,
+                              });
                             }}
                           />
                         ))}

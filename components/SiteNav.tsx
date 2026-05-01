@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import NavLocaleSwitcher from "./NavLocaleSwitcher";
+import ResetProjectButton from "./ResetProjectButton";
 import { useLocale } from "@/lib/i18n";
 
 /**
@@ -47,6 +48,7 @@ export default function SiteNav() {
               {t("home.nav.offerte")}
             </Link>
           </div>
+          <ResetProjectButton />
           <NavLocaleSwitcher compact className="ml-1" />
         </div>
       </div>
