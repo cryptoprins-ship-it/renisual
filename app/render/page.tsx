@@ -245,7 +245,6 @@ export default function RenderPage() {
   const [selectedSku, setSelectedSku] = useState<string>("");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
 
-  const [customPrompt, setCustomPrompt] = useState<string>("");
 
   const [variants, setVariants] = useState<RenderVariant[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -361,10 +360,6 @@ export default function RenderPage() {
     }),
     [windowMaterial, doorMaterial, doorColour]
   );
-
-  // Prompt construction now happens server-side in /api/render. The textarea
-  // here is for OPTIONAL user notes only — appended to the server prompt.
-  const effectivePrompt = customPrompt;
 
   useEffect(() => {
     loadSpanlImageIndex()
@@ -534,10 +529,6 @@ export default function RenderPage() {
         door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
           ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
           : undefined,
-        // The textarea is now treated server-side as APPENDED notes to a
-        // simplified base prompt, not a full replacement. Send only when
-        // the user actually wrote notes — server builds the base prompt.
-        prompt: customPrompt.trim() ? customPrompt.trim() : undefined,
         includeBoeideel,
         locale,
       };
@@ -577,12 +568,12 @@ export default function RenderPage() {
         panelLabel: productLabel,
         panelSku: panelSkuForVariant,
         orientation,
-        prompt: effectivePrompt,
+        prompt: "",
         dataUrl: renderDataUrl,
         createdAt: Date.now(),
       };
       setVariants((prev) => [variant, ...prev]);
-      const key = await sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${effectivePrompt}|${variant.id}`);
+      const key = await sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${variant.id}`);
       await saveRender(key, renderDataUrl).catch(() => {});
       if (targetHex) {
         try {
@@ -627,6 +618,7 @@ export default function RenderPage() {
             {t("nav.toCalc")} →
           </Link>
         </header>
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_500px]">
         <div className="space-y-12">
         <section>
           <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
@@ -1068,26 +1060,36 @@ export default function RenderPage() {
           </div>
         </section>
 
-        <section>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-              05 — {t("render.section.prompt")}
+        </div>
+
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+          <header>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
+              05 — {t("render.section.renders")}
             </p>
-          </div>
-          <p className="mb-3 text-xs text-stone-500">{t("render.promptHint")}</p>
-          <textarea
-            value={customPrompt}
-            onChange={(e) => setCustomPrompt(e.target.value)}
-            rows={3}
-            placeholder={t("render.promptPlaceholder")}
-            className="w-full border border-stone-200 bg-paper p-3 font-mono text-xs text-ink"
-          />
-        </section>
+          </header>
+
+          {sourcePhoto && (
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                {locale === "nl" ? "Origineel"
+                  : locale === "de" ? "Original"
+                  : locale === "fr" ? "Original"
+                  : locale === "es" ? "Original"
+                  : "Original"}
+              </p>
+              <img
+                src={sourcePhoto}
+                alt=""
+                className="block w-full border border-stone-200 object-contain"
+              />
+            </div>
+          )}
 
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-              06 — {t("render.section.renders")}
+              {t("render.section.renders")}
             </p>
             <span
               className={`text-xs font-medium ${
@@ -1214,6 +1216,7 @@ export default function RenderPage() {
             </div>
           )}
         </section>
+        </aside>
         </div>
       </div>
 

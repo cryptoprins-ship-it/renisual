@@ -26,8 +26,7 @@ function buildPrompt(
   brandPrefix: string,
   orientation: "horizontal" | "vertical" | undefined,
   facadeWidthMeters: number | undefined,
-  includeBoeideel: boolean,
-  userPrompt: string | undefined
+  includeBoeideel: boolean
 ): string {
   const colorLine =
     product.ral_code && product.color_hex
@@ -56,15 +55,12 @@ function buildPrompt(
     ? "Replace ALL vertical wall surfaces including the fascia board (boeideel — the horizontal trim plank along the roof edge above the wall) with the new cladding."
     : "Keep the fascia board (boeideel — the horizontal trim plank along the roof edge above the wall) UNCHANGED in its current appearance. Only replace the main wall cladding below the fascia.";
 
-  let prompt = `Replace the cladding on this facade with: ${brandPrefix}${product.name}.
+  return `Replace the cladding on this facade with: ${brandPrefix}${product.name}.
 ${colorLine}
 Surface profile: ${product.description ?? "as shown in product reference"}.
 ${orientationRule}
 Keep these unchanged: windows, doors, window frames, door frames, glazing, gutters, downpipes, roof tiles, and the sky.
 ${boeideelLine}`;
-
-  if (userPrompt?.trim()) prompt += `\n\nNotes: ${userPrompt.trim()}`;
-  return prompt;
 }
 
 // Hard cap on inbound image bytes to keep one bad caller from blowing the
@@ -114,10 +110,6 @@ const renderSchema = z.object({
       colour: z.string().max(100).optional(),
     })
     .optional(),
-  // Free-form additional instructions from the user textarea. Appended to
-  // the simple base prompt — never replaces it. Limit kept generous as
-  // safety headroom; the textarea itself caps client-side.
-  prompt: z.string().max(8000).optional(),
   // Whether the fascia board (boeideel) should be replaced with the new
   // cladding (true, default) or kept unchanged (false).
   includeBoeideel: z.boolean().default(true),
@@ -375,7 +367,6 @@ export async function POST(request: Request) {
     body.orientation,
     facadeWidthMeters,
     body.includeBoeideel,
-    body.prompt
   );
 
   console.log("[render] prompt:", promptText);
