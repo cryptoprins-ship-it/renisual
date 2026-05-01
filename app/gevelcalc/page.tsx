@@ -357,21 +357,28 @@ function RenderingPanel({
     skuLine = color ? `${selectedProduct.brand} · ${color.name}` : selectedProduct.brand;
   }
 
+  // When a product is selected we render at content-height (no h-full,
+  // no stone-50 background): the aside collapses around the compact card
+  // instead of stretching a tinted box across the full viewport. The
+  // empty state still uses the full panel — that's where stretched space
+  // is actually wanted (it acts as a placeholder canvas).
+  const hasSelection = !!(src && selectedProduct);
   return (
-    <div className="relative h-full min-h-[40vh] overflow-y-auto bg-stone-50 lg:min-h-0 print-hidden">
-      {src && selectedProduct ? (
-        // Compact preview + next-step CTA. The aside grants this panel the
-        // full column height; previously the image stretched into all of
-        // it which read as "broken layout". Constrain to a centered column
-        // with a fixed aspect-square thumbnail and explicit hand-off to
-        // /render so the user knows the calc step is done.
+    <div
+      className={
+        hasSelection
+          ? "print-hidden"
+          : "relative h-full min-h-[40vh] overflow-y-auto bg-stone-50 lg:min-h-0 print-hidden"
+      }
+    >
+      {hasSelection && selectedProduct ? (
         <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-6 py-12">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
               {selectedLabel}
             </p>
             <div className="mt-3 aspect-square overflow-hidden border border-stone-200 bg-paper">
-              <img src={src} alt={alt} className="h-full w-full object-contain p-4" />
+              <img src={src ?? ""} alt={alt} className="h-full w-full object-contain p-4" />
             </div>
             <p className="mt-3 font-display text-lg leading-tight text-ink">
               {selectedProduct.name}
@@ -1577,7 +1584,7 @@ export default function GevelCalcPage() {
             </div>
           </div>
           </div>
-          <aside className="flex h-[50vh] flex-col lg:col-span-7 lg:h-full print-hidden">
+          <aside className="flex flex-col lg:col-span-7 lg:sticky lg:top-20 lg:self-start print-hidden">
             <RenderingPanel
               selectedProduct={selectedProduct}
               keralitColorNumber={keralitColorNumber}
