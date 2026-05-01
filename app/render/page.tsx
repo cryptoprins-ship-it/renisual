@@ -16,7 +16,7 @@ import { useLocale } from "@/lib/i18n";
 import { useProjectStore } from "@/lib/projectStore";
 import { getPhotoUrl } from "@/lib/photoStorage";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
@@ -130,6 +130,37 @@ const DOOR_COLOUR_EN: Record<DoorColour, string> = {
 
 function cleanSku(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const ZOOM_LEVELS = [1, 2, 3] as const;
+type ZoomLevel = (typeof ZOOM_LEVELS)[number];
+
+function ZoomControls() {
+  const { setTransform } = useControls();
+  const [active, setActive] = useState<ZoomLevel>(1);
+  const goToLevel = (level: ZoomLevel) => {
+    setActive(level);
+    setTransform(0, 0, level, 250, "easeOut");
+  };
+  return (
+    <div className="absolute bottom-2 right-2 z-10 flex gap-1 rounded border border-stone-200 bg-white/95 p-0.5 shadow-sm">
+      {ZOOM_LEVELS.map((level) => (
+        <button
+          key={level}
+          type="button"
+          onClick={() => goToLevel(level)}
+          aria-label={`Zoom ${level}x`}
+          className={`px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+            active === level
+              ? "bg-ink text-paper"
+              : "text-stone-600 hover:bg-stone-100"
+          }`}
+        >
+          {level}x
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function findImagesForSku(index: SpanlImageProduct[], sku: string): { main?: string; variant?: string } {
@@ -1126,13 +1157,14 @@ export default function RenderPage() {
                     the image to the box on first paint; double-click resets. */}
                 <div className="relative h-56 w-full overflow-hidden bg-stone-100">
                   <TransformWrapper
-                    minScale={1}
-                    maxScale={6}
                     initialScale={1}
+                    minScale={1}
+                    maxScale={3}
                     centerOnInit
-                    doubleClick={{ mode: "reset" }}
-                    wheel={{ step: 0.15 }}
-                    pinch={{ step: 5 }}
+                    wheel={{ disabled: true }}
+                    pinch={{ disabled: true }}
+                    doubleClick={{ disabled: true }}
+                    panning={{ disabled: false }}
                     limitToBounds
                   >
                     <TransformComponent
@@ -1145,6 +1177,7 @@ export default function RenderPage() {
                         className="h-full w-full object-contain"
                       />
                     </TransformComponent>
+                    <ZoomControls />
                   </TransformWrapper>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
