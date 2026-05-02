@@ -53,37 +53,6 @@ type PromptOptions = {
   includeFascia: boolean;
 };
 
-// Framing-preservation wrapper. Gemini Flash Image treats every request
-// as a creative re-composition by default and will sometimes crop, zoom,
-// or reframe the output — making side-by-side comparisons unreliable.
-// The block at the START locks framing in before the model considers
-// transformation; the block at the END is a deliberate repetition,
-// because image models respond to repeated key constraints. Both blocks
-// wrap the assembled prompt so the FINAL CHECK stays last even for
-// Mono Groove (where groovePatternBlock is appended after the Mono Flat
-// body).
-const FRAMING_PRESERVATION_BLOCK = `CRITICAL — IMAGE FRAMING (read this first):
-
-Preserve the EXACT framing, composition, and viewpoint of the input image. This is non-negotiable.
-
-- Do NOT crop the image
-- Do NOT zoom in or zoom out
-- Do NOT change the camera angle or perspective
-- Do NOT shift the framing to focus on a specific element
-- Do NOT add or remove elements at the edges of the frame
-- The output must show the same visible scene boundaries as the input — every element visible in the input must be visible in the output, in the same proportions and position
-
-The output dimensions and aspect ratio must match the input exactly. The viewer should be able to overlay input and output and see identical framing — only the cladding has changed, nothing else.
-
-If the input shows the full facade plus surrounding context (sky, water, neighbours, foreground objects): the output must show the same full scope. Do not isolate the facade. Do not reframe to a "better composition".`;
-
-const FINAL_FRAMING_CHECK = `FINAL FRAMING CHECK:
-The output image must have IDENTICAL framing, zoom level, and composition as the input. Same camera position, same scene boundaries, same proportions. Only the cladding texture, color, and pattern have changed. Everything else — including which parts of the building and surroundings are visible — is preserved exactly.`;
-
-function wrapWithFraming(body: string): string {
-  return `${FRAMING_PRESERVATION_BLOCK}\n\n${body}\n\n${FINAL_FRAMING_CHECK}`;
-}
-
 // Top-level dispatcher. Mono Flat is the base; Mono Groove appends a
 // groove-pattern block on top of the SAME buildMonoFlatPrompt so it
 // inherits panel-count enforcement, color compensation, joint
@@ -91,22 +60,17 @@ function wrapWithFraming(body: string): string {
 // surface description changes. Mono Textured stays on the legacy
 // buildBasePrompt for now — gets its own enforcement pass once
 // textured products exist in the catalog.
-//
-// All Mono-* lines are wrapped with the framing-preservation block so
-// Gemini cannot crop or zoom the output. Legacy (Strip / Brick / Wood /
-// Spanish Tile / Keralit free-text) is left untouched until each line
-// gets its own targeted rewrite.
 function buildRenderPrompt(opts: PromptOptions): string {
   const line = detectLine(opts.product);
   if (line === "mono_flat") {
-    return wrapWithFraming(buildMonoFlatPrompt(opts));
+    return buildMonoFlatPrompt(opts);
   }
   if (line === "mono_groove") {
-    return wrapWithFraming(`${buildMonoFlatPrompt(opts)}\n\n${groovePatternBlock(opts)}`);
+    return `${buildMonoFlatPrompt(opts)}\n\n${groovePatternBlock(opts)}`;
   }
   if (line === "mono_textured") {
     const tex = texturePatternBlock(opts);
-    return wrapWithFraming(tex ? `${buildBasePrompt(opts)}\n\n${tex}` : buildBasePrompt(opts));
+    return tex ? `${buildBasePrompt(opts)}\n\n${tex}` : buildBasePrompt(opts);
   }
   return legacyPromptBlock(opts);
 }
