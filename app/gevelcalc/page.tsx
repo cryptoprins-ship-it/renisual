@@ -50,6 +50,24 @@ function sideKeyForIndex(i: number): string {
   return ["gc.side.front", "gc.side.back", "gc.side.left", "gc.side.right"][i] ?? "gc.side.numbered";
 }
 
+// Defaults across all locales + the raw i18n keys themselves. Used by the
+// locale-rewrite effect to detect "this side name is a default that should
+// be re-translated" vs "the user typed a custom name we must preserve".
+const SIDE_DEFAULTS: ReadonlySet<string> = new Set([
+  // raw keys (leak when initial useState runs before t() is ready)
+  "gc.side.front", "gc.side.back", "gc.side.left", "gc.side.right",
+  // nl
+  "Voorzijde", "Achterzijde", "Linkerzijde", "Rechterzijde",
+  // en
+  "Front", "Back", "Left", "Right",
+  // de
+  "Vorderseite", "Rückseite", "Linke Seite", "Rechte Seite",
+  // fr
+  "Façade avant", "Façade arrière", "Côté gauche", "Côté droit",
+  // es
+  "Frente", "Trasera", "Lado izquierdo", "Lado derecho",
+]);
+
 function createOpening(type: OpeningType, t: (k: string, p?: Record<string, string | number>) => string): OpeningGroup {
   return {
     id: crypto.randomUUID(),
@@ -642,8 +660,9 @@ export default function GevelCalcPage() {
       prev.map((s, i) => {
         const key = sideKeyForIndex(i);
         const defaultName = key === "gc.side.numbered" ? t(key, { n: i + 1 }) : t(key);
-        // only rewrite if name was empty or matches a known default in any locale
-        if (!s.name || s.name === "Voorzijde" || s.name === "Achterzijde" || s.name === "Linkerzijde" || s.name === "Rechterzijde") {
+        // Rewrite when name is empty, a raw i18n key, or a known default in
+        // any supported locale. User-typed custom names are preserved.
+        if (!s.name || SIDE_DEFAULTS.has(s.name)) {
           return { ...s, name: defaultName };
         }
         return s;

@@ -1817,6 +1817,19 @@ export function translate(locale: Locale, key: string, params?: Record<string, s
   const direct = TRANSLATIONS[locale]?.[key];
   const value = direct ?? TRANSLATIONS.en[key] ?? TRANSLATIONS.nl[key] ?? key;
 
+  // Final-line defence: if the resolver still returned the raw key, prefer a
+  // related fallback over leaking dotted strings into the UI. Today only
+  // gc.side.* uses dots; extend the prefix list when more namespaces appear.
+  if (value === key && key.includes(".")) {
+    const generic =
+      TRANSLATIONS[locale]?.["gc.side.numbered"] ??
+      TRANSLATIONS.en["gc.side.numbered"] ??
+      TRANSLATIONS.nl["gc.side.numbered"];
+    if (key.startsWith("gc.side.") && generic) {
+      return fmt(generic, { n: params?.n ?? "" });
+    }
+  }
+
   if (
     process.env.NODE_ENV !== "production" &&
     direct === undefined &&
