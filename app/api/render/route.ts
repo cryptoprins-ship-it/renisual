@@ -26,15 +26,18 @@ type ProductForPrompt = {
   panel_work_size_mm?: number | null;
 };
 
-type ProductLine = "mono_flat" | "other";
+type ProductLine = "mono_flat" | "mono_groove" | "mono_textured" | "other";
 
-// Decide which prompt block applies. Mono Flat needs the new strong
-// transformation language (this commit); everything else (Mono Groove,
-// Strip, Brick, Spanish Tile, Wood) stays on the legacy buildPrompt
-// block until they get their own targeted prompts.
+// Decide which prompt branch applies. Mono Flat is the base treatment;
+// Mono Groove and Mono Textured layer their pattern instructions on
+// top of that base. Everything else (Strip, Brick, Spanish Tile, Wood,
+// Keralit free-text) keeps the legacy buildPrompt until those lines
+// get their own targeted prompts.
 function detectLine(product: ProductForPrompt): ProductLine {
   const haystack = `${product.name} ${product.description ?? ""}`.toLowerCase();
   if (haystack.includes("mono flat")) return "mono_flat";
+  if (haystack.includes("mono groove")) return "mono_groove";
+  if (haystack.includes("mono textured")) return "mono_textured";
   return "other";
 }
 
@@ -47,14 +50,59 @@ type PromptOptions = {
   includeFascia: boolean;
 };
 
-// Top-level dispatcher. Other render paths in the API call into this
-// instead of the line-specific functions so a future Mono Groove /
-// Mono Textured rewrite is just a new branch.
+// Top-level dispatcher. Mono Flat is the base; Mono Groove and Mono
+// Textured append a pattern-modifier block to that same base. The
+// additive shape keeps colour, finish, joints, preserve-elements, and
+// the fascia toggle consistent across all three treatments — only the
+// surface description changes.
 function buildRenderPrompt(opts: PromptOptions): string {
-  if (detectLine(opts.product) === "mono_flat") {
-    return flatPanelPromptBlock(opts);
+  const line = detectLine(opts.product);
+  if (line === "mono_flat") {
+    return buildBasePrompt(opts);
+  }
+  if (line === "mono_groove") {
+    return `${buildBasePrompt(opts)}\n\n${groovePatternBlock(opts)}`;
+  }
+  if (line === "mono_textured") {
+    const tex = texturePatternBlock(opts);
+    return tex ? `${buildBasePrompt(opts)}\n\n${tex}` : buildBasePrompt(opts);
   }
   return legacyPromptBlock(opts);
+}
+
+// Mono Groove pattern layer. Appended AFTER buildBasePrompt() so its
+// "Override the previous 'subtle thin shadow lines'" line targets the
+// SEAMS clause earlier in the prompt and replaces it with deep
+// recessed channels. The verbatim phrasing matters: "DEEP visible
+// grooves", "must be clearly visible — not subtle", and the rabat /
+// shadow-gap visual reference all earn their place. Don't paraphrase
+// without re-testing on a wood-siding photo.
+function groovePatternBlock(opts: PromptOptions): string {
+  const visibleWidthMm = opts.product.panel_work_size_mm ?? 370;
+  return `ADDITIONAL DETAIL — DEEP GROOVES BETWEEN PANELS:
+
+Override the previous "subtle thin shadow lines" between panels. Instead, render DEEP visible grooves between adjacent panels across the facade.
+
+The grooves are recessed channels approximately 15mm deep, creating clearly visible dark shadow lines. Each panel is ${visibleWidthMm}mm wide, so a groove appears every ${visibleWidthMm}mm in the direction perpendicular to panel length.
+
+Visual reference: Dutch "rabat" cladding or modern shadow-gap cladding — clean architectural reveal joints between panels.
+
+The panel face itself remains completely flat, smooth, and matte (as described in the base prompt). The grooves are the defining feature distinguishing this product from a flat panel.
+
+CRITICAL: the grooves must be clearly visible — not subtle. A viewer should immediately see the rhythmic pattern of panel-groove-panel-groove across the facade.`;
+}
+
+// Mono Textured pattern layer — placeholder. No textured products
+// exist in the catalog yet; once seed data + visual references land
+// we'll fill this in. Returning an empty string means a textured
+// product (if one is ever inserted prematurely) renders as Mono
+// Flat — no crash, no broken prompt, just the base treatment.
+function texturePatternBlock(opts: PromptOptions): string {
+  // eslint-disable-next-line no-console
+  console.warn(
+    `[render] Mono Textured prompt not yet implemented for ${opts.product.sku ?? opts.product.name}`
+  );
+  return "";
 }
 
 // Joint counter — perpendicular shadow lines where consecutive panels
@@ -85,13 +133,16 @@ function jointBlock(opts: {
   return `${joints} thin perpendicular shadow lines spaced evenly across the facade where panels meet end-to-end.`;
 }
 
-// Mono Flat block. The phrasing in REMOVE / "Treat the current wall
-// covering as if it does not exist" / "Transform this facade by
-// completely replacing" is intentionally kept verbatim — it has been
-// chosen because Gemini responds to the imperative + negative
-// descriptors more strongly than to softer alternatives. Do not
-// paraphrase without re-testing on the woonboot wood-siding photo.
-function flatPanelPromptBlock(opts: PromptOptions): string {
+// Mono Flat base block — also used as the foundation for Mono Groove
+// and (eventually) Mono Textured prompts via buildRenderPrompt.
+//
+// The phrasing in REMOVE / "Treat the current wall covering as if it
+// does not exist" / "Transform this facade by completely replacing"
+// is intentionally kept verbatim — it has been chosen because Gemini
+// responds to the imperative + negative descriptors more strongly
+// than to softer alternatives. Do not paraphrase without re-testing
+// on the woonboot wood-siding photo.
+function buildBasePrompt(opts: PromptOptions): string {
   const { product, brandPrefix, orientation, includeFascia } = opts;
   const panelLengthMm = product.panel_length_mm ?? 4200;
   const visibleWidthMm = product.panel_work_size_mm ?? 370;
