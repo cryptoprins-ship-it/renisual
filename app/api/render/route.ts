@@ -214,6 +214,8 @@ REMOVE: all existing wall cladding, all wood grain texture, all horizontal or ve
 
 ADD: ${brandPrefix}${productCode} ${product.name} panels — manufactured rectangular cladding panels with completely flat, smooth, matte surfaces. Each panel is ${visibleWidthMm}mm wide and up to ${panelLengthMm}mm long.
 
+REFERENCE IMAGE INTERPRETATION: the product reference photo shows the panel SURFACE, SHAPE, and SEAM RHYTHM only. The COLOR in the reference photo is UNRELIABLE — it was shot under bright studio lighting on a white background, which makes the panels appear significantly lighter and more washed-out than the real product. DO NOT match the reference photo's color. Use ONLY the hex value below for color.
+
 ORIENTATION: ${orientationLine}
 
 ${rhythmSection}SEAMS: subtle thin shadow lines between adjacent panels (every ${visibleWidthMm}mm in the direction perpendicular to panel length). These are narrow shadow gaps, NOT deep grooves. Visible but understated.
@@ -225,7 +227,7 @@ JOINTS: ${jointBlock({
     panelLengthMm,
   })}
 
-COLOR: ${colorName} (${ralPart}). ${hexClause}Uniform across all panels. No color variation, no weathering, no patina. The color must clearly read as ${colorName} — not lighter, not washed out.
+COLOR (AUTHORITATIVE — overrides reference photo): ${colorName} (${ralPart}). ${hexClause}This hex value is the ground truth. Render the panels at exactly this darkness and saturation. The reference photo looks lighter than this — that is wrong, ignore it. Uniform across all panels. No color variation, no weathering, no patina. The result must clearly read as ${colorName} — not lighter, not washed out, not cream, not white.
 
 SURFACE: completely flat, no texture, no wood grain, no embossed pattern, no ribs, no fluting. Matte finish with even diffuse light reflection. NO glossy reflections, NO sheen.
 
