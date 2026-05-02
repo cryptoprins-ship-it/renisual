@@ -651,6 +651,14 @@ export default function GevelCalcPage() {
   );
   const { savePhoto, deletePhoto, loadAllPhotos, clearAllPhotos } = usePhotoStore();
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Per-side <input type="file"> refs so we can reset .value after each
+  // upload (otherwise re-selecting the same file fires no change event)
+  // and after a remove/retry (so the box is clean again).
+  const fileInputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
+  // Monotonic id stamped on every handleImageUpload call. After each await
+  // we compare against the latest id; if a newer upload has started, the
+  // current invocation is stale and must not write to state.
+  const uploadIdRef = useRef(0);
 
   const hasPhotos = Object.keys(photos).length > 0;
 
@@ -799,22 +807,49 @@ export default function GevelCalcPage() {
     updateSide(sideId, (side) => ({ ...side, openings: side.openings.filter((o) => o.id !== openingId) }));
   }
 
+  // Wipe every piece of upload state for a side: local preview, IndexedDB
+  // entry, file-input value (so the same file can be re-selected), upload
+  // error, and any in-flight handler (via uploadIdRef bump). Used by the
+  // error-state retry button and the loaded-state remove button.
+  function clearPhotoState(sideId: string) {
+    uploadIdRef.current += 1;
+    setUploadError(null);
+    setUploading(false);
+    setPhotos((prev) => {
+      if (!(sideId in prev)) return prev;
+      const next = { ...prev };
+      delete next[sideId];
+      return next;
+    });
+    deletePhoto(sideId).catch(() => {});
+    const input = fileInputRefs.current.get(sideId);
+    if (input) input.value = "";
+  }
+
   async function handleImageUpload(sideId: string, file: File | null) {
     if (!file) return;
+    // Stamp this invocation. Any prior in-flight upload sees myId !==
+    // uploadIdRef.current after its await and bails out before writing
+    // stale data into state.
+    const myId = ++uploadIdRef.current;
     setUploadError(null);
     setUploading(true);
     try {
       // Local IndexedDB save keeps the per-side gallery + offline preview
       // working even if Supabase Storage is unreachable.
       const dataUrl = await fileToDataUrl(file);
+      if (myId !== uploadIdRef.current) return;
       await savePhoto(sideId, dataUrl);
+      if (myId !== uploadIdRef.current) return;
       setPhotos((prev) => ({ ...prev, [sideId]: dataUrl }));
 
       // Upload to Supabase Storage so /render can hydrate via the
       // shared project store. Last upload wins as the "primary" photo.
       const { path, fileName } = await uploadPhoto(file);
+      if (myId !== uploadIdRef.current) return;
       useProjectStore.getState().setPhoto(path, fileName);
     } catch (err) {
+      if (myId !== uploadIdRef.current) return;
       if (err instanceof UploadError) {
         const messageKey = {
           too_large: "upload_error_too_large",
@@ -828,7 +863,9 @@ export default function GevelCalcPage() {
       }
       showToast(t("gc.toast.uploadFailed"), "error");
     } finally {
-      setUploading(false);
+      if (myId === uploadIdRef.current) {
+        setUploading(false);
+      }
     }
   }
 
@@ -1185,10 +1222,17 @@ export default function GevelCalcPage() {
                   </span>
                   <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
                   <input
+                    ref={(el) => { fileInputRefs.current.set(QUICK_SIDE_ID, el); }}
                     type="file"
                     accept={PHOTO_ACCEPT}
                     className="hidden"
-                    onChange={(e) => handleImageUpload(QUICK_SIDE_ID, e.target.files?.[0] ?? null)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      // Reset value so re-selecting the SAME file still
+                      // fires onChange (browsers skip identical-value events).
+                      e.target.value = "";
+                      handleImageUpload(QUICK_SIDE_ID, file);
+                    }}
                   />
                 </label>
               </div>
@@ -1297,10 +1341,15 @@ export default function GevelCalcPage() {
                       </span>
                       <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
                       <input
+                        ref={(el) => { fileInputRefs.current.set(side.id, el); }}
                         type="file"
                         accept={PHOTO_ACCEPT}
                         className="hidden"
-                        onChange={(e) => handleImageUpload(side.id, e.target.files?.[0] ?? null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          e.target.value = "";
+                          handleImageUpload(side.id, file);
+                        }}
                       />
                     </label>
                   </div>
