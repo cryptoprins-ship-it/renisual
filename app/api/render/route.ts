@@ -18,6 +18,9 @@ type ProductForPrompt = {
   ral_code: string | null;
   color_name: string | null;
   color_hex: string | null;
+  // Compensated hex used only by the Mono Flat prompt to counteract
+  // Gemini's ~15-20% lightening bias. Falls back to color_hex when null.
+  color_hex_render?: string | null;
   image_url: string | null;
   // Panel geometry — used by the Mono Flat prompt block to anchor the
   // panel size and joint-spacing language. Optional so legacy / Keralit
@@ -58,7 +61,7 @@ type PromptOptions = {
 function buildRenderPrompt(opts: PromptOptions): string {
   const line = detectLine(opts.product);
   if (line === "mono_flat") {
-    return buildBasePrompt(opts);
+    return buildMonoFlatPrompt(opts);
   }
   if (line === "mono_groove") {
     return `${buildBasePrompt(opts)}\n\n${groovePatternBlock(opts)}`;
@@ -68,6 +71,25 @@ function buildRenderPrompt(opts: PromptOptions): string {
     return tex ? `${buildBasePrompt(opts)}\n\n${tex}` : buildBasePrompt(opts);
   }
   return legacyPromptBlock(opts);
+}
+
+// Visible panels across the facade in the rhythm direction. Vertical
+// orientation → panels run side-by-side across the WIDTH; horizontal
+// orientation → panels stack across the HEIGHT. Returns undefined when
+// the relevant facade dimension is unknown so the caller can omit the
+// EXACTLY-N instruction rather than invent a count.
+function visiblePanelCount(opts: {
+  orientation: "horizontal" | "vertical" | undefined;
+  facadeWidthMeters: number | undefined;
+  facadeHeightMeters: number | undefined;
+  panelWorkSizeMm: number;
+}): number | undefined {
+  const acrossM =
+    opts.orientation === "vertical" ? opts.facadeWidthMeters : opts.facadeHeightMeters;
+  if (!acrossM || acrossM <= 0 || !opts.panelWorkSizeMm || opts.panelWorkSizeMm <= 0) {
+    return undefined;
+  }
+  return Math.max(1, Math.ceil((acrossM * 1000) / opts.panelWorkSizeMm));
 }
 
 // Mono Groove pattern layer. Appended AFTER buildBasePrompt() so its
@@ -131,6 +153,92 @@ function jointBlock(opts: {
     return "One thin perpendicular shadow line where two panels meet end-to-end.";
   }
   return `${joints} thin perpendicular shadow lines spaced evenly across the facade where panels meet end-to-end.`;
+}
+
+// Mono Flat-only prompt with panel-count enforcement and color
+// compensation. Diverges from buildBasePrompt because Gemini ignores
+// soft "approximately" wording on panel rhythm and renders RAL colors
+// 15-20% lighter than ground-truth swatches. buildBasePrompt stays
+// unchanged so Mono Groove / Mono Textured can be measured and tuned
+// independently.
+//
+// Panel rhythm: the EXACTLY-N wording is repeated at the start AND end
+// of the prompt — image models respond to repeated key facts. Falls
+// back to the soft SEAMS-only language when facade dimensions are
+// unknown so we never invent a count.
+//
+// Color: prefers product.color_hex_render (compensated darker) over
+// product.color_hex (the official RAL match). The new "Render the
+// panels in this exact color: ..." + "not lighter, not washed out"
+// phrasing is the second half of the compensation — strong language
+// matters as much as the hex itself.
+function buildMonoFlatPrompt(opts: PromptOptions): string {
+  const { product, brandPrefix, orientation, includeFascia } = opts;
+  const panelLengthMm = product.panel_length_mm ?? 4200;
+  const visibleWidthMm = product.panel_work_size_mm ?? 370;
+
+  const orientationLine =
+    orientation === "vertical"
+      ? "vertical — panels mounted top-to-bottom. Visible rhythm runs vertically across the facade."
+      : "horizontal — panels mounted side-to-side. Visible rhythm runs horizontally across the facade.";
+
+  const colorName = product.color_name ?? "as shown in product reference";
+  const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "no RAL code";
+  const promptHex = product.color_hex_render ?? product.color_hex ?? null;
+  const hexClause = promptHex
+    ? `Render the panels in this exact color: ${promptHex}. `
+    : "";
+
+  const productCode = product.sku ?? "";
+  const fasciaLine = includeFascia
+    ? "Replace ALL vertical wall surfaces INCLUDING the fascia board (boeideel — the trim plank along the top edge above the wall) with the new cladding."
+    : "Replace ALL vertical wall surfaces but EXCLUDE the fascia board (boeideel — the trim plank along the top edge). Leave the fascia board exactly as it appears in the original image.";
+
+  const count = visiblePanelCount({
+    orientation,
+    facadeWidthMeters: opts.facadeWidthMeters,
+    facadeHeightMeters: opts.facadeHeightMeters,
+    panelWorkSizeMm: visibleWidthMm,
+  });
+  const rhythmDirection = orientation === "vertical" ? "horizontal" : "vertical";
+  const rhythmSection = count
+    ? `PANEL RHYTHM IS MANDATORY: Render EXACTLY ${count} uniformly-sized panels across the facade in the ${rhythmDirection} direction. Each panel is identical in width — ${visibleWidthMm}mm visible. The panel rhythm runs continuously and uniformly. Do NOT vary panel width to accommodate windows, doors, or other facade features — panels run behind/around them at constant width. Count: ${count} panels visible.\n\n`
+    : "";
+  const finalCheck = count
+    ? `\n\nFINAL CHECK: ${count} panels visible across the facade. Uniform width. Constant rhythm.`
+    : "";
+
+  return `Transform this facade by completely replacing all wall surfaces with new modern fiber-cement cladding panels.
+
+REMOVE: all existing wall cladding, all wood grain texture, all horizontal or vertical plank lines from existing wood siding, all peeling paint, all weathering, all surface imperfections. Treat the current wall covering as if it does not exist.
+
+ADD: ${brandPrefix}${productCode} ${product.name} panels — manufactured rectangular cladding panels with completely flat, smooth, matte surfaces. Each panel is ${visibleWidthMm}mm wide and up to ${panelLengthMm}mm long.
+
+ORIENTATION: ${orientationLine}
+
+${rhythmSection}SEAMS: subtle thin shadow lines between adjacent panels (every ${visibleWidthMm}mm in the direction perpendicular to panel length). These are narrow shadow gaps, NOT deep grooves. Visible but understated.
+
+JOINTS: ${jointBlock({
+    orientation,
+    facadeWidthMeters: opts.facadeWidthMeters,
+    facadeHeightMeters: opts.facadeHeightMeters,
+    panelLengthMm,
+  })}
+
+COLOR: ${colorName} (${ralPart}). ${hexClause}Uniform across all panels. No color variation, no weathering, no patina. The color must clearly read as ${colorName} — not lighter, not washed out.
+
+SURFACE: completely flat, no texture, no wood grain, no embossed pattern, no ribs, no fluting. Matte finish with even diffuse light reflection. NO glossy reflections, NO sheen.
+
+PRESERVE EXACTLY AS-IS:
+- All windows and their glazing
+- All window frames in their current color
+- All doors and door frames
+- The roof and roof tiles/material
+- Gutters and downpipes
+- The sky, trees, and background
+- Any waterline, reflections, fences, or foreground elements
+
+${fasciaLine}${finalCheck}`;
 }
 
 // Mono Flat base block — also used as the foundation for Mono Groove
@@ -500,7 +608,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("sku, name, description, ral_code, color_name, color_hex, image_url, panel_length_mm, panel_work_size_mm")
+      .select("sku, name, description, ral_code, color_name, color_hex, color_hex_render, image_url, panel_length_mm, panel_work_size_mm")
       .eq("sku", body.productSku)
       .eq("active", true)
       .single();
@@ -518,6 +626,7 @@ export async function POST(request: Request) {
       ral_code: null,
       color_name: null,
       color_hex: null,
+      color_hex_render: null,
       image_url: null,
     };
   } else {
