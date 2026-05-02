@@ -622,6 +622,9 @@ export default function GevelCalcPage() {
   const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Side id whose upload produced the current uploadError, so the error
+  // banner + retry button only appear next to the box that actually failed.
+  const [uploadErrorSideId, setUploadErrorSideId] = useState<string | null>(null);
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
@@ -814,6 +817,7 @@ export default function GevelCalcPage() {
   function clearPhotoState(sideId: string) {
     uploadIdRef.current += 1;
     setUploadError(null);
+    setUploadErrorSideId(null);
     setUploading(false);
     setPhotos((prev) => {
       if (!(sideId in prev)) return prev;
@@ -833,6 +837,7 @@ export default function GevelCalcPage() {
     // stale data into state.
     const myId = ++uploadIdRef.current;
     setUploadError(null);
+    setUploadErrorSideId(null);
     setUploading(true);
     try {
       // Local IndexedDB save keeps the per-side gallery + offline preview
@@ -861,6 +866,7 @@ export default function GevelCalcPage() {
       } else {
         setUploadError(t("upload_error_unknown"));
       }
+      setUploadErrorSideId(sideId);
       showToast(t("gc.toast.uploadFailed"), "error");
     } finally {
       if (myId === uploadIdRef.current) {
@@ -1243,13 +1249,31 @@ export default function GevelCalcPage() {
               {uploading && (
                 <p className="mt-2 text-sm text-stone-500 print-hidden">{t("uploading_photo")}</p>
               )}
-              {uploadError && (
-                <p className="mt-2 text-sm text-red-600 print-hidden">{uploadError}</p>
+              {uploadError && uploadErrorSideId === QUICK_SIDE_ID && (
+                <div className="mt-2 print-hidden">
+                  <p className="text-sm text-red-600">{uploadError}</p>
+                  <button
+                    type="button"
+                    onClick={() => clearPhotoState(QUICK_SIDE_ID)}
+                    className="mt-2 rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+                  >
+                    {t("upload_remove_retry")}
+                  </button>
+                </div>
               )}
 
               {photos[QUICK_SIDE_ID] && (
-                <div className="mt-3 text-center">
+                <div className="relative mt-3 text-center">
                   <img src={photos[QUICK_SIDE_ID]} alt="" className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => clearPhotoState(QUICK_SIDE_ID)}
+                    aria-label={t("upload_remove_tooltip")}
+                    title={t("upload_remove_tooltip")}
+                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-base text-stone-700 shadow-sm transition hover:bg-white print-hidden"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
 
@@ -1358,9 +1382,31 @@ export default function GevelCalcPage() {
                     {t("upload_hint")}
                   </p>
 
+                  {uploadError && uploadErrorSideId === side.id && (
+                    <div className="mt-2 print-hidden">
+                      <p className="text-sm text-red-600">{uploadError}</p>
+                      <button
+                        type="button"
+                        onClick={() => clearPhotoState(side.id)}
+                        className="mt-2 rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+                      >
+                        {t("upload_remove_retry")}
+                      </button>
+                    </div>
+                  )}
+
                   {photo && (
-                    <div className="mt-3 text-center">
+                    <div className="relative mt-3 text-center">
                       <img src={photo} alt={side.name} className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => clearPhotoState(side.id)}
+                        aria-label={t("upload_remove_tooltip")}
+                        title={t("upload_remove_tooltip")}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-base text-stone-700 shadow-sm transition hover:bg-white print-hidden"
+                      >
+                        ×
+                      </button>
                     </div>
                   )}
 
