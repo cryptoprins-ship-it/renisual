@@ -1,31 +1,52 @@
 {
   "name": "Renisual",
   "short_name": "Renisual",
-  "description": "Renovation, facade calculation, and material visualisation tools.",
-  "start_url": "/gevelcalc",
-  "scope": "/",
+  "description": "Visualize facade renovations with AI rendering and m² calculations",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f6f4ef",
-  "theme_color": "#000000",
+  "background_color": "#f5f4f0",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "nl",
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "src": "/icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calculator",
+      "short_name": "Calc",
+      "url": "/gevelcalc",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI Rendering",
+      "short_name": "Render",
+      "url": "/render",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

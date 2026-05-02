@@ -32,7 +32,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Renisual",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
   icons: {
     icon: [
@@ -58,9 +61,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#0a0a0a",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
   viewportFit: "cover",
 };
 
@@ -74,6 +78,10 @@ export default function RootLayout({
       lang="nl"
       className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
     >
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
+      </head>
       <body className="min-h-[100dvh] flex flex-col bg-paper text-ink">
         {/* Plausible analytics — cookieless, no PII, GDPR-exempt by
             design. Mirrors the BrainArena setup so both sites report
