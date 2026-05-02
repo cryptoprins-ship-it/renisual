@@ -1797,15 +1797,7 @@ export default function GevelCalcPage() {
             ) : (
               <div className="border border-dashed border-stone-300 p-6 text-center">
                 <p className="text-xs text-stone-500">
-                  {locale === "nl"
-                    ? "Selecteer een paneel om te visualiseren"
-                    : locale === "de"
-                    ? "Wähle ein Paneel zur Visualisierung"
-                    : locale === "fr"
-                    ? "Sélectionne un panneau à visualiser"
-                    : locale === "es"
-                    ? "Selecciona un panel para visualizar"
-                    : "Select a panel to visualise"}
+                  {t("overview.select_panel_hint")}
                 </p>
               </div>
             )}

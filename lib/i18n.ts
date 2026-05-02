@@ -368,6 +368,8 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     boeideel_exclude: "Uitsluiten",
     boeideel_exclude_hint: "Boeideel blijft in huidige staat",
     photo_upload_subtitle: "Maak een foto of kies uit galerij",
+    "overview.original_label": "Origineel",
+    "overview.select_panel_hint": "Selecteer een paneel om te visualiseren",
   },
 
   en: {
@@ -721,6 +723,8 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     boeideel_exclude: "Exclude",
     boeideel_exclude_hint: "Fascia remains as-is",
     photo_upload_subtitle: "Take a photo or choose from gallery",
+    "overview.original_label": "Original",
+    "overview.select_panel_hint": "Select a panel to visualise",
   },
 
   de: {
@@ -1074,6 +1078,8 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     boeideel_exclude: "Ausschließen",
     boeideel_exclude_hint: "Ortgangbrett bleibt wie bisher",
     photo_upload_subtitle: "Foto aufnehmen oder aus Galerie wählen",
+    "overview.original_label": "Original",
+    "overview.select_panel_hint": "Wähle ein Paneel zur Visualisierung",
   },
 
   fr: {
@@ -1427,6 +1433,8 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     boeideel_exclude: "Exclure",
     boeideel_exclude_hint: "La planche de rive reste telle quelle",
     photo_upload_subtitle: "Prenez une photo ou choisissez dans la galerie",
+    "overview.original_label": "Original",
+    "overview.select_panel_hint": "Sélectionne un panneau à visualiser",
   },
 
   es: {
@@ -1780,6 +1788,8 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     boeideel_exclude: "Excluir",
     boeideel_exclude_hint: "La tabla de cierre permanece como está",
     photo_upload_subtitle: "Hacer foto o elegir de la galería",
+    "overview.original_label": "Original",
+    "overview.select_panel_hint": "Selecciona un panel para visualizar",
   },
 };
 

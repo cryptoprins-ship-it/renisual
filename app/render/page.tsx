@@ -1103,11 +1103,7 @@ export default function RenderPage() {
           {sourcePhoto && (
             <div>
               <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
-                {locale === "nl" ? "Origineel"
-                  : locale === "de" ? "Original"
-                  : locale === "fr" ? "Original"
-                  : locale === "es" ? "Original"
-                  : "Original"}
+                {t("overview.original_label")}
               </p>
               <img
                 src={sourcePhoto}
