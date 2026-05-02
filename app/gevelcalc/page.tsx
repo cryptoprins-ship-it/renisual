@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { products, categoryForType, type Orientation, type ProductCategory } from "@/lib/productCatalog";
+import type { SpanlFinish } from "@/lib/spanlPanelCatalog";
 import { useSpanlImage } from "@/lib/spanlImageCatalog";
 import {
   KERALIT_COLORS,
@@ -42,6 +43,19 @@ const QUICK_WINDOW_M2 = 1.5;
 const QUICK_DOOR_M2 = 2.0;
 const M2_TO_FT2 = 10.7639;
 const QUICK_SIDE_ID = "quick-side";
+
+// Display order for Spanl finish families in the product picker, sorted by
+// panel width (widest first). Within a family all panels share the same
+// width, so the visible secondary sort is by SKU.
+//   monoFlat 37 → monoGroove 37 → wood 32 → spanishTile 30 → strip 25 → brick 21
+const SPANL_FAMILY_ORDER: SpanlFinish[] = [
+  "monoFlat",
+  "monoGroove",
+  "wood",
+  "spanishTile",
+  "strip",
+  "brick",
+];
 
 type Mode = "quick" | "advanced";
 type Unit = "m2" | "ft2";
@@ -1660,6 +1674,61 @@ export default function GevelCalcPage() {
                 {brandsForCategory.map((brand) => {
                   const items = productsByCategory.filter((p) => p.brand === brand);
                   if (items.length === 0) return null;
+                  const onSelect = (p: (typeof items)[number]) => {
+                    setSelectedProductId(p.id);
+                    if (p.orientations[0]) setOrientation(p.orientations[0]);
+                    if (p.brand !== "Keralit") setKeralitColorNumber(null);
+                    useProjectStore.getState().setProduct({
+                      id: p.id,
+                      sku: p.id,
+                      name: p.name,
+                      supplier_slug: p.brand.toLowerCase(),
+                      image_url: null,
+                    });
+                  };
+                  if (brand === "Spanl") {
+                    // Group by finish family, sort each group by panel width
+                    // (widest first). Without this, the 24 Spanl SKUs render
+                    // as one long flat list and panels like YMPB9003A get
+                    // buried near the bottom.
+                    const groups = SPANL_FAMILY_ORDER
+                      .map((family) => ({
+                        family,
+                        items: items
+                          .filter((p) => p.spanlFinish === family)
+                          .sort((a, b) => a.name.localeCompare(b.name)),
+                      }))
+                      .filter((g) => g.items.length > 0);
+                    return (
+                      <div key={brand}>
+                        <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                          {brand}
+                        </p>
+                        <div className="space-y-4">
+                          {groups.map(({ family, items: familyItems }) => (
+                            <div key={family}>
+                              <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-400">
+                                {t(`finish.${family}`)}
+                                <span className="ml-2 normal-case tracking-normal text-stone-400">
+                                  · {familyItems[0]?.spanlPanelWidthCm} cm
+                                </span>
+                              </p>
+                              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                                {familyItems.map((p) => (
+                                  <ProductCard
+                                    key={p.id}
+                                    product={p}
+                                    selected={selectedProductId === p.id}
+                                    onSelect={() => onSelect(p)}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
                   return (
                     <div key={brand}>
                       <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
@@ -1671,18 +1740,7 @@ export default function GevelCalcPage() {
                             key={p.id}
                             product={p}
                             selected={selectedProductId === p.id}
-                            onSelect={() => {
-                              setSelectedProductId(p.id);
-                              if (p.orientations[0]) setOrientation(p.orientations[0]);
-                              if (p.brand !== "Keralit") setKeralitColorNumber(null);
-                              useProjectStore.getState().setProduct({
-                                id: p.id,
-                                sku: p.id,
-                                name: p.name,
-                                supplier_slug: p.brand.toLowerCase(),
-                                image_url: null,
-                              });
-                            }}
+                            onSelect={() => onSelect(p)}
                           />
                         ))}
                       </div>

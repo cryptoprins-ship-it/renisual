@@ -1,3 +1,5 @@
+import { SPANL_PANELS, finishEn, type SpanlFinish } from "@/lib/spanlPanelCatalog";
+
 export type Orientation = "horizontal" | "vertical";
 export type ProductType = "panel" | "paint" | "kozijn" | "insulation";
 export type ProductCategory = "gevelbekleding" | "kozijnen" | "isolatie";
@@ -38,6 +40,8 @@ export type Product = {
   warranty?: string;
   colors?: string[];
   profileRules: Record<Orientation, ProfileRules>;
+  spanlFinish?: SpanlFinish;
+  spanlPanelWidthCm?: number;
 };
 
 const defaultPanelRules: Record<Orientation, ProfileRules> = {
@@ -69,8 +73,6 @@ const paintProfileRules: Record<Orientation, ProfileRules> = {
     needsCornerProfile: false,
   },
 };
-
-import { SPANL_PANELS, finishEn, type SpanlFinish } from "@/lib/spanlPanelCatalog";
 
 const SPANL_PROFILE_RULES: Record<Orientation, ProfileRules> = {
   horizontal: { needsConnectionProfile: true, needsStartProfile: true, needsEndProfile: true, needsCornerProfile: true },
@@ -114,6 +116,8 @@ function spanlProducts(): Product[] {
       coating: "Akzo Nobel poedercoating, vuilafstotend",
       warranty: "10 jaar garantie op coating",
       profileRules: SPANL_PROFILE_RULES,
+      spanlFinish: panel.finish,
+      spanlPanelWidthCm: panel.panelWidthCm,
     } satisfies Product;
   });
 }

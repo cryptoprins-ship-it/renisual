@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { products, type Orientation } from "@/lib/productCatalog";
+import type { SpanlFinish } from "@/lib/spanlPanelCatalog";
 import {
   type CalcSide,
   type OpeningGroup,
@@ -18,6 +19,17 @@ const STORAGE_KEY = "renisual-gevelcalc-v1";
 const MAX_SIDES = 10;
 const QUICK_WINDOW_M2 = 1.5;
 const QUICK_DOOR_M2 = 2.0;
+
+// Display order for Spanl finish families, sorted by panel width
+// (widest first). Within a family panels share the same width.
+const SPANL_FAMILY_ORDER: SpanlFinish[] = [
+  "monoFlat",
+  "monoGroove",
+  "wood",
+  "spanishTile",
+  "strip",
+  "brick",
+];
 
 type Tab = "sides" | "product" | "total" | "render";
 
@@ -358,10 +370,10 @@ export default function MobileGevelcalcPage() {
               Verticaal
             </button>
           </div>
-          <div className="space-y-2">
-            {products
-              .filter((p) => p.orientations.includes(orientation))
-              .map((p) => (
+          <div className="space-y-4">
+            {(() => {
+              const visible = products.filter((p) => p.orientations.includes(orientation));
+              const renderCard = (p: (typeof visible)[number]) => (
                 <button
                   key={p.id}
                   type="button"
@@ -378,7 +390,40 @@ export default function MobileGevelcalcPage() {
                   </div>
                   <p className="mt-1 text-xs text-gray-600">{p.description}</p>
                 </button>
-              ))}
+              );
+              const spanl = visible.filter((p) => p.brand === "Spanl");
+              const others = visible.filter((p) => p.brand !== "Spanl");
+              const spanlGroups = SPANL_FAMILY_ORDER
+                .map((family) => ({
+                  family,
+                  items: spanl
+                    .filter((p) => p.spanlFinish === family)
+                    .sort((a, b) => a.name.localeCompare(b.name)),
+                }))
+                .filter((g) => g.items.length > 0);
+              return (
+                <>
+                  {spanlGroups.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-xs uppercase tracking-wide text-gray-500">Spanl</p>
+                      {spanlGroups.map(({ family, items }) => (
+                        <div key={family} className="space-y-2">
+                          <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                            {t(`finish.${family}`)} · {items[0]?.spanlPanelWidthCm} cm
+                          </p>
+                          {items.map(renderCard)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {others.length > 0 && (
+                    <div className="space-y-2">
+                      {others.map(renderCard)}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </main>
       )}
