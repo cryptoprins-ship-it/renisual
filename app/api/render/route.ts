@@ -56,32 +56,49 @@ type PromptOptions = {
 // Framing-preservation wrapper. Gemini Flash Image treats every request
 // as a creative re-composition by default and will sometimes crop, zoom,
 // or reframe the output — making side-by-side comparisons unreliable.
+//
+// IMPORTANT: this block governs CAMERA/FRAME only, not scene contents.
+// An earlier version said "every element visible in the input must be
+// visible in the output" — Gemini interpreted that as "preserve the
+// existing wood-rabat cladding too" and reverted Mono Flat panels back
+// to rabat texture. The wording below explicitly carves out wall
+// cladding: the frame is locked, but the wall surface within the frame
+// is replaced per the transformation instructions.
+//
 // The block at the START locks framing in before the model considers
-// transformation; the block at the END is a deliberate repetition,
-// because image models respond to repeated key constraints. Both blocks
-// wrap the assembled prompt so the FINAL CHECK stays last even for
-// Mono Groove (where groovePatternBlock is appended after the Mono Flat
-// body).
-const FRAMING_PRESERVATION_BLOCK = `CRITICAL — IMAGE FRAMING (read this first):
+// transformation; the block at the END is a deliberate repetition —
+// image models respond to repeated key constraints. Both blocks wrap
+// the assembled prompt so the FINAL CHECK stays last even for Mono
+// Groove (where groovePatternBlock is appended after the Mono Flat
+// body). The START block is ALSO sent as a leading text part, before
+// the photo, so it is the first thing Gemini reads.
+const FRAMING_PRESERVATION_BLOCK = `CRITICAL — CAMERA AND FRAME (read this first):
 
-Preserve the EXACT framing, composition, and viewpoint of the input image. This is non-negotiable.
+Preserve the EXACT camera position, viewing angle, field of view, and frame boundaries of the input image. This is non-negotiable.
 
 - Do NOT crop the image
 - Do NOT zoom in or zoom out
-- Do NOT change the camera angle or perspective
+- Do NOT change the camera angle, perspective, or focal length
 - Do NOT shift the framing to focus on a specific element
-- Do NOT add or remove elements at the edges of the frame
-- The output must show the same visible scene boundaries as the input — every element visible in the input must be visible in the output, in the same proportions and position
+- Do NOT add or remove area at the edges of the frame
 
-The output dimensions and aspect ratio must match the input exactly. The viewer should be able to overlay input and output and see identical framing — only the cladding has changed, nothing else.
+Same viewport, same scene bounds at all four edges, same proportions.
 
-If the input shows the full facade plus surrounding context (sky, water, neighbours, foreground objects): the output must show the same full scope. Do not isolate the facade. Do not reframe to a "better composition".`;
+SCOPE OF THIS RULE: this constrains the CAMERA and FRAME only. The wall cladding within the frame IS replaced according to the transformation instructions below — that is the whole point of the render. Do not use this rule to preserve the existing wall texture. Frame is locked; cladding changes.
 
-const FINAL_FRAMING_CHECK = `FINAL FRAMING CHECK:
-The output image must have IDENTICAL framing, zoom level, and composition as the input. Same camera position, same scene boundaries, same proportions. Only the cladding texture, color, and pattern have changed. Everything else — including which parts of the building and surroundings are visible — is preserved exactly.`;
+If the input shows the full facade plus surrounding context (sky, water, neighbours, foreground objects): the output must show the same scope at the same edges. Do not isolate the facade. Do not reframe to a "better composition".`;
 
+const FINAL_FRAMING_CHECK = `FINAL CAMERA/FRAME CHECK:
+The output image must have IDENTICAL camera position, frame boundaries, zoom level, and field of view as the input. Same viewport, same scene bounds at all four edges. The wall cladding has been replaced per the instructions above — that change is correct and required. Everything OUTSIDE the wall surface (windows, doors, roof, gutters, fascia per the toggle, sky, surroundings, foreground) is preserved exactly, in the same position and proportions as the input. Frame is locked; cladding changes.`;
+
+// Wraps the prompt body with the FINAL CAMERA/FRAME check only. The
+// START block is delivered as a separate leading text part by the POST
+// handler — keeping it OUT of the body means REMOVE/ADD instructions
+// stay uncontaminated. An earlier version mixed both into the same
+// blob and Gemini conflated the framing constraint with "preserve the
+// existing wall texture", reverting Mono Flat to rabat.
 function wrapWithFraming(body: string): string {
-  return `${FRAMING_PRESERVATION_BLOCK}\n\n${body}\n\n${FINAL_FRAMING_CHECK}`;
+  return `${body}\n\n${FINAL_FRAMING_CHECK}`;
 }
 
 // Top-level dispatcher. Mono Flat is the base; Mono Groove appends a
@@ -756,10 +773,13 @@ export async function POST(request: Request) {
   console.log("[render] image_url:", product.image_url, "→ refs:", referenceParts.length);
   console.log("[render] includeBoeideel:", body.includeBoeideel);
 
-  // Send: facade photo + each product-reference photo, with a short label
-  // before each so Gemini knows which is which. The reference photos do
-  // the heavy lifting — text just describes the action.
+  // Send: framing-preservation block FIRST (before any image, so it is
+  // genuinely the first thing Gemini reads), then facade photo + each
+  // product-reference photo with a short label before each so Gemini
+  // knows which is which, then the body prompt last. The reference
+  // photos do the heavy lifting — text just describes the action.
   const parts: Array<{ text: string } | InlinePart> = [
+    { text: FRAMING_PRESERVATION_BLOCK },
     { text: "Facade to modify:" },
     photoPart,
   ];
