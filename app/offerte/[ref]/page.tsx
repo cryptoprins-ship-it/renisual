@@ -9,7 +9,10 @@ import type { Metadata } from "next";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { isValidRef } from "@/lib/offerte/ref";
 
-const PHOTO_BUCKET = "offerte-photos";
+// Aligns with /api/offertes — photos live in the existing
+// project-photos bucket, renders in offerte-renders (Phase 2 wiring),
+// PDFs in offerte-pdfs.
+const PHOTO_BUCKET = "project-photos";
 const RENDER_BUCKET = "offerte-renders";
 const PDF_BUCKET = "offerte-pdfs";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;

@@ -624,6 +624,9 @@ export default function GevelCalcPage() {
   // Side id whose upload produced the current uploadError, so the error
   // banner + retry button only appear next to the box that actually failed.
   const [uploadErrorSideId, setUploadErrorSideId] = useState<string | null>(null);
+  // Offerte download flow (POST /api/offertes -> PDF + ref + public URL).
+  const [offerteSubmitting, setOfferteSubmitting] = useState(false);
+  const [offerteResult, setOfferteResult] = useState<{ ref: string; offerteUrl: string } | null>(null);
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
@@ -984,6 +987,100 @@ export default function GevelCalcPage() {
     }
     setCalcDate(new Date().toISOString());
     setTimeout(() => window.print(), 100);
+  }
+
+  // Build the calc snapshot the offerte API expects. Pulls profile
+  // counts out of materialResult.profileItems by their canonical
+  // engine label so display-side renaming never breaks the payload.
+  function buildOffertePayload() {
+    if (!selectedProduct || !materialResult) return null;
+    const findCount = (label: string) =>
+      materialResult.profileItems.find((p) => p.label === label)?.count ?? 0;
+    const subtotal = round2Money(materialResult.totalExVat);
+    const total = round2Money(subtotal * VAT);
+    const photoStoragePath = useProjectStore.getState().photoStoragePath;
+    return {
+      calcInput: {
+        mode,
+        unit,
+        orientation,
+        projectName,
+        selectedProductId,
+        keralitColorNumber,
+        sides: mode === "quick" ? [quickSide] : sides,
+        // Pricing knobs the PDF needs but that the calc engine
+        // doesn't currently surface as named fields.
+        pricePerPanel:
+          selectedProduct.pricePerPanelExVat ??
+          selectedProduct.panelAreaM2 * selectedProduct.pricePerM2ExVat,
+        pricePerEndProfile: DEFAULT_SPANL_PROFILES.endProfile.priceEachExVat,
+        pricePerMiddleProfile: DEFAULT_SPANL_PROFILES.connectionProfile.priceEachExVat,
+        pricePerCornerProfile: DEFAULT_SPANL_PROFILES.cornerProfile.priceEachExVat,
+        fastenerEstimateExBtw: 0,
+      },
+      calcOutput: {
+        panelCount: materialResult.panelCount,
+        profileEndCount: findCount("Eindprofiel"),
+        profileMiddleCount: findCount("Verbindingsprofiel"),
+        profileCornerCount: findCount("Hoekprofiel"),
+        subtotalExclBtw: subtotal,
+        totalInclBtw: total,
+      },
+      customer: projectName ? { projectAddress: projectName } : undefined,
+      photoPath: photoStoragePath ?? undefined,
+    };
+  }
+
+  async function downloadOfferte() {
+    const validationErr = validateForExport();
+    if (validationErr) {
+      showToast(validationErr, "error");
+      return;
+    }
+    const payload = buildOffertePayload();
+    if (!payload) {
+      showToast(t("gc.error.chooseProduct"), "error");
+      return;
+    }
+    setOfferteSubmitting(true);
+    setOfferteResult(null);
+    try {
+      const res = await fetch("/api/offertes", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        console.error("[offerte] HTTP", res.status, await res.text());
+        showToast(t("gc.offerte.errorGeneric"), "error");
+        return;
+      }
+      const data = (await res.json()) as { ref: string; offerteUrl: string; pdfUrl: string | null };
+      setOfferteResult({ ref: data.ref, offerteUrl: data.offerteUrl });
+      // Trigger download in a new tab so the user keeps their work
+      // intact in case the browser blocks an auto-download. If pdfUrl
+      // is null (PDF generation failed) we still have the page link.
+      if (data.pdfUrl) {
+        window.open(data.pdfUrl, "_blank", "noopener,noreferrer");
+      }
+      // Best-effort copy of the public offerte URL — most browsers
+      // grant clipboard inside a click handler without prompting.
+      try {
+        await navigator.clipboard.writeText(data.offerteUrl);
+        showToast(t("gc.offerte.linkCopied"));
+      } catch {
+        /* clipboard blocked — link is still in the success block */
+      }
+    } catch (err) {
+      console.error("[offerte] fetch failed", err);
+      showToast(t("gc.offerte.errorGeneric"), "error");
+    } finally {
+      setOfferteSubmitting(false);
+    }
+  }
+
+  function round2Money(v: number): number {
+    return Math.round(v * 100) / 100;
   }
 
   function sendMail() {
@@ -1752,9 +1849,24 @@ export default function GevelCalcPage() {
                   {t("gc.btnAddSide")}
                 </button>
               )}
-              <button type="button" onClick={exportPdf} className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium">
-                {t("gc.btnExportPdf")}
+              <button
+                type="button"
+                onClick={downloadOfferte}
+                disabled={offerteSubmitting}
+                className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium disabled:opacity-40"
+              >
+                {offerteSubmitting ? t("gc.btnExportPdfBusy") : t("gc.btnExportPdf")}
               </button>
+              {offerteResult && (
+                <a
+                  href={offerteResult.offerteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 rounded-xl border border-black px-3 py-2 text-sm hover:bg-stone-100"
+                >
+                  {t("gc.offerte.successOpenPage")} → {offerteResult.ref}
+                </a>
+              )}
               <button type="button" onClick={sendMail} className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium">
                 {t("gc.btnMail")}
               </button>

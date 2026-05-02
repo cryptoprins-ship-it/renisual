@@ -17,7 +17,13 @@ import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 
 const PDF_BUCKET = "offerte-pdfs";
-const PHOTO_BUCKET = "offerte-photos";
+// Photos already live in the project-photos bucket (uploaded by
+// /gevelcalc via lib/photoStorage.ts) so we sign URLs against that
+// bucket directly rather than maintain a duplicate offerte-photos
+// copy. Deviates from the original Phase 1 spec which proposed a
+// dedicated offerte-photos bucket — revisit if/when we want
+// per-offerte privacy isolation.
+const PHOTO_BUCKET = "project-photos";
 const RENDER_BUCKET = "offerte-renders";
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
