@@ -853,21 +853,31 @@ export default function GevelCalcPage() {
       const { path, fileName } = await uploadPhoto(file);
       if (myId !== uploadIdRef.current) return;
       useProjectStore.getState().setPhoto(path, fileName);
+      // Success path: re-assert that no error message is showing for
+      // this side. Already cleared at the top of the function, but a
+      // defensive re-clear here makes error+success states provably
+      // mutually exclusive — callers reading state after a resolved
+      // upload promise can rely on uploadError being null.
+      setUploadError(null);
+      setUploadErrorSideId(null);
     } catch (err) {
       if (myId !== uploadIdRef.current) return;
-      if (err instanceof UploadError) {
-        const messageKey = {
-          too_large: "upload_error_too_large",
-          wrong_type: "upload_error_wrong_type",
-          compression_failed: "upload_error_compression",
-          upload_failed: "upload_error_failed",
-        }[err.code];
-        setUploadError(t(messageKey));
-      } else {
-        setUploadError(t("upload_error_unknown"));
-      }
+      const messageKey =
+        err instanceof UploadError
+          ? {
+              too_large: "upload_error_too_large",
+              wrong_type: "upload_error_wrong_type",
+              compression_failed: "upload_error_compression",
+              upload_failed: "upload_error_failed",
+            }[err.code]
+          : "upload_error_unknown";
+      setUploadError(t(messageKey));
       setUploadErrorSideId(sideId);
       showToast(t("gc.toast.uploadFailed"), "error");
+      // Log the real error to the console so we can debug actual
+      // failures — the user-facing message above is intentionally
+      // generic and sometimes hides the root cause.
+      console.error("[gevelcalc] photo upload failed", err);
     } finally {
       if (myId === uploadIdRef.current) {
         setUploading(false);
