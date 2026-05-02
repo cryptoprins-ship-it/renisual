@@ -149,10 +149,22 @@ function jointBlock(opts: {
   if (joints === 0) {
     return "Surface continuous, NO joint lines, NO horizontal interruptions, NO perpendicular seams.";
   }
+  // Even distribution at 1/N, 2/N, ..., (N-1)/N of the facade. Soft
+  // "spaced evenly" wording was being ignored — Gemini omitted the
+  // outermost joint (typically the right one). Explicit percentage
+  // positions + MANDATORY language mirror the panel-rhythm fix.
+  const positions = Array.from({ length: joints }, (_, i) =>
+    Math.round(((i + 1) * 100) / panelsInSeries)
+  );
+  const positionList = positions.map((p) => `${p}%`).join(", ");
   if (joints === 1) {
-    return "One thin perpendicular shadow line where two panels meet end-to-end.";
+    return `JOINTS ARE MANDATORY: render EXACTLY 1 thin perpendicular shadow line at ${positionList} of the facade ${
+      opts.orientation === "vertical" ? "height" : "width"
+    } where two panels meet end-to-end.`;
   }
-  return `${joints} thin perpendicular shadow lines spaced evenly across the facade where panels meet end-to-end.`;
+  return `JOINTS ARE MANDATORY: render EXACTLY ${joints} thin perpendicular shadow lines at the following positions across the facade ${
+    opts.orientation === "vertical" ? "height (top to bottom)" : "width (left to right)"
+  }: ${positionList}. Each joint marks where two panels meet end-to-end. ALL ${joints} joints must be visible — do not omit the outermost joint.`;
 }
 
 // Mono Flat-only prompt with panel-count enforcement and color
