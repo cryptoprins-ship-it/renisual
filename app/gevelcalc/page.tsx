@@ -664,6 +664,21 @@ export default function GevelCalcPage() {
   // we compare against the latest id; if a newer upload has started, the
   // current invocation is stale and must not write to state.
   const uploadIdRef = useRef(0);
+  // Forces React to unmount and remount the file <input> after each
+  // completed/cleared upload. Reasons for the hard remount:
+  //   1. The input is inside a <label> and uses className="hidden". On
+  //      mobile Safari, repeatedly clicking the same hidden input via
+  //      its label has known listener-staleness issues — a fresh DOM
+  //      node sidesteps them.
+  //   2. e.target.value = "" mutates DOM out-of-band from React; some
+  //      browsers retain selected-file state under specific conditions
+  //      and refuse to re-fire change for a similar file. Remounting
+  //      the element guarantees a pristine state.
+  //   3. Re-renders triggered by other parts of the form (e.g. product
+  //      selection) cause the inline ref callback to detach/reattach;
+  //      on the next user click we want the input to be unambiguously
+  //      fresh rather than reusing whatever React reconciled.
+  const [inputResetKey, setInputResetKey] = useState(0);
 
   const hasPhotos = Object.keys(photos).length > 0;
 
@@ -829,6 +844,10 @@ export default function GevelCalcPage() {
     deletePhoto(sideId).catch(() => {});
     const input = fileInputRefs.current.get(sideId);
     if (input) input.value = "";
+    // Force React to remount every <input type="file"> on the page so
+    // the next click hits a fresh DOM node — see the inputResetKey
+    // declaration for the full reasoning.
+    setInputResetKey((k) => k + 1);
   }
 
   async function handleImageUpload(sideId: string, file: File | null) {
@@ -882,6 +901,11 @@ export default function GevelCalcPage() {
     } finally {
       if (myId === uploadIdRef.current) {
         setUploading(false);
+        // Remount file inputs once the upload settles — successful or
+        // failed, doesn't matter, the next attempt should start from a
+        // clean DOM. Skipped for stale invocations so we don't yank
+        // the input out from under a still-running newer upload.
+        setInputResetKey((k) => k + 1);
       }
     }
   }
@@ -1329,14 +1353,18 @@ export default function GevelCalcPage() {
                   </span>
                   <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
                   <input
+                    key={`q-${inputResetKey}`}
                     ref={(el) => { fileInputRefs.current.set(QUICK_SIDE_ID, el); }}
                     type="file"
                     accept={PHOTO_ACCEPT}
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
-                      // Reset value so re-selecting the SAME file still
-                      // fires onChange (browsers skip identical-value events).
+                      // Belt-and-braces: still clear the DOM value here
+                      // even though the key-bump remounts the input on
+                      // settle. Covers the rare case where the user
+                      // picks two files in rapid succession before the
+                      // remount has applied.
                       e.target.value = "";
                       handleImageUpload(QUICK_SIDE_ID, file);
                     }}
@@ -1466,6 +1494,7 @@ export default function GevelCalcPage() {
                       </span>
                       <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
                       <input
+                        key={`${side.id}-${inputResetKey}`}
                         ref={(el) => { fileInputRefs.current.set(side.id, el); }}
                         type="file"
                         accept={PHOTO_ACCEPT}
