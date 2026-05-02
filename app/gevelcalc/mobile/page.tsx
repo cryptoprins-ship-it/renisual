@@ -106,7 +106,7 @@ export default function MobileGevelcalcPage() {
 
   const result = useMemo(() => {
     if (!product) return null;
-    return calculateMaterialResult({ sides, product, orientation, totalDiscountPercent: 0 });
+    return calculateMaterialResult({ sides, product, orientation });
   }, [sides, product, orientation]);
 
   function updateActiveSide(patch: Partial<CalcSide>) {

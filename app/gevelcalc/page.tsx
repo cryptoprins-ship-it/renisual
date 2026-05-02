@@ -615,7 +615,6 @@ export default function GevelCalcPage() {
   const [keralitColorNumber, setKeralitColorNumber] = useState<number | null>(null);
   const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
-  const [totalDiscountPercent, setTotalDiscountPercent] = useState("0");
   const [showInclVat, setShowInclVat] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [calcDate, setCalcDate] = useState<string>("");
@@ -730,10 +729,9 @@ export default function GevelCalcPage() {
       sides: activeSides,
       product: selectedProduct,
       orientation,
-      totalDiscountPercent,
       profiles: DEFAULT_SPANL_PROFILES,
     });
-  }, [selectedProduct, orientation, activeSides, totalDiscountPercent]);
+  }, [selectedProduct, orientation, activeSides]);
 
   const totals = materialResult?.totals ?? { gross: 0, openings: 0, net: 0 };
   const adviesPrijs = materialResult?.totalExVat ?? 0;
@@ -904,7 +902,6 @@ export default function GevelCalcPage() {
       selectedProductId,
       keralitColorNumber,
       orientation,
-      totalDiscountPercent,
     };
     return includingPhotos ? { ...base, photos } : base;
   }
@@ -925,7 +922,6 @@ export default function GevelCalcPage() {
     setSelectedProductId(data.selectedProductId ?? "");
     setKeralitColorNumber(typeof data.keralitColorNumber === "number" ? data.keralitColorNumber : null);
     setOrientation(data.orientation ?? "horizontal");
-    setTotalDiscountPercent(data.totalDiscountPercent ?? "0");
     setCalcDate(data.savedAt ?? "");
     if (data.photos) {
       setPhotos(data.photos);
@@ -973,7 +969,6 @@ export default function GevelCalcPage() {
     setLeftRightSame(false);
     setSelectedProductId("");
     setOrientation("horizontal");
-    setTotalDiscountPercent("0");
     setCalcDate("");
     setQuickTotalArea("");
     setQuickWindowCount("0");
@@ -1011,8 +1006,7 @@ export default function GevelCalcPage() {
         `${t("gc.materialPrice")} ${vatLabel}: ${fmtMoney(materialResult?.materialPriceExVat ?? 0)}\n` +
         `${t("gc.profilesPrice")} ${vatLabel}: ${fmtMoney(materialResult?.profilePriceExVat ?? 0)}\n` +
         `${t("gc.subtotal")} ${vatLabel}: ${fmtMoney(materialResult?.subtotalExVat ?? 0)}\n` +
-        `${t("gc.discountLine", { percent: totalDiscountPercent })}: -${fmtMoney(materialResult?.totalDiscount ?? 0)}\n` +
-        `${t("gc.totalAfterDiscount")} ${vatLabel}: ${fmtMoney(materialResult?.totalExVat ?? 0)}\n\n` +
+        `${t("gc.totalLabel")} ${vatLabel}: ${fmtMoney(materialResult?.totalExVat ?? 0)}\n\n` +
         `${t("gc.priceDisclaimer")}\n`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
@@ -1588,17 +1582,6 @@ export default function GevelCalcPage() {
                   </select>
                 </div>
               )}
-              {mode === "advanced" && (
-                <div>
-                  <label className="mb-1 block text-sm font-medium">{t("gc.discount")}</label>
-                  <input
-                    className="w-full rounded-xl border border-black p-3"
-                    value={totalDiscountPercent}
-                    onChange={(e) => setTotalDiscountPercent(e.target.value)}
-                    placeholder={t("gc.discountPlaceholder")}
-                  />
-                </div>
-              )}
             </div>
             {selectedProduct && (
               <div className="mt-4 flex flex-col gap-4 rounded-xl border border-black p-4 sm:flex-row">
@@ -1735,11 +1718,8 @@ export default function GevelCalcPage() {
                 <p>
                   {t("gc.subtotal")}: {fmtMoney(materialResult.subtotalExVat)}
                 </p>
-                <p>
-                  {t("gc.discountLine", { percent: totalDiscountPercent })}: -{fmtMoney(materialResult.totalDiscount)}
-                </p>
                 <p className="font-semibold pt-1 border-t border-black">
-                  {t("gc.totalAfterDiscount")}: {fmtMoney(materialResult.totalExVat)}
+                  {t("gc.totalLabel")}: {fmtMoney(materialResult.totalExVat)}
                 </p>
                 <p className="mt-3 text-xs text-gray-400 border-t border-gray-200 pt-3">
                   {t("gc.priceDisclaimer")}
@@ -1837,34 +1817,64 @@ export default function GevelCalcPage() {
             </div>
 
             {/* Material summary — visible only when product selected */}
-            {selectedProduct && materialResult && (
-              <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-stone-600">{t("gc.netWithWaste")}</span>
-                  <span className="font-semibold text-ink">{materialResult.netWithWaste.toFixed(2)} m²</span>
-                </div>
-                {selectedProduct.type === "panel" && (
+            {selectedProduct && materialResult && (() => {
+              // Surface end / connection (tussen) / corner profile counts to
+              // the overview. Source values come straight from the calc
+              // engine — no formula change. Labels are matched by item.label
+              // which is the Dutch profile-type name set in calcEngine.ts.
+              const endProfile = materialResult.profileItems.find((p) => p.label === "Eindprofiel");
+              const connProfile = materialResult.profileItems.find((p) => p.label === "Verbindingsprofiel");
+              const cornerProfile = materialResult.profileItems.find((p) => p.label === "Hoekprofiel");
+              return (
+                <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
-                    <span className="font-semibold text-ink">{materialResult.panelCount}</span>
+                    <span className="text-stone-600">{t("gc.netWithWaste")}</span>
+                    <span className="font-semibold text-ink">{materialResult.netWithWaste.toFixed(2)} m²</span>
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-stone-600">{t("gc.materialPrice")}</span>
-                  <span className="font-semibold text-ink">{fmtMoney(materialResult.materialPriceExVat)}</span>
-                </div>
-                {materialResult.profileItems.length > 0 && (
+                  {selectedProduct.type === "panel" && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
+                      <span className="font-semibold text-ink">{materialResult.panelCount}</span>
+                    </div>
+                  )}
+                  {endProfile && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">{t("gc.endProfilesNeeded")}</span>
+                      <span className="font-semibold text-ink">{endProfile.count}</span>
+                    </div>
+                  )}
+                  {connProfile && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">{t("gc.middleProfilesNeeded")}</span>
+                      <span className="font-semibold text-ink">{connProfile.count}</span>
+                    </div>
+                  )}
+                  {cornerProfile && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">{t("gc.cornerProfilesNeeded")}</span>
+                      <span className="font-semibold text-ink">{cornerProfile.count}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-stone-600">{t("gc.profilesPrice")}</span>
-                    <span className="font-semibold text-ink">{fmtMoney(materialResult.profilePriceExVat)}</span>
+                    <span className="text-stone-600">{t("gc.materialPrice")}</span>
+                    <span className="font-semibold text-ink">{fmtMoney(materialResult.materialPriceExVat)}</span>
                   </div>
-                )}
-                <div className="flex justify-between border-t border-stone-200 pt-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600">{t("gc.totalAfterDiscount")}</span>
-                  <span className="font-display text-base text-ink">{fmtMoney(materialResult.totalExVat)}</span>
+                  {materialResult.profileItems.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-600">{t("gc.profilesPrice")}</span>
+                      <span className="font-semibold text-ink">{fmtMoney(materialResult.profilePriceExVat)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-stone-200 pt-2">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600">{t("gc.totalLabel")}</span>
+                    <span className="font-display text-base text-ink">{fmtMoney(materialResult.totalExVat)}</span>
+                  </div>
+                  <p className="pt-1 text-[11px] leading-snug text-stone-500">
+                    {t("gc.totalsDisclaimer")}
+                  </p>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Product preview + CTA when selected */}
             {selectedProduct ? (

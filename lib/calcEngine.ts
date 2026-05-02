@@ -133,13 +133,11 @@ export function calculateMaterialResult({
   sides,
   product,
   orientation,
-  totalDiscountPercent,
   profiles = DEFAULT_SPANL_PROFILES,
 }: {
   sides: CalcSide[];
   product: Product;
   orientation: Orientation;
-  totalDiscountPercent: string | number;
   profiles?: ProfileSet;
 }) {
   const totals = calculateTotals(sides);
@@ -204,8 +202,7 @@ export function calculateMaterialResult({
     profileItems.reduce((sum, item) => sum + item.totalExVat, 0)
   );
   const subtotalExVat = round2(materialPriceExVat + profilePriceExVat);
-  const totalDiscount = round2(subtotalExVat * (toNumber(totalDiscountPercent) / 100));
-  const totalExVat = round2(subtotalExVat - totalDiscount);
+  const totalExVat = subtotalExVat;
 
   return {
     totals,
@@ -216,7 +213,6 @@ export function calculateMaterialResult({
     profileItems,
     profilePriceExVat,
     subtotalExVat,
-    totalDiscount,
     totalExVat,
   };
 }
