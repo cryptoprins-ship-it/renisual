@@ -19,7 +19,146 @@ type ProductForPrompt = {
   color_name: string | null;
   color_hex: string | null;
   image_url: string | null;
+  // Panel geometry — used by the Mono Flat prompt block to anchor the
+  // panel size and joint-spacing language. Optional so legacy / Keralit
+  // free-text products without DB rows continue to work.
+  panel_length_mm?: number | null;
+  panel_work_size_mm?: number | null;
 };
+
+type ProductLine = "mono_flat" | "other";
+
+// Decide which prompt block applies. Mono Flat needs the new strong
+// transformation language (this commit); everything else (Mono Groove,
+// Strip, Brick, Spanish Tile, Wood) stays on the legacy buildPrompt
+// block until they get their own targeted prompts.
+function detectLine(product: ProductForPrompt): ProductLine {
+  const haystack = `${product.name} ${product.description ?? ""}`.toLowerCase();
+  if (haystack.includes("mono flat")) return "mono_flat";
+  return "other";
+}
+
+type PromptOptions = {
+  product: ProductForPrompt;
+  brandPrefix: string;
+  orientation: "horizontal" | "vertical" | undefined;
+  facadeWidthMeters: number | undefined;
+  facadeHeightMeters: number | undefined;
+  includeFascia: boolean;
+};
+
+// Top-level dispatcher. Other render paths in the API call into this
+// instead of the line-specific functions so a future Mono Groove /
+// Mono Textured rewrite is just a new branch.
+function buildRenderPrompt(opts: PromptOptions): string {
+  if (detectLine(opts.product) === "mono_flat") {
+    return flatPanelPromptBlock(opts);
+  }
+  return legacyPromptBlock(opts);
+}
+
+// Joint counter — perpendicular shadow lines where consecutive panels
+// meet end-to-end. Horizontal mounting consumes the facade WIDTH;
+// vertical mounting consumes the facade HEIGHT. Falls back to "no
+// joints" copy when the relevant dimension is unknown so we don't
+// invent a phantom seam count.
+function jointBlock(opts: {
+  orientation: "horizontal" | "vertical" | undefined;
+  facadeWidthMeters: number | undefined;
+  facadeHeightMeters: number | undefined;
+  panelLengthMm: number;
+}): string {
+  const lengthMeters = opts.panelLengthMm / 1000;
+  const relevant =
+    opts.orientation === "vertical" ? opts.facadeHeightMeters : opts.facadeWidthMeters;
+  if (!relevant || relevant <= 0 || lengthMeters <= 0) {
+    return "Surface continuous, NO joint lines, NO horizontal interruptions, NO perpendicular seams.";
+  }
+  const panelsInSeries = Math.max(1, Math.ceil(relevant / lengthMeters));
+  const joints = Math.max(0, panelsInSeries - 1);
+  if (joints === 0) {
+    return "Surface continuous, NO joint lines, NO horizontal interruptions, NO perpendicular seams.";
+  }
+  if (joints === 1) {
+    return "One thin perpendicular shadow line where two panels meet end-to-end.";
+  }
+  return `${joints} thin perpendicular shadow lines spaced evenly across the facade where panels meet end-to-end.`;
+}
+
+// Mono Flat block. The phrasing in REMOVE / "Treat the current wall
+// covering as if it does not exist" / "Transform this facade by
+// completely replacing" is intentionally kept verbatim — it has been
+// chosen because Gemini responds to the imperative + negative
+// descriptors more strongly than to softer alternatives. Do not
+// paraphrase without re-testing on the woonboot wood-siding photo.
+function flatPanelPromptBlock(opts: PromptOptions): string {
+  const { product, brandPrefix, orientation, includeFascia } = opts;
+  const panelLengthMm = product.panel_length_mm ?? 4200;
+  const visibleWidthMm = product.panel_work_size_mm ?? 370;
+
+  const orientationLine =
+    orientation === "vertical"
+      ? "vertical — panels mounted top-to-bottom. Visible rhythm runs vertically across the facade."
+      : "horizontal — panels mounted side-to-side. Visible rhythm runs horizontally across the facade.";
+
+  const colorName = product.color_name ?? "as shown in product reference";
+  const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "no RAL code";
+  const hexPart = product.color_hex
+    ? `approximately ${product.color_hex}`
+    : "approximately as in product reference";
+
+  const productCode = product.sku ?? "";
+  const fasciaLine = includeFascia
+    ? "Replace ALL vertical wall surfaces INCLUDING the fascia board (boeideel — the trim plank along the top edge above the wall) with the new cladding."
+    : "Replace ALL vertical wall surfaces but EXCLUDE the fascia board (boeideel — the trim plank along the top edge). Leave the fascia board exactly as it appears in the original image.";
+
+  return `Transform this facade by completely replacing all wall surfaces with new modern fiber-cement cladding panels.
+
+REMOVE: all existing wall cladding, all wood grain texture, all horizontal or vertical plank lines from existing wood siding, all peeling paint, all weathering, all surface imperfections. Treat the current wall covering as if it does not exist.
+
+ADD: ${brandPrefix}${productCode} ${product.name} panels — manufactured rectangular cladding panels with completely flat, smooth, matte surfaces. Each panel is ${visibleWidthMm}mm wide and up to ${panelLengthMm}mm long.
+
+ORIENTATION: ${orientationLine}
+
+SEAMS: subtle thin shadow lines between adjacent panels (every ${visibleWidthMm}mm in the direction perpendicular to panel length). These are narrow shadow gaps, NOT deep grooves. Visible but understated.
+
+JOINTS: ${jointBlock({
+    orientation,
+    facadeWidthMeters: opts.facadeWidthMeters,
+    facadeHeightMeters: opts.facadeHeightMeters,
+    panelLengthMm,
+  })}
+
+COLOR: ${colorName} (${ralPart}, ${hexPart}). Uniform across all panels. No color variation, no weathering, no patina, no fade.
+
+SURFACE: completely flat, no texture, no wood grain, no embossed pattern, no ribs, no fluting. Matte finish with even diffuse light reflection. NO glossy reflections, NO sheen.
+
+PRESERVE EXACTLY AS-IS:
+- All windows and their glazing
+- All window frames in their current color
+- All doors and door frames
+- The roof and roof tiles/material
+- Gutters and downpipes
+- The sky, trees, and background
+- Any waterline, reflections, fences, or foreground elements
+
+${fasciaLine}`;
+}
+
+// Legacy block — used unchanged for Mono Groove, Strip, Brick, Wood,
+// Spanish Tile, and Keralit free-text. This is the previous prompt
+// shape; it stays in place until each line gets its own targeted
+// rewrite. Signature differs from PromptOptions only in that it
+// repackages the same fields, so callers go through buildRenderPrompt.
+function legacyPromptBlock(opts: PromptOptions): string {
+  return buildPrompt(
+    opts.product,
+    opts.brandPrefix,
+    opts.orientation,
+    opts.facadeWidthMeters,
+    opts.includeFascia,
+  );
+}
 
 function buildPrompt(
   product: ProductForPrompt,
@@ -310,7 +449,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("sku, name, description, ral_code, color_name, color_hex, image_url")
+      .select("sku, name, description, ral_code, color_name, color_hex, image_url, panel_length_mm, panel_work_size_mm")
       .eq("sku", body.productSku)
       .eq("active", true)
       .single();
@@ -360,14 +499,19 @@ export async function POST(request: Request) {
     body.facadeWidthCm && body.facadeWidthCm > 0
       ? body.facadeWidthCm / 100
       : undefined;
+  const facadeHeightMeters =
+    body.facadeHeightCm && body.facadeHeightCm > 0
+      ? body.facadeHeightCm / 100
+      : undefined;
 
-  const promptText = buildPrompt(
+  const promptText = buildRenderPrompt({
     product,
     brandPrefix,
-    body.orientation,
+    orientation: body.orientation,
     facadeWidthMeters,
-    body.includeBoeideel,
-  );
+    facadeHeightMeters,
+    includeFascia: body.includeBoeideel,
+  });
 
   console.log("[render] prompt:", promptText);
   console.log("[render] product:", product.sku, product.color_name, product.ral_code);
