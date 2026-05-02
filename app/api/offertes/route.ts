@@ -10,9 +10,16 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { generateRef } from "@/lib/offerte/ref";
+import { buildOffertePdf } from "@/lib/offerte/pdf";
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
+
+const PDF_BUCKET = "offerte-pdfs";
+const PHOTO_BUCKET = "offerte-photos";
+const RENDER_BUCKET = "offerte-renders";
+const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -118,12 +125,90 @@ export async function POST(request: Request) {
 
   const offerteUrl = `https://renisual.com/offerte/${inserted.ref}`;
 
-  // pdfUrl is filled in by a later phase that generates the PDF and
-  // uploads it to the offerte-pdfs bucket. Keeping the field in the
-  // response now means callers don't need a follow-up release.
+  // PDF generation + upload is best-effort: a failure here should not
+  // void the persisted row (the user can still share the offerte URL,
+  // and a retry endpoint can regenerate the PDF later).
+  let pdfUrl: string | null = null;
+  try {
+    const admin = createAdminClient();
+    const [photoSrc, renderSrc] = await Promise.all([
+      parsed.photoPath ? signedUrl(admin, PHOTO_BUCKET, parsed.photoPath) : Promise.resolve(undefined),
+      parsed.renderPath ? signedUrl(admin, RENDER_BUCKET, parsed.renderPath) : Promise.resolve(undefined),
+    ]);
+
+    const pdfBuffer = await buildOffertePdf({
+      ref: inserted.ref,
+      generatedAt: new Date(),
+      customer: parsed.customer,
+      panelCount: parsed.calcOutput.panelCount,
+      pricePerPanel: derivePricePerPanel(parsed),
+      profileEndCount: parsed.calcOutput.profileEndCount,
+      profileMiddleCount: parsed.calcOutput.profileMiddleCount,
+      profileCornerCount: parsed.calcOutput.profileCornerCount,
+      pricePerEndProfile: numberFromCalcInput(parsed.calcInput, "pricePerEndProfile"),
+      pricePerMiddleProfile: numberFromCalcInput(parsed.calcInput, "pricePerMiddleProfile"),
+      pricePerCornerProfile: numberFromCalcInput(parsed.calcInput, "pricePerCornerProfile"),
+      fastenerEstimateExBtw: numberFromCalcInput(parsed.calcInput, "fastenerEstimateExBtw"),
+      subtotalExBtw: parsed.calcOutput.subtotalExclBtw,
+      totalInclBtw: parsed.calcOutput.totalInclBtw,
+      photoSrc,
+      renderSrc,
+    });
+
+    const pdfPath = `${inserted.ref}.pdf`;
+    const { error: uploadErr } = await admin.storage.from(PDF_BUCKET).upload(pdfPath, pdfBuffer, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+    if (uploadErr) throw uploadErr;
+
+    const { error: updateErr } = await admin
+      .from("offertes")
+      .update({ pdf_path: pdfPath })
+      .eq("id", inserted.id);
+    if (updateErr) throw updateErr;
+
+    pdfUrl = (await signedUrl(admin, PDF_BUCKET, pdfPath)) ?? null;
+  } catch (err) {
+    logger.error({ err, ref: inserted.ref }, "offerte_pdf_generation_failed");
+    // pdfUrl stays null; client falls back to the public offerte page.
+  }
+
   return NextResponse.json({
     ref: inserted.ref,
     offerteUrl,
-    pdfUrl: null,
+    pdfUrl,
   });
+}
+
+async function signedUrl(
+  admin: ReturnType<typeof createAdminClient>,
+  bucket: string,
+  path: string
+): Promise<string | undefined> {
+  const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
+  if (error || !data) {
+    logger.warn({ err: error, bucket, path }, "offerte_signed_url_failed");
+    return undefined;
+  }
+  return data.signedUrl;
+}
+
+// Pricing knobs travel through calcInput so the PDF stays consistent
+// with whatever the calc engine quoted. Falls back to 0 when missing
+// rather than guessing — the line will still render without a price.
+function numberFromCalcInput(input: Record<string, unknown>, key: string): number {
+  const v = input[key];
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+function derivePricePerPanel(body: z.infer<typeof bodySchema>): number {
+  const direct = numberFromCalcInput(body.calcInput, "pricePerPanel");
+  if (direct > 0) return direct;
+  // Reverse-engineer from totals when calcInput didn't carry it: assume
+  // panels dominate the subtotal and divide. Better than 0,00 in the PDF.
+  if (body.calcOutput.panelCount > 0 && body.calcOutput.subtotalExclBtw > 0) {
+    return Math.round((body.calcOutput.subtotalExclBtw / body.calcOutput.panelCount) * 100) / 100;
+  }
+  return 0;
 }
