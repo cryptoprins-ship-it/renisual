@@ -566,7 +566,8 @@ export default function RenderPage() {
 
       const MAX_ATTEMPTS = 3;
       let renderDataUrl: string | null = null;
-      let lastError = "";
+      let lastErrorKey: string = "render.error.retry";
+      let lastStatus = 0;
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         setAttemptCount(attempt);
         const res = await fetch("/api/render", {
@@ -574,24 +575,67 @@ export default function RenderPage() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
         });
-        const data = (await res.json()) as { renderDataUrl?: string; error?: string };
-        if (res.ok && data.renderDataUrl) {
-          renderDataUrl = data.renderDataUrl;
+        lastStatus = res.status;
+
+        // Read body once as text. JSON-parse only after confirming success
+        // so a non-JSON error body (e.g. plain "Forbidden" from origin
+        // verification, "Internal Server Error" from a crash, or an HTML
+        // error page) doesn't crash with "Unexpected token".
+        const bodyText = await res.text();
+
+        if (res.ok) {
+          let data: { renderDataUrl?: string; error?: string };
+          try {
+            data = JSON.parse(bodyText);
+          } catch (parseErr) {
+            console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
+            lastErrorKey = "render.error.server";
+            break;
+          }
+          if (data.renderDataUrl) {
+            renderDataUrl = data.renderDataUrl;
+            break;
+          }
+          // 200 + no renderDataUrl: treat as a soft retryable failure.
+          lastErrorKey = "render.error.retry";
+          continue;
+        }
+
+        // Non-OK: log full context and map status → friendly key.
+        console.error("[render] HTTP error", { status: res.status, bodyText });
+
+        // Try to pull a retryDelay out of an upstream Gemini quota body
+        // when present, but never throw if the body isn't JSON.
+        let upstreamErrorText = "";
+        try {
+          const parsed = JSON.parse(bodyText) as { error?: string };
+          upstreamErrorText = String(parsed.error ?? "");
+        } catch {
+          upstreamErrorText = bodyText;
+        }
+
+        if (res.status === 401 || res.status === 403) {
+          lastErrorKey = "render.error.auth";
           break;
         }
-        const errorText = String(data.error ?? "");
-        const isRateLimit =
-          res.status === 429 ||
-          errorText.includes('"code":429') ||
-          /quota|rate.?limit|exhausted|too many/i.test(errorText);
-        lastError = errorText || `HTTP ${res.status}`;
-        if (!isRateLimit || attempt >= MAX_ATTEMPTS) break;
-        const m = errorText.match(/"retryDelay":\s*"(\d+)s"/);
-        const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
-        await new Promise((r) => setTimeout(r, delaySec * 1000));
+        if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
+          lastErrorKey = "render.error.rateLimit";
+          if (attempt >= MAX_ATTEMPTS) break;
+          const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
+          const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
+          await new Promise((r) => setTimeout(r, delaySec * 1000));
+          continue;
+        }
+        if (res.status >= 500) {
+          lastErrorKey = "render.error.server";
+          break;
+        }
+        lastErrorKey = "render.error.retry";
+        break;
       }
       if (!renderDataUrl) {
-        setErrorMsg(lastError || t("render.error.failed"));
+        console.error("[render] all attempts exhausted", { lastStatus, lastErrorKey });
+        setErrorMsg(t(lastErrorKey));
         return;
       }
       const variant: RenderVariant = {
