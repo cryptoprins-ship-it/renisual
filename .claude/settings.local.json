@@ -51,7 +51,8 @@
       "PowerShell(Get-NetTCPConnection *)",
       "Bash(curl -s http://localhost:3000/)",
       "Bash(curl *)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "Bash(void)"
     ]
   }
 }
