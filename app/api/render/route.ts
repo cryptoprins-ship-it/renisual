@@ -567,6 +567,35 @@ function readEnvCaseInsensitive(name: string): string | undefined {
   return undefined;
 }
 
+// Map an arbitrary input width/height to the closest Gemini Flash Image
+// supported aspect ratio. Used to pin output framing via
+// imageConfig.aspectRatio so the model stops drifting into 1:1 / 16:9
+// recompositions when the source is a different shape. Supported set is
+// from @google/genai's ImageConfig: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
+function pickGeminiAspectRatio(width: number, height: number): string {
+  const aspect = width / height;
+  const candidates: Array<[string, number]> = [
+    ["1:1", 1],
+    ["2:3", 2 / 3],
+    ["3:4", 3 / 4],
+    ["3:2", 3 / 2],
+    ["4:3", 4 / 3],
+    ["9:16", 9 / 16],
+    ["16:9", 16 / 9],
+    ["21:9", 21 / 9],
+  ];
+  let best = candidates[0];
+  let bestDiff = Math.abs(aspect - best[1]);
+  for (const c of candidates) {
+    const d = Math.abs(aspect - c[1]);
+    if (d < bestDiff) {
+      best = c;
+      bestDiff = d;
+    }
+  }
+  return best[0];
+}
+
 function resolveGeminiKey(): string | undefined {
   const candidates = [
     "GEMINI_API_KEY",
@@ -715,25 +744,55 @@ export async function POST(request: Request) {
     includeFascia: body.includeBoeideel,
   });
 
+  // Detect source aspect so we can pin Gemini's output to the closest
+  // supported ratio. Without this the model defaults to its own framing
+  // bias (often a tighter 1:1 / 16:9 crop), causing the side-by-side
+  // zoom drift that prompt-text alone cannot fix. Sharp metadata is
+  // cheap and we already have sourceBytes in memory.
+  let sourceAspectRatio: string | undefined;
+  try {
+    const meta = await sharp(sourceBytes).metadata();
+    if (meta.width && meta.height) {
+      sourceAspectRatio = pickGeminiAspectRatio(meta.width, meta.height);
+    }
+  } catch (err) {
+    logger.warn({ err }, "render_aspect_detect_failed");
+  }
+
   console.log("[render] prompt:", promptText);
   console.log("[render] product:", product.sku, product.color_name, product.ral_code);
   console.log("[render] image_url:", product.image_url, "→ refs:", referenceParts.length);
   console.log("[render] includeBoeideel:", body.includeBoeideel);
+  console.log("[render] aspectRatio:", sourceAspectRatio ?? "(not detected)");
 
-  // Send: facade photo + each product-reference photo, with a short label
-  // before each so Gemini knows which is which. The reference photos do
-  // the heavy lifting — text just describes the action.
+  // Image-to-image framing strategy:
+  //  - The base photo is labelled as the EDIT TARGET — its frame and
+  //    dimensions are authoritative for the output.
+  //  - Reference photos are labelled as TEXTURE/COLOR-only — explicitly
+  //    not to be copied into the output framing. Without this Gemini
+  //    sometimes adopts the product photo's tight crop or studio
+  //    backdrop into the rendered facade.
+  //  - imageConfig.aspectRatio (set on the Gemini config below) hard-
+  //    pins the output ratio to match the base photo, which prompt
+  //    text alone could not enforce.
   const parts: Array<{ text: string } | InlinePart> = [
-    { text: "Facade to modify:" },
+    {
+      text: "BASE PHOTO — edit this image. The output must match this image's camera angle, frame edges, and aspect ratio exactly. Modify only the wall cladding surface; everything else (frame, sky, surroundings, windows, doors, roof) stays in place.",
+    },
     photoPart,
   ];
   referenceParts.forEach((p) => {
-    parts.push({ text: "Product to apply:" });
+    parts.push({
+      text: "TEXTURE AND COLOR REFERENCE ONLY — use this image to understand the product's surface texture and color. Do NOT copy its framing, composition, background, or crop into the output.",
+    });
     parts.push(p);
   });
   parts.push({ text: promptText });
 
-  logger.info({ promptLen: promptText.length, refs: referenceParts.length }, "render_prompt");
+  logger.info(
+    { promptLen: promptText.length, refs: referenceParts.length, aspectRatio: sourceAspectRatio },
+    "render_prompt"
+  );
 
   const ai = new GoogleGenAI({ apiKey });
 
@@ -746,6 +805,9 @@ export async function POST(request: Request) {
         // Lowish temperature keeps the model close to the input photos
         // instead of drifting into stylised renders.
         temperature: 0.3,
+        // Pin output aspect ratio to match the source photo. Falls back
+        // to model default when sharp couldn't read the source meta.
+        ...(sourceAspectRatio ? { imageConfig: { aspectRatio: sourceAspectRatio } } : {}),
       },
     });
 
