@@ -53,18 +53,20 @@ type PromptOptions = {
   includeFascia: boolean;
 };
 
-// Top-level dispatcher. Mono Flat is the base; Mono Groove and Mono
-// Textured append a pattern-modifier block to that same base. The
-// additive shape keeps colour, finish, joints, preserve-elements, and
-// the fascia toggle consistent across all three treatments — only the
-// surface description changes.
+// Top-level dispatcher. Mono Flat is the base; Mono Groove appends a
+// groove-pattern block on top of the SAME buildMonoFlatPrompt so it
+// inherits panel-count enforcement, color compensation, joint
+// MANDATORY language, fascia toggle, and preserve-elements. Only the
+// surface description changes. Mono Textured stays on the legacy
+// buildBasePrompt for now — gets its own enforcement pass once
+// textured products exist in the catalog.
 function buildRenderPrompt(opts: PromptOptions): string {
   const line = detectLine(opts.product);
   if (line === "mono_flat") {
     return buildMonoFlatPrompt(opts);
   }
   if (line === "mono_groove") {
-    return `${buildBasePrompt(opts)}\n\n${groovePatternBlock(opts)}`;
+    return `${buildMonoFlatPrompt(opts)}\n\n${groovePatternBlock(opts)}`;
   }
   if (line === "mono_textured") {
     const tex = texturePatternBlock(opts);
@@ -92,26 +94,54 @@ function visiblePanelCount(opts: {
   return Math.max(1, Math.ceil((acrossM * 1000) / opts.panelWorkSizeMm));
 }
 
-// Mono Groove pattern layer. Appended AFTER buildBasePrompt() so its
-// "Override the previous 'subtle thin shadow lines'" line targets the
-// SEAMS clause earlier in the prompt and replaces it with deep
-// recessed channels. The verbatim phrasing matters: "DEEP visible
-// grooves", "must be clearly visible — not subtle", and the rabat /
-// shadow-gap visual reference all earn their place. Don't paraphrase
-// without re-testing on a wood-siding photo.
+// Mono Groove pattern layer. Appended AFTER buildMonoFlatPrompt() so
+// the inter-panel SEAMS clause stays unchanged (subtle light grey
+// shadow lines) and this block ADDS 3 internal grooves per panel
+// face, dividing each panel's visible width into 4 equal strips.
+//
+// Validated against real Spänl SG-series installation photos
+// (SG9010A in particular): each panel face shows multiple parallel
+// grooves creating a layered plank effect — traditional Dutch rabat
+// karakter. Total visible line count is ~3x the inter-panel seam
+// count.
+//
+// CRITICAL phrasing decisions, don't paraphrase without re-testing:
+// - "OVERRIDE the previous SURFACE clause" — base says "no fluting,
+//   no ribs"; we have to undo that or Gemini renders a flat face
+// - "subtle light grey shadow lines, NOT dark, NOT black" — image
+//   models default to high-contrast dark-recess grooves, which makes
+//   the result read as harsh black stripes instead of rabat rhythm
+// - "do not interpret 'grooves' as deep dark gaps between panels" —
+//   without this, Gemini conflates the new internal grooves with the
+//   inter-panel seams and amplifies BOTH, breaking the panel rhythm
 function groovePatternBlock(opts: PromptOptions): string {
   const visibleWidthMm = opts.product.panel_work_size_mm ?? 370;
-  return `ADDITIONAL DETAIL — DEEP GROOVES BETWEEN PANELS:
+  const stripWidthMm = Math.round(visibleWidthMm / 4);
+  const directionLine =
+    opts.orientation === "vertical"
+      ? "Panels are vertical, so the 3 internal grooves run vertically within each panel."
+      : "Panels are horizontal, so the 3 internal grooves run horizontally within each panel.";
 
-Override the previous "subtle thin shadow lines" between panels. Instead, render DEEP visible grooves between adjacent panels across the facade.
+  return `ADDITIONAL DETAIL — INTERNAL GROOVES WITHIN EACH PANEL:
 
-The grooves are recessed channels approximately 15mm deep, creating clearly visible dark shadow lines. Each panel is ${visibleWidthMm}mm wide, so a groove appears every ${visibleWidthMm}mm in the direction perpendicular to panel length.
+OVERRIDE the previous SURFACE clause's "no ribs, no fluting" instruction for this product. The base panel surface remains matte and smooth BETWEEN grooves, but each panel face contains 3 grooves carved into it as detailed below.
 
-Visual reference: Dutch "rabat" cladding or modern shadow-gap cladding — clean architectural reveal joints between panels.
+Each panel face contains 3 grooves running parallel across it, dividing each panel's visible surface into 4 equal strips. These grooves are recessed channels carved into the panel face itself, NOT additional gaps between panels.
 
-The panel face itself remains completely flat, smooth, and matte (as described in the base prompt). The grooves are the defining feature distinguishing this product from a flat panel.
+Visual properties of the internal grooves — match the existing inter-panel seam style:
+- Same color tone as the inter-panel seams: subtle light grey shadow lines, NOT dark, NOT black
+- Same line thickness as the inter-panel seams
+- Slightly more visible than inter-panel seams because they are deeper recesses, but still in the same neutral grey family — no harsh dark contrast
 
-CRITICAL: the grooves must be clearly visible — not subtle. A viewer should immediately see the rhythmic pattern of panel-groove-panel-groove across the facade.`;
+Spacing: 3 grooves evenly spaced within each panel's ${visibleWidthMm}mm visible width, dividing it into 4 strips of approximately ${stripWidthMm}mm each.
+
+Direction: grooves run parallel to the panel orientation (along the panel length, not across it). ${directionLine}
+
+Result: the total visible line count is approximately 3x the inter-panel seam count. The visual rhythm is dense and regular, characteristic of traditional Dutch rabat plank cladding.
+
+VISUAL REFERENCE: this matches the Spänl SG-series products such as SG9010A — fris plank model met traditioneel rabat karakter, where every panel face shows multiple parallel grooves creating a layered plank effect.
+
+CRITICAL: do not interpret "grooves" as deep dark gaps between panels. The inter-panel seams stay subtle as defined in the base prompt. The grooves WITHIN each panel are slightly more pronounced but still grey-toned, never black. Total visual: dense grey-on-grey rhythm, not high-contrast stripes.`;
 }
 
 // Mono Textured pattern layer — placeholder. No textured products
@@ -167,12 +197,13 @@ function jointBlock(opts: {
   }: ${positionList}. Each joint marks where two panels meet end-to-end. ALL ${joints} joints must be visible — do not omit the outermost joint.`;
 }
 
-// Mono Flat-only prompt with panel-count enforcement and color
-// compensation. Diverges from buildBasePrompt because Gemini ignores
-// soft "approximately" wording on panel rhythm and renders RAL colors
-// 15-20% lighter than ground-truth swatches. buildBasePrompt stays
-// unchanged so Mono Groove / Mono Textured can be measured and tuned
-// independently.
+// Mono Flat prompt with panel-count enforcement and color
+// compensation. Also serves as the base for Mono Groove (which
+// appends groovePatternBlock on top of this output). Diverges from
+// buildBasePrompt because Gemini ignores soft "approximately"
+// wording on panel rhythm and renders RAL colors 15-20% lighter than
+// ground-truth swatches. buildBasePrompt stays unchanged so Mono
+// Textured can be measured and tuned independently.
 //
 // Panel rhythm: the EXACTLY-N wording is repeated at the start AND end
 // of the prompt — image models respond to repeated key facts. Falls
