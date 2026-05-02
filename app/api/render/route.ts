@@ -94,26 +94,25 @@ function visiblePanelCount(opts: {
   return Math.max(1, Math.ceil((acrossM * 1000) / opts.panelWorkSizeMm));
 }
 
-// Mono Groove pattern layer. Appended AFTER buildMonoFlatPrompt() so
-// the inter-panel SEAMS clause stays unchanged (subtle light grey
-// shadow lines) and this block ADDS 3 internal grooves per panel
-// face, dividing each panel's visible width into 4 equal strips.
+// Mono Groove = Mono Flat + 3 internal grooves per panel face.
+// Appended AFTER buildMonoFlatPrompt() so the panel rhythm,
+// inter-panel seam style, color, joints, fascia toggle, and
+// preserve-elements all inherit unchanged. This block extends —
+// it does not replace.
 //
 // Validated against real Spänl SG-series installation photos
 // (SG9010A in particular): each panel face shows multiple parallel
-// grooves creating a layered plank effect — traditional Dutch rabat
-// karakter. Total visible line count is ~3x the inter-panel seam
-// count.
+// grooves creating a layered plank effect — traditional Dutch
+// rabat karakter. Total visible line count is ~3x the inter-panel
+// seam count.
 //
-// CRITICAL phrasing decisions, don't paraphrase without re-testing:
-// - "OVERRIDE the previous SURFACE clause" — base says "no fluting,
-//   no ribs"; we have to undo that or Gemini renders a flat face
+// Phrasing notes:
 // - "subtle light grey shadow lines, NOT dark, NOT black" — image
-//   models default to high-contrast dark-recess grooves, which makes
-//   the result read as harsh black stripes instead of rabat rhythm
-// - "do not interpret 'grooves' as deep dark gaps between panels" —
-//   without this, Gemini conflates the new internal grooves with the
-//   inter-panel seams and amplifies BOTH, breaking the panel rhythm
+//   models default to high-contrast dark recess grooves, which
+//   reads as harsh black stripes instead of rabat rhythm
+// - "do not interpret 'grooves' as deep dark gaps between panels"
+//   — without this, Gemini conflates the new internal grooves with
+//   the inter-panel seams and amplifies BOTH, breaking the rhythm
 function groovePatternBlock(opts: PromptOptions): string {
   const visibleWidthMm = opts.product.panel_work_size_mm ?? 370;
   const stripWidthMm = Math.round(visibleWidthMm / 4);
@@ -124,18 +123,16 @@ function groovePatternBlock(opts: PromptOptions): string {
 
   return `ADDITIONAL DETAIL — INTERNAL GROOVES WITHIN EACH PANEL:
 
-OVERRIDE the previous SURFACE clause's "no ribs, no fluting" instruction for this product. The base panel surface remains matte and smooth BETWEEN grooves, but each panel face contains 3 grooves carved into it as detailed below.
+Each panel face contains 3 grooves running parallel across it, dividing each panel's visible surface into 4 equal strips. These grooves are recessed channels carved into the panel face itself.
 
-Each panel face contains 3 grooves running parallel across it, dividing each panel's visible surface into 4 equal strips. These grooves are recessed channels carved into the panel face itself, NOT additional gaps between panels.
-
-Visual properties of the internal grooves — match the existing inter-panel seam style:
+Visual properties of the internal grooves — match the existing seam style:
 - Same color tone as the inter-panel seams: subtle light grey shadow lines, NOT dark, NOT black
 - Same line thickness as the inter-panel seams
 - Slightly more visible than inter-panel seams because they are deeper recesses, but still in the same neutral grey family — no harsh dark contrast
 
 Spacing: 3 grooves evenly spaced within each panel's ${visibleWidthMm}mm visible width, dividing it into 4 strips of approximately ${stripWidthMm}mm each.
 
-Direction: grooves run parallel to the panel orientation (along the panel length, not across it). ${directionLine}
+Direction: grooves run parallel to the panel orientation. ${directionLine}
 
 Result: the total visible line count is approximately 3x the inter-panel seam count. The visual rhythm is dense and regular, characteristic of traditional Dutch rabat plank cladding.
 
