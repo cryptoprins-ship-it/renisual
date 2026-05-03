@@ -94,30 +94,33 @@ export default function FluxLabPage() {
           RAL grey-shade picker — klein-9b prototype
         </h2>
         <p className="mb-3 max-w-[820px] text-xs text-[#9aa0a6]">
-          Photo 3 (voorkant vanaf water) gerenderd in 6 grijstinten op Mono
-          Flat — vertical. Productie-UI krijgt deze als clickable swatches
-          naast het beeld; hier alle 6 naast elkaar zodat je het verloop
-          ziet. Klik een afbeelding voor vol formaat.
+          Photo 3 (voorkant vanaf water) gerenderd in 5 grijstinten die
+          Spanl daadwerkelijk levert (uit catalog), op Mono Flat —
+          vertical. Productie-UI krijgt deze als clickable swatches naast
+          het beeld; hier alle 5 naast elkaar zodat je het verloop ziet.
+          Klik een afbeelding voor vol formaat.
         </p>
-        <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
+        <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
           <Cell src={`/test-inputs/IMG_20260422_095323.jpg`} label="Source" highlight="source" />
           {[
-            { code: "7044", name: "zijdegrijs", hex: "#CAC4B0", src: `${OUT_BASE}/ral-picker/ral-7044-klein-9b.jpg` },
-            { code: "7037", name: "stofgrijs", hex: "#7D7F7D", src: `${OUT_BASE}/ral-picker/ral-7037-klein-9b.jpg` },
-            { code: "7038", name: "agaatgrijs (default)", hex: "#B5B8B1", src: `${OUT_BASE}/IMG_20260422_095323-mono-flat-vertical-klein-9b.jpg` },
-            { code: "7012", name: "bazaltgrijs", hex: "#4D5645", src: `${OUT_BASE}/ral-picker/ral-7012-klein-9b.jpg` },
-            { code: "7016", name: "antracietgrijs", hex: "#293133", src: `${OUT_BASE}/ral-picker/ral-7016-klein-9b.jpg` },
-            { code: "7021", name: "zwartgrijs", hex: "#23282B", src: `${OUT_BASE}/ral-picker/ral-7021-klein-9b.jpg` },
+            { code: "9010", name: "wit", hex: "#F1ECE0", src: `${OUT_BASE}/ral-picker/ral-9010-klein-9b.jpg`, series: "PB9003A" },
+            { code: "9006", name: "zilver", hex: "#A5A8A8", src: `${OUT_BASE}/ral-picker/ral-9006-klein-9b.jpg`, series: "SG9006A · TS-9006P" },
+            { code: "7038", name: "agaatgrijs (default)", hex: "#B5B8B1", src: `${OUT_BASE}/IMG_20260422_095323-mono-flat-vertical-klein-9b.jpg`, series: "PB7038A · SG-7038A · YPMB7038A · YMSG7038A" },
+            { code: "7021", name: "zwartgrijs", hex: "#23282B", src: `${OUT_BASE}/ral-picker/ral-7021-klein-9b.jpg`, series: "YMPB-7021A · SG7021A · TS7021A · YMSG7021A" },
+            { code: "9005", name: "diepzwart", hex: "#0A0A0A", src: `${OUT_BASE}/ral-picker/ral-9005-klein-9b.jpg`, series: "SG9005A · YMPB9005A · YMSG9005A" },
           ].map((g) => (
             <figure key={g.code} className="m-0 flex flex-col overflow-hidden rounded-md border border-[#232733] bg-[#0a0c10]">
               <a href={g.src} target="_blank" rel="noopener noreferrer" className="block leading-none">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={g.src} alt={`RAL ${g.code} render`} loading="lazy" className="block w-full h-auto transition-opacity hover:opacity-90" />
               </a>
-              <figcaption className="flex items-center gap-2 border-t border-[#232733] bg-[#11141b] px-2.5 py-2 text-xs">
-                <span className="inline-block h-3 w-3 rounded-sm border border-[#444]" style={{ backgroundColor: g.hex }} />
-                <strong className="font-semibold text-[#e6e8eb]">RAL {g.code}</strong>
-                <span className="text-[#9aa0a6]">{g.name}</span>
+              <figcaption className="flex flex-col gap-1 border-t border-[#232733] bg-[#11141b] px-2.5 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-3 w-3 rounded-sm border border-[#444]" style={{ backgroundColor: g.hex }} />
+                  <strong className="font-semibold text-[#e6e8eb]">RAL {g.code}</strong>
+                  <span className="text-[#9aa0a6]">{g.name}</span>
+                </div>
+                <span className="text-[10px] text-[#6b7280]">in: {g.series}</span>
               </figcaption>
             </figure>
           ))}

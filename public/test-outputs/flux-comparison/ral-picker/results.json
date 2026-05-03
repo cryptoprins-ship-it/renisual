@@ -2,57 +2,44 @@
   "source": "public/test-inputs/IMG_20260422_095323.jpg",
   "results": [
     {
-      "code": "7044",
-      "name": "zijdegrijs",
-      "hex": "#CAC4B0",
-      "output": "public/test-outputs/flux-comparison/ral-picker/ral-7044-klein-9b.jpg",
+      "code": "9010",
+      "name": "wit (RAL 9010)",
+      "hex": "#F1ECE0",
+      "output": "public/test-outputs/flux-comparison/ral-picker/ral-9010-klein-9b.jpg",
       "status": "rendered",
-      "time_seconds": 13.3,
+      "time_seconds": 8.3,
       "cost_credits": 1.7000000000000002
     },
     {
-      "code": "7037",
-      "name": "stofgrijs",
-      "hex": "#7D7F7D",
-      "output": "public/test-outputs/flux-comparison/ral-picker/ral-7037-klein-9b.jpg",
+      "code": "9006",
+      "name": "zilver (RAL 9006)",
+      "hex": "#A5A8A8",
+      "output": "public/test-outputs/flux-comparison/ral-picker/ral-9006-klein-9b.jpg",
       "status": "rendered",
-      "time_seconds": 8.1,
+      "time_seconds": 7.2,
       "cost_credits": 1.7000000000000002
     },
     {
       "code": "7038",
-      "name": "agaatgrijs",
+      "name": "agaatgrijs (RAL 7038)",
       "hex": "#B5B8B1",
       "output": "public/test-outputs/flux-comparison/ral-picker/ral-7038-klein-9b.jpg",
-      "status": "rendered",
-      "time_seconds": 8.5,
-      "cost_credits": 1.7000000000000002
-    },
-    {
-      "code": "7012",
-      "name": "bazaltgrijs",
-      "hex": "#4D5645",
-      "output": "public/test-outputs/flux-comparison/ral-picker/ral-7012-klein-9b.jpg",
-      "status": "rendered",
-      "time_seconds": 6.4,
-      "cost_credits": 1.7000000000000002
-    },
-    {
-      "code": "7016",
-      "name": "antracietgrijs",
-      "hex": "#293133",
-      "output": "public/test-outputs/flux-comparison/ral-picker/ral-7016-klein-9b.jpg",
-      "status": "rendered",
-      "time_seconds": 6.7,
-      "cost_credits": 1.7000000000000002
+      "status": "cached"
     },
     {
       "code": "7021",
-      "name": "zwartgrijs",
+      "name": "zwartgrijs (RAL 7021)",
       "hex": "#23282B",
       "output": "public/test-outputs/flux-comparison/ral-picker/ral-7021-klein-9b.jpg",
+      "status": "cached"
+    },
+    {
+      "code": "9005",
+      "name": "diepzwart (RAL 9005)",
+      "hex": "#0A0A0A",
+      "output": "public/test-outputs/flux-comparison/ral-picker/ral-9005-klein-9b.jpg",
       "status": "rendered",
-      "time_seconds": 5.6,
+      "time_seconds": 11.8,
       "cost_credits": 1.7000000000000002
     }
   ]

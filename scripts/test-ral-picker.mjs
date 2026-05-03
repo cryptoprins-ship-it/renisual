@@ -26,14 +26,15 @@ DO NOT INVENT new windows or architectural features.
 
 Match the input image framing exactly. No cropping, no zoom change.`;
 
-// Spanl-relevant grey range, lighter → darker.
+// Spanl actually-sold panel greys (from catalog), lighter → darker.
+// Limited to what's in spanl-images-index.json — picker only shows
+// colors customers can actually order.
 const GREYS = [
-  { code: "7044", name: "zijdegrijs", hex: "#CAC4B0" },
-  { code: "7037", name: "stofgrijs", hex: "#7D7F7D" },
-  { code: "7038", name: "agaatgrijs", hex: "#B5B8B1" }, // default — already exists in main test
-  { code: "7012", name: "bazaltgrijs", hex: "#4D5645" },
-  { code: "7016", name: "antracietgrijs", hex: "#293133" },
-  { code: "7021", name: "zwartgrijs", hex: "#23282B" },
+  { code: "9010", name: "wit (RAL 9010)", hex: "#F1ECE0" },
+  { code: "9006", name: "zilver (RAL 9006)", hex: "#A5A8A8" },
+  { code: "7038", name: "agaatgrijs (RAL 7038)", hex: "#B5B8B1" }, // matt grey
+  { code: "7021", name: "zwartgrijs (RAL 7021)", hex: "#23282B" }, // dark grey/black
+  { code: "9005", name: "diepzwart (RAL 9005)", hex: "#0A0A0A" },
 ];
 
 async function loadEnvKey(name) {
