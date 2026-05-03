@@ -767,6 +767,21 @@ export default function RenderPage() {
             </div>
           </div>
 
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            <span aria-hidden className="text-base leading-none">⚠</span>
+            <p>
+              {locale === "nl"
+                ? "Hekken, bomen of obstakels voor de gevel kunnen het render-resultaat vervormen. Voor het beste resultaat: kies een foto met een vrij zicht op de gevel, zonder obstakels op de voorgrond."
+                : locale === "de"
+                ? "Zäune, Bäume oder Hindernisse vor der Fassade können das Render-Ergebnis verzerren. Für das beste Ergebnis: Wählen Sie ein Foto mit freier Sicht auf die Fassade, ohne Hindernisse im Vordergrund."
+                : locale === "fr"
+                ? "Les clôtures, arbres ou obstacles devant la façade peuvent déformer le rendu. Pour de meilleurs résultats: choisissez une photo avec une vue dégagée sur la façade, sans obstacles au premier plan."
+                : locale === "es"
+                ? "Vallas, árboles u obstáculos delante de la fachada pueden distorsionar el resultado del renderizado. Para el mejor resultado: elija una foto con vista despejada de la fachada, sin obstáculos en primer plano."
+                : "Fences, trees or obstacles in front of the facade can distort the render. For the best result: pick a photo with a clear view of the facade, without obstacles in the foreground."}
+            </p>
+          </div>
+
           <div className="mt-4">
             <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
               {locale === "nl" ? "Of kies een voorbeeldfoto" : "Or pick a sample photo"}
