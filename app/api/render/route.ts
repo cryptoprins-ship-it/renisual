@@ -781,19 +781,40 @@ export async function POST(request: Request) {
   let product: ProductForPrompt;
   let brandPrefix = "";
   if (body.productSku) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("sku, name, description, ral_code, color_name, color_hex, color_hex_render, image_url, panel_length_mm, panel_work_size_mm")
-      .eq("sku", body.productSku)
-      .eq("active", true)
-      .single();
-    if (error || !data) {
-      logger.warn({ err: error, sku: body.productSku }, "render_product_not_found");
-      return Response.json({ error: "product_not_found" }, { status: 404 });
+    let dbProduct: ProductForPrompt | null = null;
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("products")
+        .select("sku, name, description, ral_code, color_name, color_hex, color_hex_render, image_url, panel_length_mm, panel_work_size_mm")
+        .eq("sku", body.productSku)
+        .eq("active", true)
+        .single();
+      if (error) throw error;
+      dbProduct = data as ProductForPrompt;
+    } catch (err) {
+      // Supabase unavailable / auth error / product missing — log and
+      // fall through to a minimal stub built from the request body so
+      // the render pipeline still attempts BFL/Gemini instead of 404'ing.
+      logger.warn({ err, sku: body.productSku }, "render_product_lookup_failed_using_fallback");
     }
-    product = data as ProductForPrompt;
-    brandPrefix = "Spanl ";
+
+    if (dbProduct) {
+      product = dbProduct;
+      brandPrefix = "Spanl ";
+    } else {
+      product = {
+        sku: body.productSku,
+        name: body.productLabel ?? body.productSku,
+        description: body.productDescription ?? null,
+        ral_code: null,
+        color_name: null,
+        color_hex: null,
+        color_hex_render: null,
+        image_url: null,
+      };
+      brandPrefix = "Spanl ";
+    }
   } else if (body.productLabel) {
     product = {
       sku: null,
