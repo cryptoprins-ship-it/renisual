@@ -32,7 +32,6 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-zoom-pan-pinch": "^4.0.3",
-    "supabase": "^2.98.0",
     "zod": "^4.4.1",
     "zustand": "^5.0.12"
   },
@@ -51,6 +50,7 @@
     "playwright": "^1.59.1",
     "postcss": "^8",
     "sharp": "^0.34.5",
+    "supabase": "^2.98.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5"
