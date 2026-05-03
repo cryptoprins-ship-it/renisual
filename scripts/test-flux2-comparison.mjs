@@ -28,7 +28,20 @@ const IMG_RE = /\.(jpe?g|png|webp)$/i;
 // sees 4 lines: 3 grooves + 1 panel-edge seam.
 const FACADE_DIMS = `The facade is 1350cm wide and 355cm tall.`;
 
-const PROMPT_PRESERVE = `PRESERVE EXACTLY AS-IS — keep their ORIGINAL colors from the source photo: all windows, glazing, window frames (kozijnen — keep their existing color, do NOT recolor to match cladding), doors, fascia/eaves boards (boeidelen — keep their existing color, do NOT recolor to match cladding), roof, gutters, sky, water, foreground railing, surrounding context. Only the wall cladding surface itself changes color and finish; everything else retains its color and material as shown in the input photo.
+const PROMPT_PRESERVE = `APPLY CLADDING ONLY TO: the houseboat's exterior wall surfaces between the roof and the waterline/foundation. The walls are the flat painted/sided panels of the building's hull and superstructure.
+
+DO NOT APPLY CLADDING TO ANY OF THE FOLLOWING — they keep their original color, material, and texture exactly as in the source photo:
+- Fences, gates, hekwerk, wire mesh, balustrades, railings, gratings, bars (any barrier between camera and the houseboat — these are NOT walls even if they fill a rectangular area in front of the building)
+- Vegetation: trees, hedges, plants, leaves, branches
+- Foreground objects: bins, containers, equipment, tools, stored items, stairs, ramps
+- Sky, clouds, water surface, water reflections, ripples
+- Neighboring buildings (different houses next to the woonboot)
+- Roof, roof tiles, roof edge, gutters, chimneys, antennas
+- Windows, glazing, window frames (kozijnen) — keep their ORIGINAL color, do NOT recolor to match cladding
+- Doors, door frames, door handles — keep ORIGINAL color
+- Fascia, eaves boards (boeidelen), trim — keep ORIGINAL color, do NOT recolor to match cladding
+
+DO NOT INVENT new windows, doors, vents, lights, balconies, or any architectural features. Walls that have no windows in the source MUST remain blank cladding — do NOT add imagined windows just because the building shape suggests they should be there.
 
 Match the input image framing exactly. No cropping, no zoom change. Output dimensions and composition match input.`;
 
@@ -163,13 +176,15 @@ ${PROMPT_PRESERVE}`,
   },
 ];
 
-// pro-preview eliminated 2026-05-03: occasionally rescaled woonboot larger
-// than source. Framing drift unacceptable for photo-edit use case.
+// Surviving primary candidate: klein-9b only.
+// Production fallback (not active in this test): Gemini, only if BFL fails.
+// Eliminated as primary candidates:
+//   pro-preview — scale drift
+//   klein-4b    — orientation drift
+//   max         — color inconsistency across same-prompt runs
+//   gemini      — needs much more elaborate prompts; demoted to fallback
 const MODELS = [
-  { name: "gemini", slug: "gemini-2.5-flash-image", provider: "gemini" },
-  { name: "klein-4b", slug: "flux-2-klein-4b", provider: "bfl" },
   { name: "klein-9b", slug: "flux-2-klein-9b", provider: "bfl" },
-  { name: "max", slug: "flux-2-max", provider: "bfl" },
 ];
 
 async function loadEnvKey(name) {

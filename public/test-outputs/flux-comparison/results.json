@@ -10,22 +10,6 @@
       },
       "variants": {
         "mono-flat-vertical": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-vertical-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
             "output_dimensions": "1152x864",
@@ -33,41 +17,9 @@
             "status": "success",
             "error": null,
             "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
           }
         },
         "mono-flat-horizontal": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-horizontal-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-horizontal-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
             "output_dimensions": "1152x864",
@@ -75,41 +27,9 @@
             "status": "success",
             "error": null,
             "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-horizontal-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-flat-horizontal-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
           }
         },
         "mono-groove-vertical": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-vertical-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
             "output_dimensions": "1152x864",
@@ -117,41 +37,9 @@
             "status": "success",
             "error": null,
             "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
           }
         },
         "mono-groove-horizontal": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-horizontal-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-horizontal-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
             "output_dimensions": "1152x864",
@@ -159,158 +47,50 @@
             "status": "success",
             "error": null,
             "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-horizontal-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-mono-groove-horizontal-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
           }
         },
         "flat-structure": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 13.19,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "flat-structure-vertical": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 8.19,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "groove-structure": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 7.89,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "groove-structure-vertical": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.73,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         }
       }
@@ -325,308 +105,91 @@
       },
       "variants": {
         "mono-flat-vertical": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-vertical-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.53,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "mono-flat-horizontal": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-horizontal-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-horizontal-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.16,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-horizontal-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-horizontal-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-horizontal-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "mono-groove-vertical": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-vertical-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 5.11,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "mono-groove-horizontal": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-horizontal-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-horizontal-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.5,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-horizontal-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-horizontal-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-horizontal-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "flat-structure": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.53,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "flat-structure-vertical": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 7.28,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-vertical-klein-9b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "time_seconds": 24.73,
-            "cost_credits": 10,
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-vertical-max.jpg",
             "status": "success",
             "error": null
           }
         },
         "groove-structure": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.68,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "groove-structure-vertical": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 4.99,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         }
       }
@@ -641,319 +204,103 @@
       },
       "variants": {
         "mono-flat-vertical": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-vertical-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.66,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "mono-flat-horizontal": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.83,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "mono-groove-vertical": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.23,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "mono-groove-horizontal": {
-          "gemini": {
-            "model": "gemini-2.5-flash-image",
-            "output_dimensions": "1184x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-gemini.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.97,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "flat-structure": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.71,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "flat-structure-vertical": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.23,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "groove-structure": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 6.73,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         },
         "groove-structure-vertical": {
-          "klein-4b": {
-            "model": "flux-2-klein-4b",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-vertical-klein-4b.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
           "klein-9b": {
             "model": "flux-2-klein-9b",
+            "time_seconds": 5.07,
+            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "pro": {
-            "model": "flux-2-pro-preview",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-vertical-pro.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
-          },
-          "max": {
-            "model": "flux-2-max",
-            "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-vertical-max.jpg",
-            "status": "success",
-            "error": null,
-            "note": "cached"
+            "error": null
           }
         }
       }
     }
   ],
   "totals": {
-    "new_renders": 1,
-    "cached_renders": 107,
+    "new_renders": 20,
+    "cached_renders": 4,
     "failed_renders": 0,
-    "new_cost_credits": 10,
-    "approx_new_cost_usd": 0.01,
-    "new_time_seconds": 24.73
+    "new_cost_credits": 34,
+    "approx_new_cost_usd": 0.034,
+    "new_time_seconds": 137.21
   },
   "notes": [
     "BFL cost field returns credits, not USD. approx_new_cost_usd uses ~$0.001/credit.",

@@ -27,12 +27,10 @@ const PHOTOS = [
 
 type Highlight = "source" | "gemini" | undefined;
 
-// pro-preview removed: scaled object larger than source — framing drift.
+// Sole primary candidate: klein-9b.
+// Fallback chain in production: klein-4b → gemini (not shown here).
 const MODELS: ReadonlyArray<{ name: string; label: string; highlight?: Highlight }> = [
-  { name: "gemini", label: "gemini", highlight: "gemini" },
-  { name: "klein-4b", label: "klein-4b" },
   { name: "klein-9b", label: "klein-9b" },
-  { name: "max", label: "max" },
 ];
 
 function Cell({ src, label, highlight }: { src: string; label: string; highlight?: Highlight }) {
@@ -86,7 +84,7 @@ export default function FluxLabPage() {
           {PHOTOS.map((photo) => {
             const modelsForVariant = variant.bflOnly ? MODELS.filter((m) => m.name !== "gemini") : MODELS;
             const cols = modelsForVariant.length + 1; // +1 for source
-            const colsClass = cols === 5 ? "xl:grid-cols-5" : cols === 4 ? "xl:grid-cols-4" : "xl:grid-cols-6";
+            const colsClass = cols === 3 ? "xl:grid-cols-3" : cols === 4 ? "xl:grid-cols-4" : "xl:grid-cols-6";
             return (
               <div
                 key={`${variant.name}-${photo.base}`}
