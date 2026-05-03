@@ -15,54 +15,149 @@ const OUT_DIR = "public/test-outputs/flux-comparison";
 const ENV_PATH = ".env.local";
 const IMG_RE = /\.(jpe?g|png|webp)$/i;
 
-const PROMPT_PRESERVE = `PRESERVE EXACTLY AS-IS: all windows, glazing, window frames, doors, roof, gutters, sky, water, foreground railing, surrounding context.
+// Real woonboot facade dimensions: 1350cm wide × 355cm tall.
+//
+// Mono Flat = SEAMLESS — panels butt naadloos together, no visible joints, no
+// grooves. The whole facade reads as one continuous flat metal surface. Panels
+// are 370mm wide for vertical (36 panels across) or 370mm tall for horizontal
+// (10 rows). Vertical = full-height panels, no horizontal couplings.
+//
+// Mono Groove = same panel widths as Mono Flat, but each panel face has 3
+// decorative grooves cut into it (running parallel to the panel direction),
+// PLUS hairline seams between adjacent panels. So per 370mm panel the viewer
+// sees 4 lines: 3 grooves + 1 panel-edge seam.
+const FACADE_DIMS = `The facade is 1350cm wide and 355cm tall.`;
+
+const PROMPT_PRESERVE = `PRESERVE EXACTLY AS-IS — keep their ORIGINAL colors from the source photo: all windows, glazing, window frames (kozijnen — keep their existing color, do NOT recolor to match cladding), doors, fascia/eaves boards (boeidelen — keep their existing color, do NOT recolor to match cladding), roof, gutters, sky, water, foreground railing, surrounding context. Only the wall cladding surface itself changes color and finish; everything else retains its color and material as shown in the input photo.
 
 Match the input image framing exactly. No cropping, no zoom change. Output dimensions and composition match input.`;
 
 const PROMPT_REMOVE = `REMOVE: existing wooden plank siding, all wood grain, peeling paint, weathering. Treat current cladding as if it doesn't exist.`;
 
+function structureAddendum(orientation) {
+  const dir = orientation === "vertical" ? "vertical" : "horizontal";
+  const dirOpp = orientation === "vertical" ? "top to bottom" : "left to right";
+  return `ADDITIONAL DETAIL — SURFACE TEXTURE:
+
+Plus a fine ${dir} wood-grain linen texture embossed on each panel face — subtle 3D relief running ${dirOpp} across the panel surface, parallel to the panel orientation. Not deep grooves, just textured surface like brushed wood grain. The texture catches light differently across the panel, giving each panel a tactile woven appearance while maintaining the overall flat panel shape. Texture follows each panel face individually — it does NOT bleed across panel boundaries or coupling joints.
+
+The panels remain flat overall — the texture is surface detail only, not a structural change.`;
+}
+
 const VARIANTS = [
   {
     name: "mono-flat-vertical",
-    label: "Mono Flat — vertical panels",
-    prompt: `Transform this facade by replacing all wall surfaces with new modern flat metal cladding panels.
+    label: "Mono Flat — vertical (smalle naad, no horizontal couplings)",
+    prompt: `Transform this facade by replacing all wall surfaces with smooth flat metal cladding panels.
+
+${FACADE_DIMS}
 
 ${PROMPT_REMOVE}
 
-ADD: smooth flat metal cladding panels, matt grey finish (approximately RAL 7038, hex #B5B8B1). Panels are 370mm wide and mounted VERTICALLY across the facade — vertical seams between adjacent panels every 370mm. Subtle light grey shadow seams — barely visible, never dark.
+ADD: matt grey RAL 7038 (hex #B5B8B1) smooth flat metal cladding panels. Panels are 370mm wide and run the FULL 355cm height as unbroken vertical strips — NO horizontal couplings, NO horizontal joints anywhere. Mounted vertically across the 1350cm width (~36 panels side by side). Between adjacent panels is only a "smalle naad" — a very narrow hairline seam in the SAME RAL 7038 grey color as the panels, barely visible from a few meters back, never a contrasting dark shadow line. The overall facade reads as a near-uniform smooth flat metal surface with subtle same-color vertical hairline articulation.
 
 ${PROMPT_PRESERVE}`,
   },
   {
     name: "mono-flat-horizontal",
-    label: "Mono Flat — horizontal panels",
-    prompt: `Transform this facade by replacing all wall surfaces with new modern flat metal cladding panels.
+    label: "Mono Flat — horizontal (smalle naad rows + same-color couplings)",
+    prompt: `Transform this facade by replacing all wall surfaces with smooth flat metal cladding panels.
+
+${FACADE_DIMS}
 
 ${PROMPT_REMOVE}
 
-ADD: smooth flat metal cladding panels, matt grey finish (approximately RAL 7038, hex #B5B8B1). Panels are 370mm tall and mounted HORIZONTALLY across the facade — horizontal seams between adjacent panels every 370mm. Subtle light grey shadow seams — barely visible, never dark.
+ADD: matt grey RAL 7038 (hex #B5B8B1) smooth flat metal cladding panels. Panels are 370mm tall, mounted horizontally in rows across the 1350cm width. Between adjacent rows is a "smalle naad" — a very narrow hairline seam in the SAME RAL 7038 grey color as the panels, never a contrasting dark shadow. Standard panels are max 6000mm long, so each horizontal row must be split into 2 or 3 segments joined by vertical butt coupling profiles — also painted RAL 7038 grey, so the coupling joints are also same-color hairline seams, not dark contrasting lines. Place couplings at aesthetically balanced positions: divide each row into 3 equal segments of ~450cm with vertical butt joints aligned vertically at ~450cm and ~900cm from the left edge. Overall: a near-uniform smooth flat metal surface with subtle same-color hairline articulation along rows and a few aligned same-color vertical couplings.
 
 ${PROMPT_PRESERVE}`,
   },
   {
     name: "mono-groove-vertical",
-    label: "Mono Groove — vertical grooves",
-    prompt: `Transform this facade by replacing all wall surfaces with new modern Mono Groove metal cladding.
+    label: "Mono Groove — vertical (370mm panel + 3 grooves per face)",
+    prompt: `Transform this facade by replacing all wall surfaces with Mono Groove metal cladding.
+
+${FACADE_DIMS}
 
 ${PROMPT_REMOVE}
 
-ADD: vertically-mounted metal cladding panels with prominent vertical standing-seam grooves running top to bottom. Matt grey finish (approximately RAL 7038, hex #B5B8B1). Panels are 370mm wide. The grooves are about 20mm wide channels between panels, with visible shadow lines — distinctive standing-seam look, NOT flat.
+ADD: matt grey RAL 7038 (hex #B5B8B1) Mono Groove metal cladding. Panels are 370mm wide and run the FULL 355cm height as unbroken vertical strips — NO horizontal couplings, NO horizontal joints. Mounted vertically across the 1350cm width (~36 panels side by side). Between adjacent panels is a smalle naad — a narrow same-color hairline seam (NOT a dark line). On TOP of that, each panel face has THREE narrow vertical decorative grooves cut into it, evenly spaced and running top-to-bottom across the full panel height — about 5mm wide grooves with crisp shadow lines (these grooves ARE shaded because they are physically recessed into the panel face), dividing each 370mm panel face into four roughly equal vertical segments. Net result: pronounced vertical line pattern, with the in-panel grooves visually stronger than the same-color panel-to-panel hairline seams.
 
 ${PROMPT_PRESERVE}`,
   },
   {
     name: "mono-groove-horizontal",
-    label: "Mono Groove — horizontal grooves",
-    prompt: `Transform this facade by replacing all wall surfaces with new modern Mono Groove metal cladding.
+    label: "Mono Groove — horizontal (370mm row + 3 grooves + same-color couplings)",
+    prompt: `Transform this facade by replacing all wall surfaces with Mono Groove metal cladding.
+
+${FACADE_DIMS}
 
 ${PROMPT_REMOVE}
 
-ADD: horizontally-mounted metal cladding panels with prominent horizontal standing-seam grooves running left to right. Matt grey finish (approximately RAL 7038, hex #B5B8B1). Panels are 370mm tall. The grooves are about 20mm wide channels between panels, with visible shadow lines — distinctive standing-seam look, NOT flat.
+ADD: matt grey RAL 7038 (hex #B5B8B1) Mono Groove metal cladding. Panels are 370mm tall, mounted horizontally in rows across the 1350cm width. Each row is split into 3 segments of ~450cm joined by vertical butt coupling profiles (also painted RAL 7038 — same color as panels, hairline seam not a dark shadow), aligned vertically at ~450cm and ~900cm from the left edge. Between adjacent rows is a smalle naad — a same-color hairline seam, not a dark line. On TOP of that, each panel face has THREE narrow horizontal decorative grooves cut into it, evenly spaced and running left-to-right across the panel width — about 5mm wide grooves with crisp shadow lines (these grooves ARE shaded because they are physically recessed into the panel face), dividing each 370mm row face into four roughly equal horizontal segments. Net result: pronounced horizontal line pattern with the in-panel grooves visually stronger than the same-color row-to-row hairline seams; the vertical couplings are barely visible same-color hairlines.
+
+${PROMPT_PRESERVE}`,
+  },
+  {
+    name: "flat-structure",
+    label: "Mono Flat + Structure — horizontal (linen texture + same-color couplings)",
+    bflOnly: true,
+    prompt: `Transform this facade by replacing all wall surfaces with smooth flat metal cladding panels with embossed linen surface texture.
+
+${FACADE_DIMS}
+
+${PROMPT_REMOVE}
+
+ADD: matt grey RAL 7038 (hex #B5B8B1) flat metal cladding panels. Panels are 370mm tall, mounted horizontally in rows across the 1350cm width. Between adjacent rows is a smalle naad (same-color hairline seam, not a dark line). Each row is split into 3 segments of ~450cm joined by vertical butt coupling profiles (also painted RAL 7038 — same-color hairline, not contrasting), aligned at ~450cm and ~900cm from the left edge.
+
+${structureAddendum("horizontal")}
+
+${PROMPT_PRESERVE}`,
+  },
+  {
+    name: "flat-structure-vertical",
+    label: "Mono Flat + Structure — vertical (linen texture, no couplings)",
+    bflOnly: true,
+    prompt: `Transform this facade by replacing all wall surfaces with smooth flat metal cladding panels with embossed linen surface texture.
+
+${FACADE_DIMS}
+
+${PROMPT_REMOVE}
+
+ADD: matt grey RAL 7038 (hex #B5B8B1) flat metal cladding panels. Panels are 370mm wide and run the FULL 355cm height as unbroken vertical strips — NO horizontal couplings, NO horizontal joints anywhere. Mounted vertically across the 1350cm width (~36 panels side by side). Between adjacent panels is a smalle naad — a narrow same-color hairline seam (NOT a dark contrasting line).
+
+${structureAddendum("vertical")}
+
+${PROMPT_PRESERVE}`,
+  },
+  {
+    name: "groove-structure",
+    label: "Mono Groove + Structure — horizontal (3 grooves + linen texture + same-color couplings)",
+    bflOnly: true,
+    prompt: `Transform this facade by replacing all wall surfaces with Mono Groove metal cladding with embossed linen surface texture.
+
+${FACADE_DIMS}
+
+${PROMPT_REMOVE}
+
+ADD: matt grey RAL 7038 (hex #B5B8B1) Mono Groove metal cladding. Panels are 370mm tall, mounted horizontally in rows across the 1350cm width, with each row split into 3 segments of ~450cm joined by vertical butt coupling profiles (also painted RAL 7038 — same-color hairline) at ~450cm and ~900cm from the left edge. Between adjacent rows is a smalle naad — a same-color hairline seam, not a dark line. Each panel face has THREE narrow horizontal decorative grooves cut into it, evenly spaced and running left-to-right — about 5mm wide grooves with crisp shadow lines (these grooves ARE shaded because they are physically recessed into the panel face), dividing each 370mm row face into four roughly equal horizontal segments.
+
+${structureAddendum("horizontal")} Three visual layers must coexist: (1) same-color hairline seams between rows (subtle), (2) the three internal horizontal grooves per panel face (more prominent, shaded recess), (3) the horizontal linen wood-grain texture on the smooth panel surfaces between grooves. The texture sits ON the panel face, the grooves cut INTO the panel, the seams BETWEEN panels — three distinct visual layers, not conflated.
+
+${PROMPT_PRESERVE}`,
+  },
+  {
+    name: "groove-structure-vertical",
+    label: "Mono Groove + Structure — vertical (3 grooves + linen texture, no couplings)",
+    bflOnly: true,
+    prompt: `Transform this facade by replacing all wall surfaces with Mono Groove metal cladding with embossed linen surface texture.
+
+${FACADE_DIMS}
+
+${PROMPT_REMOVE}
+
+ADD: matt grey RAL 7038 (hex #B5B8B1) Mono Groove metal cladding. Panels are 370mm wide and run the FULL 355cm height as unbroken vertical strips — NO horizontal couplings, NO horizontal joints. Mounted vertically across the 1350cm width (~36 panels side by side). Between adjacent panels is a smalle naad — a narrow same-color hairline seam (NOT a dark line). Each panel face has THREE narrow vertical decorative grooves cut into it, evenly spaced and running top-to-bottom across the full panel height — about 5mm wide grooves with crisp shadow lines (these grooves ARE shaded because they are physically recessed into the panel face), dividing each 370mm panel face into four roughly equal vertical segments.
+
+${structureAddendum("vertical")} Three visual layers must coexist: (1) same-color hairline seams between panels (subtle), (2) the three internal vertical grooves per panel face (more prominent, shaded recess), (3) the vertical linen wood-grain texture on the smooth panel surfaces between grooves. The texture sits ON the panel face, the grooves cut INTO the panel, the seams BETWEEN panels — three distinct visual layers, not conflated.
 
 ${PROMPT_PRESERVE}`,
   },
@@ -253,7 +348,8 @@ async function main() {
     const variantResults = {};
     for (const v of VARIANTS) {
       const modelResults = {};
-      for (const m of MODELS) {
+      const modelsForVariant = v.bflOnly ? MODELS.filter((m) => m.provider === "bfl") : MODELS;
+      for (const m of modelsForVariant) {
         const outPath = path.join(OUT_DIR, `${input.base}-${v.name}-${m.name}.jpg`);
         try {
           const stat = await fs.stat(outPath);

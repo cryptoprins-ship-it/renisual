@@ -7,12 +7,17 @@ export const metadata: Metadata = {
 
 const OUT_BASE = "/test-outputs/flux-comparison";
 
-const VARIANTS = [
-  { name: "mono-flat-vertical", label: "Mono Flat — vertical panels" },
-  { name: "mono-flat-horizontal", label: "Mono Flat — horizontal panels" },
-  { name: "mono-groove-vertical", label: "Mono Groove — vertical grooves" },
-  { name: "mono-groove-horizontal", label: "Mono Groove — horizontal grooves" },
-] as const;
+type Variant = { name: string; label: string; bflOnly?: boolean };
+const VARIANTS: ReadonlyArray<Variant> = [
+  { name: "mono-flat-vertical", label: "Mono Flat — vertical (smalle naad, no couplings)" },
+  { name: "mono-flat-horizontal", label: "Mono Flat — horizontal (smalle naad + same-color couplings)" },
+  { name: "mono-groove-vertical", label: "Mono Groove — vertical (3 grooves per face, no couplings)" },
+  { name: "mono-groove-horizontal", label: "Mono Groove — horizontal (3 grooves + same-color couplings)" },
+  { name: "flat-structure", label: "Mono Flat + Structure — horizontal (linen texture + couplings)", bflOnly: true },
+  { name: "flat-structure-vertical", label: "Mono Flat + Structure — vertical (linen texture, no couplings)", bflOnly: true },
+  { name: "groove-structure", label: "Mono Groove + Structure — horizontal (3 grooves + linen texture + couplings)", bflOnly: true },
+  { name: "groove-structure-vertical", label: "Mono Groove + Structure — vertical (3 grooves + linen texture, no couplings)", bflOnly: true },
+];
 
 const PHOTOS = [
   { base: "IMG_20260421_183639", title: "Photo 1 — achterkant met hek", subtitle: "3264×2448 → 1152×864" },
@@ -78,26 +83,30 @@ export default function FluxLabPage() {
             {variant.label}
           </h2>
 
-          {PHOTOS.map((photo) => (
-            <div
-              key={`${variant.name}-${photo.base}`}
-              className="mb-4 grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6"
-            >
-              <h3 className="col-span-full text-[14px] font-medium text-[#cbd0d6]">
-                {photo.title}{" "}
-                <small className="ml-2 font-normal text-[#6b7280]">{photo.subtitle}</small>
-              </h3>
-              <Cell src={`/test-inputs/${photo.base}.jpg`} label="Source" highlight="source" />
-              {MODELS.map((model) => (
-                <Cell
-                  key={`${variant.name}-${photo.base}-${model.name}`}
-                  src={`${OUT_BASE}/${photo.base}-${variant.name}-${model.name}.jpg`}
-                  label={model.label}
-                  highlight={model.highlight}
-                />
-              ))}
-            </div>
-          ))}
+          {PHOTOS.map((photo) => {
+            const modelsForVariant = variant.bflOnly ? MODELS.filter((m) => m.name !== "gemini") : MODELS;
+            const cols = modelsForVariant.length + 1; // +1 for source
+            return (
+              <div
+                key={`${variant.name}-${photo.base}`}
+                className={`mb-4 grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 ${cols === 5 ? "xl:grid-cols-5" : "xl:grid-cols-6"}`}
+              >
+                <h3 className="col-span-full text-[14px] font-medium text-[#cbd0d6]">
+                  {photo.title}{" "}
+                  <small className="ml-2 font-normal text-[#6b7280]">{photo.subtitle}</small>
+                </h3>
+                <Cell src={`/test-inputs/${photo.base}.jpg`} label="Source" highlight="source" />
+                {modelsForVariant.map((model) => (
+                  <Cell
+                    key={`${variant.name}-${photo.base}-${model.name}`}
+                    src={`${OUT_BASE}/${photo.base}-${variant.name}-${model.name}.jpg`}
+                    label={model.label}
+                    highlight={model.highlight}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </section>
       ))}
 
