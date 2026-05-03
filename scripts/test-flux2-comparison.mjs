@@ -126,7 +126,7 @@ async function renderOne(model, inputBase64, dims, apiKey) {
     model: model.slug,
     endpoint: `https://api.bfl.ai/v1/${model.slug}`,
     time_seconds: Number(elapsed.toFixed(2)),
-    estimated_cost_usd: result.cost,
+    cost_credits: result.cost,
     output_dimensions: `${meta.width}x${meta.height}`,
     output_path: outPath.replace(/\\/g, "/"),
     status: "success",
@@ -147,13 +147,45 @@ async function main() {
 
   await fs.mkdir(OUT_DIR, { recursive: true });
 
-  const inputBytes = await fs.readFile(INPUT_PATH);
+  const sourceBytes = await fs.readFile(INPUT_PATH);
+  const sourceMeta = await sharp(sourceBytes).metadata();
+  const sourceMP = ((sourceMeta.width ?? 0) * (sourceMeta.height ?? 0)) / 1_000_000;
+
+  // Keep test cost predictable: BFL bills per output megapixel, and a 4 MP
+  // input pushes the model toward producing a 4 MP output. Cap the input at
+  // ~1 MP for fair model-vs-model comparison.
+  let inputBytes = sourceBytes;
+  let inputMeta = sourceMeta;
+  let downscaled = false;
+  if (sourceMP > 1.2) {
+    const dims = targetDims(sourceMeta.width, sourceMeta.height);
+    inputBytes = await sharp(sourceBytes).resize(dims.width, dims.height, { fit: "fill" }).toBuffer();
+    inputMeta = await sharp(inputBytes).metadata();
+    downscaled = true;
+    const downPath = path.join(OUT_DIR, "woonboot-input-1mp.png");
+    await fs.writeFile(downPath, inputBytes);
+    console.log(`Source: ${INPUT_PATH} ${sourceMeta.width}x${sourceMeta.height} (~${sourceMP.toFixed(2)} MP) — downscaled to ${inputMeta.width}x${inputMeta.height}`);
+    console.log(`        downscaled copy saved to ${downPath}`);
+  } else {
+    console.log(`Source: ${INPUT_PATH} ${sourceMeta.width}x${sourceMeta.height} (~${sourceMP.toFixed(2)} MP) — no downscale needed`);
+  }
+
   const inputBase64 = inputBytes.toString("base64");
-  const inMeta = await sharp(inputBytes).metadata();
-  const dims = targetDims(inMeta.width ?? 1024, inMeta.height ?? 1024);
-  console.log(`Input:  ${INPUT_PATH} ${inMeta.width}x${inMeta.height} (${(inputBytes.length/1024).toFixed(0)} KB)`);
+  const dims = targetDims(inputMeta.width ?? 1024, inputMeta.height ?? 1024);
   console.log(`Target: ${dims.width}x${dims.height} (~${((dims.width*dims.height)/1_000_000).toFixed(2)} MP)`);
   console.log(`Models: ${MODELS.map((m) => m.slug).join(", ")}\n`);
+
+  globalThis.__inputMetadata = {
+    source_path: INPUT_PATH,
+    source_dimensions: `${sourceMeta.width}x${sourceMeta.height}`,
+    source_megapixels: Number(sourceMP.toFixed(2)),
+    downscaled,
+    sent_dimensions: `${inputMeta.width}x${inputMeta.height}`,
+    sent_megapixels: Number((((inputMeta.width ?? 0) * (inputMeta.height ?? 0)) / 1_000_000).toFixed(2)),
+    note: downscaled
+      ? "Source was >1.2 MP; downscaled to ~1 MP for cost-controlled fair model comparison. Production may want to re-test the chosen model at native resolution."
+      : "Source was already ~1 MP or smaller; sent as-is. Production may want to re-test the chosen model at higher (4 MP) resolution.",
+  };
 
   const results = {};
   for (const m of MODELS) {
@@ -161,7 +193,7 @@ async function main() {
     try {
       results[m.name] = await renderOne(m, inputBase64, dims, apiKey);
       const r = results[m.name];
-      console.log(`✓ ${r.time_seconds}s  cost=$${r.estimated_cost_usd ?? "?"}  ${r.output_dimensions}  → ${r.output_path}`);
+      console.log(`✓ ${r.time_seconds}s  ${r.cost_credits ?? "?"} credits  ${r.output_dimensions}  → ${r.output_path}`);
     } catch (err) {
       results[m.name] = {
         model: m.slug,
@@ -173,9 +205,10 @@ async function main() {
     }
   }
 
+  const payload = { input: globalThis.__inputMetadata, models: results };
   const resultsPath = path.join(OUT_DIR, "results.json");
-  await fs.writeFile(resultsPath, JSON.stringify(results, null, 2));
-  console.log(`\nresults.json:\n${JSON.stringify(results, null, 2)}`);
+  await fs.writeFile(resultsPath, JSON.stringify(payload, null, 2));
+  console.log(`\nresults.json:\n${JSON.stringify(payload, null, 2)}`);
   console.log(`\nFiles in ${OUT_DIR}:`);
   for (const m of MODELS) console.log(`  ${OUT_DIR}/woonboot-${m.name}.jpg`);
 }

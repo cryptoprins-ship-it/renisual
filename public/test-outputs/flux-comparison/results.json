@@ -1,32 +1,47 @@
 {
-  "klein-4b": {
-    "model": "flux-2-klein-4b",
-    "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
-    "time_seconds": 6.96,
-    "estimated_cost_usd": 1.5,
-    "output_dimensions": "1152x864",
-    "output_path": "public/test-outputs/flux-comparison/woonboot-klein-4b.jpg",
-    "status": "success",
-    "error": null
+  "input": {
+    "source_path": "public/test-inputs/woonboot.png",
+    "source_dimensions": "1062x800",
+    "source_megapixels": 0.85,
+    "downscaled": false,
+    "sent_dimensions": "1062x800",
+    "sent_megapixels": 0.85,
+    "note": "Source was already ~1 MP; sent as-is. The native 4 MP woonboot photo lives outside the repo (on user's disk). To re-test at native resolution, drop the 4 MP file at public/test-inputs/woonboot.png and re-run scripts/test-flux2-comparison.mjs — the script auto-downscales >1.2 MP inputs to ~1 MP for cost-controlled comparison, but the chosen model can be re-tested at native res in production."
   },
-  "pro": {
-    "model": "flux-2-pro-preview",
-    "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
-    "time_seconds": 11.82,
-    "estimated_cost_usd": 4.5,
-    "output_dimensions": "1152x864",
-    "output_path": "public/test-outputs/flux-comparison/woonboot-pro.jpg",
-    "status": "success",
-    "error": null
+  "models": {
+    "klein-4b": {
+      "model": "flux-2-klein-4b",
+      "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
+      "time_seconds": 6.96,
+      "cost_credits": 1.5,
+      "output_dimensions": "1152x864",
+      "output_path": "public/test-outputs/flux-comparison/woonboot-klein-4b.jpg",
+      "status": "success",
+      "error": null
+    },
+    "pro": {
+      "model": "flux-2-pro-preview",
+      "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
+      "time_seconds": 11.82,
+      "cost_credits": 4.5,
+      "output_dimensions": "1152x864",
+      "output_path": "public/test-outputs/flux-comparison/woonboot-pro.jpg",
+      "status": "success",
+      "error": null
+    },
+    "max": {
+      "model": "flux-2-max",
+      "endpoint": "https://api.bfl.ai/v1/flux-2-max",
+      "time_seconds": 23.86,
+      "cost_credits": 10,
+      "output_dimensions": "1152x864",
+      "output_path": "public/test-outputs/flux-comparison/woonboot-max.jpg",
+      "status": "success",
+      "error": null
+    }
   },
-  "max": {
-    "model": "flux-2-max",
-    "endpoint": "https://api.bfl.ai/v1/flux-2-max",
-    "time_seconds": 23.86,
-    "estimated_cost_usd": 10,
-    "output_dimensions": "1152x864",
-    "output_path": "public/test-outputs/flux-comparison/woonboot-max.jpg",
-    "status": "success",
-    "error": null
-  }
+  "notes": [
+    "BFL `cost` field returns CREDITS, not USD. The `cost_credits` field above mirrors that. Approximate USD equivalent at typical BFL pricing (~$0.001/credit): klein-4b ≈ $0.0015, pro ≈ $0.0045, max ≈ $0.01 — total ≈ $0.016 for this run.",
+    "All three endpoints (klein-4b, pro-preview, max) accept the same image-editing body schema and returned valid renders. No model needed to be skipped."
+  ]
 }
