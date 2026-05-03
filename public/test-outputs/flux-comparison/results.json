@@ -1,47 +1,141 @@
 {
-  "input": {
-    "source_path": "public/test-inputs/woonboot.png",
-    "source_dimensions": "1062x800",
-    "source_megapixels": 0.85,
-    "downscaled": false,
-    "sent_dimensions": "1062x800",
-    "sent_megapixels": 0.85,
-    "note": "Source was already ~1 MP; sent as-is. The native 4 MP woonboot photo lives outside the repo (on user's disk). To re-test at native resolution, drop the 4 MP file at public/test-inputs/woonboot.png and re-run scripts/test-flux2-comparison.mjs — the script auto-downscales >1.2 MP inputs to ~1 MP for cost-controlled comparison, but the chosen model can be re-tested at native res in production."
-  },
-  "models": {
-    "klein-4b": {
-      "model": "flux-2-klein-4b",
-      "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
-      "time_seconds": 6.96,
-      "cost_credits": 1.5,
-      "output_dimensions": "1152x864",
-      "output_path": "public/test-outputs/flux-comparison/woonboot-klein-4b.jpg",
-      "status": "success",
-      "error": null
+  "runs": [
+    {
+      "input": {
+        "source_path": "public/test-inputs/IMG_20260421_183639.jpg",
+        "source_dimensions": "3264x2448",
+        "source_megapixels": 7.99,
+        "downscaled": true,
+        "sent_dimensions": "1152x864",
+        "sent_megapixels": 1
+      },
+      "models": {
+        "klein-4b": {
+          "model": "flux-2-klein-4b",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
+          "time_seconds": 5.42,
+          "cost_credits": 1.5,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-klein-4b.jpg",
+          "status": "success",
+          "error": null
+        },
+        "pro": {
+          "model": "flux-2-pro-preview",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
+          "time_seconds": 11.19,
+          "cost_credits": 4.5,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-pro.jpg",
+          "status": "success",
+          "error": null
+        },
+        "max": {
+          "model": "flux-2-max",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-max",
+          "time_seconds": 25.13,
+          "cost_credits": 10,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-max.jpg",
+          "status": "success",
+          "error": null
+        }
+      }
     },
-    "pro": {
-      "model": "flux-2-pro-preview",
-      "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
-      "time_seconds": 11.82,
-      "cost_credits": 4.5,
-      "output_dimensions": "1152x864",
-      "output_path": "public/test-outputs/flux-comparison/woonboot-pro.jpg",
-      "status": "success",
-      "error": null
+    {
+      "input": {
+        "source_path": "public/test-inputs/IMG_20260422_094859.jpg",
+        "source_dimensions": "3264x2448",
+        "source_megapixels": 7.99,
+        "downscaled": true,
+        "sent_dimensions": "1152x864",
+        "sent_megapixels": 1
+      },
+      "models": {
+        "klein-4b": {
+          "model": "flux-2-klein-4b",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
+          "time_seconds": 6.94,
+          "cost_credits": 1.5,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-klein-4b.jpg",
+          "status": "success",
+          "error": null
+        },
+        "pro": {
+          "model": "flux-2-pro-preview",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
+          "time_seconds": 12.45,
+          "cost_credits": 4.5,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-pro.jpg",
+          "status": "success",
+          "error": null
+        },
+        "max": {
+          "model": "flux-2-max",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-max",
+          "time_seconds": 23.93,
+          "cost_credits": 10,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-max.jpg",
+          "status": "success",
+          "error": null
+        }
+      }
     },
-    "max": {
-      "model": "flux-2-max",
-      "endpoint": "https://api.bfl.ai/v1/flux-2-max",
-      "time_seconds": 23.86,
-      "cost_credits": 10,
-      "output_dimensions": "1152x864",
-      "output_path": "public/test-outputs/flux-comparison/woonboot-max.jpg",
-      "status": "success",
-      "error": null
+    {
+      "input": {
+        "source_path": "public/test-inputs/IMG_20260422_095323.jpg",
+        "source_dimensions": "4080x3072",
+        "source_megapixels": 12.53,
+        "downscaled": true,
+        "sent_dimensions": "1152x864",
+        "sent_megapixels": 1
+      },
+      "models": {
+        "klein-4b": {
+          "model": "flux-2-klein-4b",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
+          "time_seconds": 6.22,
+          "cost_credits": 1.5,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-klein-4b.jpg",
+          "status": "success",
+          "error": null
+        },
+        "pro": {
+          "model": "flux-2-pro-preview",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
+          "time_seconds": 11.49,
+          "cost_credits": 4.5,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-pro.jpg",
+          "status": "success",
+          "error": null
+        },
+        "max": {
+          "model": "flux-2-max",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-max",
+          "time_seconds": 22.78,
+          "cost_credits": 10,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-max.jpg",
+          "status": "success",
+          "error": null
+        }
+      }
     }
+  ],
+  "totals": {
+    "successful_renders": 9,
+    "failed_renders": 0,
+    "total_cost_credits": 48,
+    "approx_total_cost_usd": 0.048,
+    "total_time_seconds": 125.55
   },
   "notes": [
-    "BFL `cost` field returns CREDITS, not USD. The `cost_credits` field above mirrors that. Approximate USD equivalent at typical BFL pricing (~$0.001/credit): klein-4b ≈ $0.0015, pro ≈ $0.0045, max ≈ $0.01 — total ≈ $0.016 for this run.",
-    "All three endpoints (klein-4b, pro-preview, max) accept the same image-editing body schema and returned valid renders. No model needed to be skipped."
+    "BFL `cost` field returns credits, not USD. approx_total_cost_usd uses ~$0.001/credit (verify against BFL pricing).",
+    "Inputs >1.2 MP are auto-downscaled to ~1 MP for fair model comparison and cost control. Native-resolution re-test recommended on the chosen model."
   ]
 }
