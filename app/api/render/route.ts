@@ -113,6 +113,19 @@ function detectStructure(product: ProductForPrompt): boolean {
   return sku.startsWith("YMPB") || sku.startsWith("YPMB") || sku.startsWith("YMSG");
 }
 
+// Darken a #RRGGBB hex by `amount` (0..1). 0.15 → 15% darker. Used to
+// pre-compensate the BFL prompt for klein-9b's lightening bias so the
+// rendered output ends up close to the actual target RAL.
+function darkenHex(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >> 8) & 0xff) * (1 - amount)));
+  const b = Math.max(0, Math.round((n & 0xff) * (1 - amount)));
+  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 function structureBlock(): string {
   return `STRUCTURE / LINEN TEXTURE (ADDITIVE — overrides "no texture, no wood grain"):
 On top of every panel face, render a fine linen wood-grain texture — subtle 3D relief running parallel to the panel direction (top-to-bottom for vertical panels, left-to-right for horizontal). Like brushed wood-grain. The texture is surface detail only — panels remain flat overall, no deep grooves from the texture. The texture catches light differently across each panel, giving a tactile woven appearance. Texture follows each panel face individually — does NOT bleed across panel boundaries or coupling joints.`;
@@ -130,8 +143,12 @@ function buildBflPromptText(opts: PromptOptions): string {
 
   const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "";
   const colorName = product.color_name ?? "matt grey";
-  const hex = product.color_hex_render ?? product.color_hex ?? "";
-  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${hex ? ` (hex ${hex})` : ""}`;
+  // Models systematically render the cladding ~15-20% lighter than the
+  // target hex. Compensate by darkening the hex we send to the model by
+  // 15% so the rendered output ends up at the actual RAL value.
+  const baseHex = product.color_hex_render ?? product.color_hex ?? "";
+  const hex = baseHex ? darkenHex(baseHex, 0.15) : "";
+  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${hex ? ` (target hex ${baseHex}, render at hex ${hex} to compensate for the model's lightening bias)` : ""}`;
 
   const dimsLine = widthCm && heightCm
     ? `The facade is ${widthCm}cm wide and ${heightCm}cm tall.\n\n`
@@ -141,19 +158,21 @@ function buildBflPromptText(opts: PromptOptions): string {
   const hasStructure = detectStructure(product);
 
   const isGroove = line === "mono_groove";
-  // For Mono Flat: emphasise SEAMLESS — model interpreting "smalle naad"
-  // as visible lines was producing groove-like output on plain flat panels.
-  // For Mono Groove: keep the three grooves explicit but tone down the
-  // "more lines than flat" comparison which was making it overdo grooves.
+  // Rhythm spacing per spec:
+  //   Mono Flat: hairline naad every 37cm (matches Spanl PB-series panel width)
+  //   Mono Groove: visible groove every ~13cm (rabat-style, ~3× Mono Flat density)
+  const orientWord = orientation === "vertical" ? "vertical" : "horizontal";
   const surface = isGroove
-    ? `Mono Groove metal cladding — flat panels with three narrow decorative grooves on each panel face, running parallel to panel direction. Each groove is ~5mm wide with a clean shadow line.`
-    : `seamless matt metal cladding — one continuous smooth surface across the entire wall. NO visible panel boundaries, NO seams, NO grooves, NO lines, NO joints, NO panel rhythm. The wall reads as a single solid sheet of matte cladding from edge to edge.`;
+    ? `Mono Groove metal cladding with crisp ${orientWord} grooves every ~13cm across the facade (rabat-style rhythm, three times the line density of Mono Flat). Each groove is a 5mm shadow line recessed into the panel surface — clearly visible, not subtle.`
+    : `matt metal cladding with very faint hairline ${orientWord} seams every 37cm (Spanl PB-series rhythm). The seams are barely visible from facade distance — same-color hairline, slightly darker shade of the panel color, never white, never contrasting. Otherwise the surface is smooth and uniform.`;
 
   const orientLine = isGroove
     ? orientation === "vertical"
-      ? `Panel grooves run vertically (top-to-bottom). Mounted as full-height vertical panels.`
-      : `Panel grooves run horizontally (left-to-right). Mounted as horizontal rows.`
-    : ""; // Mono Flat needs no orientation language — it's seamless
+      ? `Grooves run top-to-bottom across the facade.`
+      : `Grooves run left-to-right across the facade.`
+    : orientation === "vertical"
+    ? `Hairline seams run top-to-bottom across the facade.`
+    : `Hairline seams run left-to-right across the facade.`;
 
   const isDark = product.ral_code === "9005" || product.ral_code === "7021" || product.ral_code === "7016" || product.ral_code === "7012";
   const isWhite = product.ral_code === "9003" || product.ral_code === "9010";
