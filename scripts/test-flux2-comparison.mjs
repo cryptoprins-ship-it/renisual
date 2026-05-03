@@ -25,6 +25,7 @@ Match the input image framing exactly. No cropping, no zoom change. Output dimen
 
 const MODELS = [
   { name: "klein-4b", slug: "flux-2-klein-4b" },
+  { name: "klein-9b", slug: "flux-2-klein-9b" },
   { name: "pro", slug: "flux-2-pro-preview" },
   { name: "max", slug: "flux-2-max" },
 ];
@@ -200,6 +201,29 @@ async function main() {
     const modelResults = {};
     for (const m of MODELS) {
       const outPath = path.join(OUT_DIR, `${input.base}-${m.name}.jpg`);
+      // Skip if output already exists — lets us add new models without re-billing
+      // for the ones that already ran. Delete the .jpg to force a re-run.
+      try {
+        const stat = await fs.stat(outPath);
+        if (stat.isFile() && stat.size > 0) {
+          const buf = await fs.readFile(outPath);
+          const meta = await sharp(buf).metadata();
+          modelResults[m.name] = {
+            model: m.slug,
+            endpoint: `https://api.bfl.ai/v1/${m.slug}`,
+            time_seconds: null,
+            cost_credits: null,
+            output_dimensions: `${meta.width}x${meta.height}`,
+            output_path: outPath.replace(/\\/g, "/"),
+            status: "success",
+            error: null,
+            note: "cached — output already on disk, did not re-call API",
+          };
+          console.log(`  [${m.name}] ${m.slug} ... ⊘ skip (already exists)`);
+          continue;
+        }
+      } catch { /* file missing, fall through to render */ }
+
       process.stdout.write(`  [${m.name}] ${m.slug} ... `);
       try {
         modelResults[m.name] = await renderOne(m, inputBase64, dims, apiKey, outPath);

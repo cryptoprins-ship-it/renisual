@@ -17,7 +17,7 @@
   p.lead { margin: 0 0 24px; color: #9aa0a6; max-width: 780px; }
   .row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
     margin-bottom: 28px;
     padding: 16px;
@@ -66,7 +66,10 @@
   .meta a { color: #7aa2ff; }
   .source { background: #1a1410; border-color: #3a2614; }
   .source figcaption { background: #14100c; border-color: #3a2614; }
-  @media (max-width: 900px) {
+  @media (max-width: 1100px) {
+    .row { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 720px) {
     .row { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 520px) {
@@ -79,7 +82,7 @@
 <h1>FLUX.2 Mono Flat comparison — woonboot</h1>
 <p class="lead">
   Drie originele woonboot-foto's (auto-downscaled naar ~1 MP) door FLUX.2
-  klein-4b / pro-preview / max met dezelfde Mono Flat prompt.
+  klein-4b / klein-9b / pro-preview / max met dezelfde Mono Flat prompt.
   Klik een afbeelding om vol formaat te openen.
 </p>
 
@@ -97,6 +100,12 @@
       <img src="IMG_20260421_183639-klein-4b.jpg" alt="klein-4b output">
     </a>
     <figcaption><strong>klein-4b</strong><span>5.4s · 1.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260421_183639-klein-9b.jpg" target="_blank">
+      <img src="IMG_20260421_183639-klein-9b.jpg" alt="klein-9b output">
+    </a>
+    <figcaption><strong>klein-9b</strong><span>7.0s · 1.7 cr</span></figcaption>
   </figure>
   <figure>
     <a href="IMG_20260421_183639-pro.jpg" target="_blank">
@@ -128,6 +137,12 @@
     <figcaption><strong>klein-4b</strong><span>6.9s · 1.5 cr</span></figcaption>
   </figure>
   <figure>
+    <a href="IMG_20260422_094859-klein-9b.jpg" target="_blank">
+      <img src="IMG_20260422_094859-klein-9b.jpg" alt="klein-9b output">
+    </a>
+    <figcaption><strong>klein-9b</strong><span>5.2s · 1.7 cr</span></figcaption>
+  </figure>
+  <figure>
     <a href="IMG_20260422_094859-pro.jpg" target="_blank">
       <img src="IMG_20260422_094859-pro.jpg" alt="pro-preview output">
     </a>
@@ -157,6 +172,12 @@
     <figcaption><strong>klein-4b</strong><span>6.2s · 1.5 cr</span></figcaption>
   </figure>
   <figure>
+    <a href="IMG_20260422_095323-klein-9b.jpg" target="_blank">
+      <img src="IMG_20260422_095323-klein-9b.jpg" alt="klein-9b output">
+    </a>
+    <figcaption><strong>klein-9b</strong><span>7.8s · 1.7 cr</span></figcaption>
+  </figure>
+  <figure>
     <a href="IMG_20260422_095323-pro.jpg" target="_blank">
       <img src="IMG_20260422_095323-pro.jpg" alt="pro-preview output">
     </a>
@@ -171,7 +192,7 @@
 </div>
 
 <p class="meta">
-  Totaal: 9 renders, 48 credits (~$0.048), 125s wall time.
+  Totaal: 12 renders, 53.1 credits (~$0.053), 145s wall time.
   <a href="results.json">results.json</a> ·
   cr = credits (BFL), ~$0.001/credit
 </p>

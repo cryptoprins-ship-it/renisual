@@ -13,32 +13,45 @@
         "klein-4b": {
           "model": "flux-2-klein-4b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
-          "time_seconds": 5.42,
-          "cost_credits": 1.5,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-klein-4b.jpg",
+          "status": "success",
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
+        },
+        "klein-9b": {
+          "model": "flux-2-klein-9b",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-klein-9b",
+          "time_seconds": 7,
+          "cost_credits": 1.7000000000000002,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-klein-9b.jpg",
           "status": "success",
           "error": null
         },
         "pro": {
           "model": "flux-2-pro-preview",
           "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
-          "time_seconds": 11.19,
-          "cost_credits": 4.5,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-pro.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         },
         "max": {
           "model": "flux-2-max",
           "endpoint": "https://api.bfl.ai/v1/flux-2-max",
-          "time_seconds": 25.13,
-          "cost_credits": 10,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-max.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         }
       }
     },
@@ -55,32 +68,45 @@
         "klein-4b": {
           "model": "flux-2-klein-4b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
-          "time_seconds": 6.94,
-          "cost_credits": 1.5,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-klein-4b.jpg",
+          "status": "success",
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
+        },
+        "klein-9b": {
+          "model": "flux-2-klein-9b",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-klein-9b",
+          "time_seconds": 5.23,
+          "cost_credits": 1.7000000000000002,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-klein-9b.jpg",
           "status": "success",
           "error": null
         },
         "pro": {
           "model": "flux-2-pro-preview",
           "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
-          "time_seconds": 12.45,
-          "cost_credits": 4.5,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-pro.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         },
         "max": {
           "model": "flux-2-max",
           "endpoint": "https://api.bfl.ai/v1/flux-2-max",
-          "time_seconds": 23.93,
-          "cost_credits": 10,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-max.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         }
       }
     },
@@ -97,42 +123,55 @@
         "klein-4b": {
           "model": "flux-2-klein-4b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
-          "time_seconds": 6.22,
-          "cost_credits": 1.5,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-klein-4b.jpg",
+          "status": "success",
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
+        },
+        "klein-9b": {
+          "model": "flux-2-klein-9b",
+          "endpoint": "https://api.bfl.ai/v1/flux-2-klein-9b",
+          "time_seconds": 7.79,
+          "cost_credits": 1.7000000000000002,
+          "output_dimensions": "1152x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-klein-9b.jpg",
           "status": "success",
           "error": null
         },
         "pro": {
           "model": "flux-2-pro-preview",
           "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
-          "time_seconds": 11.49,
-          "cost_credits": 4.5,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-pro.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         },
         "max": {
           "model": "flux-2-max",
           "endpoint": "https://api.bfl.ai/v1/flux-2-max",
-          "time_seconds": 22.78,
-          "cost_credits": 10,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-max.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         }
       }
     }
   ],
   "totals": {
-    "successful_renders": 9,
+    "successful_renders": 12,
     "failed_renders": 0,
-    "total_cost_credits": 48,
-    "approx_total_cost_usd": 0.048,
-    "total_time_seconds": 125.55
+    "total_cost_credits": 5.1,
+    "approx_total_cost_usd": 0.0051,
+    "total_time_seconds": 20.02
   },
   "notes": [
     "BFL `cost` field returns credits, not USD. approx_total_cost_usd uses ~$0.001/credit (verify against BFL pricing).",
