@@ -52,45 +52,41 @@
         "flat-structure": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 13.19,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "flat-structure-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 8.19,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-flat-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "groove-structure": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 7.89,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "groove-structure-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.73,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-groove-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         }
       }
@@ -107,89 +103,81 @@
         "mono-flat-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.53,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "mono-flat-horizontal": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.16,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-flat-horizontal-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "mono-groove-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 5.11,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "mono-groove-horizontal": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.5,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-mono-groove-horizontal-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "flat-structure": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.53,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "flat-structure-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 7.28,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-flat-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "groove-structure": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.68,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         },
         "groove-structure-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 4.99,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-groove-structure-vertical-klein-9b.jpg",
             "status": "success",
-            "error": null
+            "error": null,
+            "note": "cached"
           }
         }
       }
@@ -206,10 +194,497 @@
         "mono-flat-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.66,
-            "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
             "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "mono-flat-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "mono-groove-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "mono-groove-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "flat-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "flat-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "groove-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        },
+        "groove-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null,
+            "note": "cached"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "source_path": "public/test-inputs/voorkant_gedeelte_woonboot.jpg",
+        "source_dimensions": "4000x3000",
+        "source_megapixels": 12,
+        "downscaled": true,
+        "sent_dimensions": "1152x864"
+      },
+      "variants": {
+        "mono-flat-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 14.26,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-mono-flat-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-flat-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.61,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-mono-flat-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 12.99,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-mono-groove-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.8,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-mono-groove-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 5.07,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-flat-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 7,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-flat-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.95,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-groove-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 8.59,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/voorkant_gedeelte_woonboot-groove-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "source_path": "public/test-inputs/woonboot_achterkant_dubbelenenkel.jpg",
+        "source_dimensions": "4000x3000",
+        "source_megapixels": 12,
+        "downscaled": true,
+        "sent_dimensions": "1152x864"
+      },
+      "variants": {
+        "mono-flat-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.73,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-mono-flat-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-flat-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.69,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-mono-flat-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.72,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-mono-groove-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.75,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-mono-groove-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 9.5,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-flat-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.26,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-flat-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.37,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-groove-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 5.98,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_dubbelenenkel-groove-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "source_path": "public/test-inputs/woonboot_achterkant_enkellaags.jpg",
+        "source_dimensions": "4000x3000",
+        "source_megapixels": 12,
+        "downscaled": true,
+        "sent_dimensions": "1152x864"
+      },
+      "variants": {
+        "mono-flat-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 8.43,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-mono-flat-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-flat-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.75,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-mono-flat-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 5.71,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-mono-groove-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 10.15,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-mono-groove-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.81,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-flat-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.8,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-flat-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 7.02,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-groove-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.28,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags-groove-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "source_path": "public/test-inputs/woonboot_achterkant_enkellaags2.jpg",
+        "source_dimensions": "4000x3000",
+        "source_megapixels": 12,
+        "downscaled": true,
+        "sent_dimensions": "1152x864"
+      },
+      "variants": {
+        "mono-flat-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.26,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-mono-flat-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-flat-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 5.57,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-mono-flat-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.7,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-mono-groove-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "mono-groove-horizontal": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.95,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-mono-groove-horizontal-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.42,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-flat-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "flat-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 5.38,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-flat-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.43,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-groove-structure-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        },
+        "groove-structure-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 14.01,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_achterkant_enkellaags2-groove-structure-vertical-klein-9b.jpg",
+            "status": "success",
+            "error": null
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "source_path": "public/test-inputs/woonboot_dubbellaags_achterkant.jpg",
+        "source_dimensions": "4000x3000",
+        "source_megapixels": 12,
+        "downscaled": true,
+        "sent_dimensions": "1152x864"
+      },
+      "variants": {
+        "mono-flat-vertical": {
+          "klein-9b": {
+            "model": "flux-2-klein-9b",
+            "time_seconds": 6.41,
+            "cost_credits": 1.7000000000000002,
+            "output_dimensions": "1152x864",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-mono-flat-vertical-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -220,7 +695,7 @@
             "time_seconds": 6.83,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-flat-horizontal-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-mono-flat-horizontal-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -228,10 +703,10 @@
         "mono-groove-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.23,
+            "time_seconds": 9.89,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-vertical-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-mono-groove-vertical-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -239,10 +714,10 @@
         "mono-groove-horizontal": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.97,
+            "time_seconds": 6.67,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-mono-groove-horizontal-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-mono-groove-horizontal-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -250,10 +725,10 @@
         "flat-structure": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.71,
+            "time_seconds": 6.27,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-flat-structure-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -261,10 +736,10 @@
         "flat-structure-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.23,
+            "time_seconds": 7.09,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-flat-structure-vertical-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-flat-structure-vertical-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -272,10 +747,10 @@
         "groove-structure": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 6.73,
+            "time_seconds": 6.38,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-groove-structure-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -283,10 +758,10 @@
         "groove-structure-vertical": {
           "klein-9b": {
             "model": "flux-2-klein-9b",
-            "time_seconds": 5.07,
+            "time_seconds": 6.77,
             "cost_credits": 1.7000000000000002,
             "output_dimensions": "1152x864",
-            "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-groove-structure-vertical-klein-9b.jpg",
+            "output_path": "public/test-outputs/flux-comparison/woonboot_dubbellaags_achterkant-groove-structure-vertical-klein-9b.jpg",
             "status": "success",
             "error": null
           }
@@ -295,12 +770,12 @@
     }
   ],
   "totals": {
-    "new_renders": 20,
-    "cached_renders": 4,
+    "new_renders": 40,
+    "cached_renders": 24,
     "failed_renders": 0,
-    "new_cost_credits": 34,
-    "approx_new_cost_usd": 0.034,
-    "new_time_seconds": 137.21
+    "new_cost_credits": 68,
+    "approx_new_cost_usd": 0.068,
+    "new_time_seconds": 295.25
   },
   "notes": [
     "BFL cost field returns credits, not USD. approx_new_cost_usd uses ~$0.001/credit.",

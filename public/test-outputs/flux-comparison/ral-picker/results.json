@@ -6,18 +6,14 @@
       "name": "wit (RAL 9010)",
       "hex": "#F1ECE0",
       "output": "public/test-outputs/flux-comparison/ral-picker/ral-9010-klein-9b.jpg",
-      "status": "rendered",
-      "time_seconds": 8.3,
-      "cost_credits": 1.7000000000000002
+      "status": "cached"
     },
     {
       "code": "9006",
       "name": "zilver (RAL 9006)",
       "hex": "#A5A8A8",
       "output": "public/test-outputs/flux-comparison/ral-picker/ral-9006-klein-9b.jpg",
-      "status": "rendered",
-      "time_seconds": 7.2,
-      "cost_credits": 1.7000000000000002
+      "status": "cached"
     },
     {
       "code": "7038",
@@ -39,7 +35,7 @@
       "hex": "#0A0A0A",
       "output": "public/test-outputs/flux-comparison/ral-picker/ral-9005-klein-9b.jpg",
       "status": "rendered",
-      "time_seconds": 11.8,
+      "time_seconds": 5.6,
       "cost_credits": 1.7000000000000002
     }
   ]

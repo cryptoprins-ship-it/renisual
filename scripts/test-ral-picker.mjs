@@ -87,7 +87,7 @@ The facade is 1350cm wide and 355cm tall.
 
 REMOVE: existing wooden plank siding, all wood grain, peeling paint, weathering. Treat current cladding as if it doesn't exist.
 
-ADD: matt ${grey.name} RAL ${grey.code} (hex ${grey.hex}) smooth flat metal cladding panels. Panels are 370mm wide and run the FULL 355cm height as unbroken vertical strips — NO horizontal couplings, NO horizontal joints anywhere. Mounted vertically across the 1350cm width (~37 panels side by side). Between adjacent panels is a smalle naad — a very narrow hairline seam in the SAME RAL ${grey.code} color as the panels, barely visible from a few meters back.
+ADD: matt ${grey.name} RAL ${grey.code} (hex ${grey.hex}) smooth flat metal cladding panels. The color must be a TRUE COOL ${grey.code === "9005" ? "BLACK" : grey.code === "9010" ? "WHITE" : "GREY"} matching exactly the named RAL code and hex value above — NOT warm-tinted, NOT brown-shifted, NOT yellow-shifted. Pure neutral metal-paint finish like a powder-coated steel panel, not wood-stain. Panels are 370mm wide and run the FULL 355cm height as unbroken vertical strips — NO horizontal couplings, NO horizontal joints anywhere. Mounted vertically across the 1350cm width (~37 panels side by side). Between adjacent panels is a smalle naad — a very narrow hairline seam in the SAME RAL ${grey.code} color as the panels, barely visible from a few meters back.
 
 ${PROMPT_PRESERVE}`;
 }

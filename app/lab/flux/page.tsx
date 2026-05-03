@@ -20,9 +20,14 @@ const VARIANTS: ReadonlyArray<Variant> = [
 ];
 
 const PHOTOS = [
-  { base: "IMG_20260421_183639", title: "Photo 1 — achterkant met hek", subtitle: "3264×2448 → 1152×864" },
-  { base: "IMG_20260422_094859", title: "Photo 2 — close-up bestaande damwand", subtitle: "3264×2448 → 1152×864 (geen facade-frame)" },
-  { base: "IMG_20260422_095323", title: "Photo 3 — voorkant vanaf water", subtitle: "4080×3072 → 1152×864" },
+  { base: "IMG_20260421_183639", title: "Boat 1 — achterkant met hek", subtitle: "originele test, hek voor de gevel" },
+  { base: "IMG_20260422_094859", title: "Boat 1 — close-up damwand", subtitle: "geen facade-frame" },
+  { base: "IMG_20260422_095323", title: "Boat 1 — voorkant vanaf water", subtitle: "originele test, schone gevel" },
+  { base: "voorkant_gedeelte_woonboot", title: "Boat 2 — wit, horizontale planken", subtitle: "achter-zijkant met dakterras" },
+  { base: "woonboot_achterkant_dubbelenenkel", title: "Boat 3 — wit, deels dubbel/enkel laags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_achterkant_enkellaags", title: "Boat 4 — wijnrood, enkellaags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_achterkant_enkellaags2", title: "Boat 5 — wit met blauwe kozijnen, enkellaags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_dubbellaags_achterkant", title: "Boat 6 — wit, dubbellaags", subtitle: "achterkant vanaf water" },
 ] as const;
 
 type Highlight = "source" | "gemini" | undefined;
