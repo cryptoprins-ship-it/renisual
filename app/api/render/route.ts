@@ -118,6 +118,81 @@ function structureBlock(): string {
 On top of every panel face, render a fine linen wood-grain texture — subtle 3D relief running parallel to the panel direction (top-to-bottom for vertical panels, left-to-right for horizontal). Like brushed wood-grain. The texture is surface detail only — panels remain flat overall, no deep grooves from the texture. The texture catches light differently across each panel, giving a tactile woven appearance. Texture follows each panel face individually — does NOT bleed across panel boundaries or coupling joints.`;
 }
 
+// Simpler prompt template for BFL FLUX.2 klein-9b — derived from
+// /lab/flux experimentation that produced clean, color-accurate
+// output. The elaborate buildMonoFlatPrompt was tuned for Gemini's
+// quirks (panel rhythm enforcement, color compensation, etc) and
+// confuses klein-9b which is more prompt-faithful by default.
+function buildBflPromptText(opts: PromptOptions): string {
+  const { product, orientation, facadeWidthMeters, facadeHeightMeters, includeFascia } = opts;
+  const widthCm = facadeWidthMeters ? Math.round(facadeWidthMeters * 100) : null;
+  const heightCm = facadeHeightMeters ? Math.round(facadeHeightMeters * 100) : null;
+
+  const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "";
+  const colorName = product.color_name ?? "matt grey";
+  const hex = product.color_hex_render ?? product.color_hex ?? "";
+  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${hex ? ` (hex ${hex})` : ""}`;
+
+  const dimsLine = widthCm && heightCm
+    ? `The facade is ${widthCm}cm wide and ${heightCm}cm tall.\n\n`
+    : "";
+
+  const line = detectLine(product);
+  const hasStructure = detectStructure(product);
+
+  const isGroove = line === "mono_groove";
+  // For Mono Flat: emphasise SEAMLESS — model interpreting "smalle naad"
+  // as visible lines was producing groove-like output on plain flat panels.
+  // For Mono Groove: keep the three grooves explicit but tone down the
+  // "more lines than flat" comparison which was making it overdo grooves.
+  const surface = isGroove
+    ? `Mono Groove metal cladding — flat panels with three narrow decorative grooves on each panel face, running parallel to panel direction. Each groove is ~5mm wide with a clean shadow line.`
+    : `seamless matt metal cladding — one continuous smooth surface across the entire wall. NO visible panel boundaries, NO seams, NO grooves, NO lines, NO joints, NO panel rhythm. The wall reads as a single solid sheet of matte cladding from edge to edge.`;
+
+  const orientLine = isGroove
+    ? orientation === "vertical"
+      ? `Panel grooves run vertically (top-to-bottom). Mounted as full-height vertical panels.`
+      : `Panel grooves run horizontally (left-to-right). Mounted as horizontal rows.`
+    : ""; // Mono Flat needs no orientation language — it's seamless
+
+  const isDark = product.ral_code === "9005" || product.ral_code === "7021" || product.ral_code === "7016" || product.ral_code === "7012";
+  const isWhite = product.ral_code === "9003" || product.ral_code === "9010";
+  const colorTone = isDark
+    ? `Pure ${product.ral_code === "9005" ? "deep black" : "dark grey"} powder-coated matt finish. NOT warm-tinted, NOT brown, NOT yellow.`
+    : isWhite
+    ? `Pure white powder-coated matt finish. NOT cream, NOT yellow.`
+    : `Powder-coated matt metal finish. No weathering, no patina.`;
+
+  const structureLine = hasStructure
+    ? `\n\nSURFACE TEXTURE: subtle linen wood-grain texture embossed on the panel face, running parallel to the panel direction. Soft 3D relief, NOT deep grooves. Catches light to give a tactile woven appearance.`
+    : "";
+
+  const fasciaLine = includeFascia
+    ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
+    : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
+
+  return `Transform this facade by replacing the wall cladding with: ${colorPhrase} ${surface}
+
+${dimsLine}REMOVE: existing wooden plank siding, all wood grain, peeling paint, weathering.
+
+COLOR: ${colorTone}${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
+
+APPLY CLADDING ONLY TO the building's exterior wall surfaces between roof and waterline.
+
+DO NOT TOUCH and keep ORIGINAL colors/materials of:
+- Fences, hekken, gates, mesh, railings — these are NOT walls
+- Vegetation, foreground objects, sky, water, neighbors
+- Roof, gutters, chimneys
+- Windows, glazing, window frames (kozijnen) — keep ORIGINAL color
+- Doors and door frames — keep ORIGINAL color
+
+DO NOT INVENT new windows, doors, or architectural features.
+
+${fasciaLine}
+
+Match input image framing exactly. No cropping, no zoom change.`;
+}
+
 type PromptOptions = {
   product: ProductForPrompt;
   brandPrefix: string;
@@ -1005,13 +1080,24 @@ export async function POST(request: Request) {
   // Primary engine: BFL FLUX.2 klein-9b (EU/GDPR via api.bfl.ai). Tried
   // first when the BFL key is configured. On any failure we silently
   // fall back to Gemini so a single-engine outage does not break renders.
+  // BFL uses a simpler prompt than Gemini — klein-9b is more prompt-
+  // faithful than Gemini and the elaborate compensation language hurts
+  // its color accuracy.
   const bflKey = resolveBflKey();
   if (bflKey) {
     try {
       logger.info({}, "render_bfl_attempt");
+      const bflPrompt = buildBflPromptText({
+        product,
+        brandPrefix,
+        orientation: body.orientation,
+        facadeWidthMeters,
+        facadeHeightMeters,
+        includeFascia: body.includeBoeideel,
+      });
       const { bytes: outBytes, mime: outMime } = await renderViaBfl({
         apiKey: bflKey,
-        prompt: promptText,
+        prompt: bflPrompt,
         sourceBytes,
         referenceParts,
       });
