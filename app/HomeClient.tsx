@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 import DynamicMetadata from "@/components/DynamicMetadata";
+import PwaInstallButton from "@/components/PwaInstallButton";
 import { useLocale } from "@/lib/i18n";
 
 const SPONSOR_MAILTO =
@@ -238,6 +239,10 @@ export default function HomeClient() {
                 <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
               </div>
             </Link>
+          </div>
+
+          <div className="mx-auto mt-12 max-w-2xl">
+            <PwaInstallButton />
           </div>
         </div>
       </section>
