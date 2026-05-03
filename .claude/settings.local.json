@@ -52,7 +52,8 @@
       "Bash(curl -s http://localhost:3000/)",
       "Bash(curl *)",
       "Bash(npx supabase *)",
-      "Bash(void)"
+      "Bash(void)",
+      "PowerShell(npm run *)"
     ]
   }
 }
