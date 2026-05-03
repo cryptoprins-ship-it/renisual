@@ -612,6 +612,111 @@ function resolveGeminiKey(): string | undefined {
   return readEnvCaseInsensitive("GEMINI_API_KEY")?.trim();
 }
 
+// BFL FLUX.2 klein-9b key. Mixed-case names per user convention; we read
+// case-insensitively so Vercel/Hostinger casing differences don't matter.
+function resolveBflKey(): string | undefined {
+  for (const name of ["renisual_bfl_key", "BFL_API_KEY", "Flux_API_Key", "FLUX_API_KEY"]) {
+    const raw = process.env[name];
+    if (typeof raw === "string" && raw.trim().length > 0) return raw.trim();
+  }
+  return readEnvCaseInsensitive("renisual_bfl_key")?.trim()
+    ?? readEnvCaseInsensitive("BFL_API_KEY")?.trim();
+}
+
+// Round to a multiple of 32 with a 64-pixel floor — BFL accepts any
+// integer >= 64 but their internal pipeline rounds anyway, so matching
+// the rounding here keeps the response dimensions predictable.
+function bflTargetDims(srcW: number, srcH: number): { width: number; height: number } {
+  const aspect = srcW / srcH;
+  const h = Math.sqrt(1_000_000 / aspect);
+  const w = h * aspect;
+  const round32 = (n: number) => Math.max(64, Math.round(n / 32) * 32);
+  return { width: round32(w), height: round32(h) };
+}
+
+// Try the EU primary engine (BFL FLUX.2 klein-9b). Throws on any failure
+// so the caller can fall back to Gemini. Source photo is downscaled to
+// ~1MP before send — klein-9b is billed per render not per input MP, but
+// keeping the request body under a few MB avoids occasional 413s and
+// trims latency on slow connections.
+async function renderViaBfl(args: {
+  apiKey: string;
+  prompt: string;
+  sourceBytes: Buffer;
+  referenceParts: InlinePart[];
+}): Promise<{ bytes: Buffer; mime: string }> {
+  const meta = await sharp(args.sourceBytes).metadata();
+  const srcW = meta.width ?? 1024;
+  const srcH = meta.height ?? 1024;
+  const dims = bflTargetDims(srcW, srcH);
+
+  const baseDownscaled = await sharp(args.sourceBytes)
+    .rotate()
+    .resize(dims.width, dims.height, { fit: "fill" })
+    .toBuffer();
+
+  const body: Record<string, unknown> = {
+    prompt: args.prompt,
+    input_image: baseDownscaled.toString("base64"),
+    width: dims.width,
+    height: dims.height,
+    output_format: "jpeg",
+    safety_tolerance: 2,
+  };
+  // BFL supports up to 8 reference images; product photos go after the base.
+  args.referenceParts.slice(0, 7).forEach((p, i) => {
+    body[`input_image_${i + 2}`] = p.inlineData.data;
+  });
+
+  const submitRes = await fetch("https://api.bfl.ai/v1/flux-2-klein-9b", {
+    method: "POST",
+    headers: {
+      "x-key": args.apiKey,
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const submitJson = await submitRes.json().catch(() => ({} as Record<string, unknown>));
+  if (!submitRes.ok) {
+    const detail = (submitJson as { detail?: string }).detail ?? `status ${submitRes.status}`;
+    throw new Error(`bfl_submit_${submitRes.status}_${detail}`);
+  }
+  const id = (submitJson as { id?: string }).id;
+  const pollingUrl = (submitJson as { polling_url?: string }).polling_url;
+  if (!pollingUrl) throw new Error("bfl_no_polling_url");
+
+  // Cap polling well below the 60s function maxDuration so we have time
+  // to download and post-process before the route times out.
+  const deadline = Date.now() + 45_000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const pollRes = await fetch(pollingUrl, {
+      headers: { "x-key": args.apiKey, accept: "application/json" },
+    });
+    const pollJson = (await pollRes.json().catch(() => ({}))) as {
+      status?: string;
+      result?: { sample?: string };
+    };
+    if (pollJson.status === "Ready") {
+      const sample = pollJson.result?.sample;
+      if (!sample) throw new Error("bfl_no_sample");
+      const dlRes = await fetch(sample);
+      if (!dlRes.ok) throw new Error(`bfl_download_${dlRes.status}`);
+      const buf = Buffer.from(await dlRes.arrayBuffer());
+      return { bytes: buf, mime: "image/jpeg" };
+    }
+    if (
+      pollJson.status === "Error" ||
+      pollJson.status === "Failed" ||
+      pollJson.status === "Content Moderated"
+    ) {
+      throw new Error(`bfl_${pollJson.status}`);
+    }
+  }
+  throw new Error(`bfl_timeout_${id ?? "unknown"}`);
+}
+
 export async function POST(request: Request) {
   const forbidden = verifyOrigin(request);
   if (forbidden) return forbidden;
@@ -793,6 +898,30 @@ export async function POST(request: Request) {
     { promptLen: promptText.length, refs: referenceParts.length, aspectRatio: sourceAspectRatio },
     "render_prompt"
   );
+
+  // Primary engine: BFL FLUX.2 klein-9b (EU/GDPR via api.bfl.ai). Tried
+  // first when the BFL key is configured. On any failure we silently
+  // fall back to Gemini so a single-engine outage does not break renders.
+  const bflKey = resolveBflKey();
+  if (bflKey) {
+    try {
+      logger.info({}, "render_bfl_attempt");
+      const { bytes: outBytes, mime: outMime } = await renderViaBfl({
+        apiKey: bflKey,
+        prompt: promptText,
+        sourceBytes,
+        referenceParts,
+      });
+      const matched = await matchSourceAspect(outBytes, outMime, sourceBytes);
+      logger.info({ outBytes: matched.bytes.length }, "render_bfl_ok");
+      return Response.json({
+        renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
+      });
+    } catch (err) {
+      logger.warn({ err }, "render_bfl_failed_fallback_to_gemini");
+      // intentional fall-through
+    }
+  }
 
   const ai = new GoogleGenAI({ apiKey });
 
