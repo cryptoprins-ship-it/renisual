@@ -10,6 +10,17 @@
         "sent_megapixels": 1
       },
       "models": {
+        "gemini": {
+          "model": "gemini-2.5-flash-image",
+          "endpoint": "google-genai-sdk",
+          "time_seconds": 8.43,
+          "cost_credits": null,
+          "output_dimensions": "1184x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-gemini.jpg",
+          "status": "success",
+          "error": null,
+          "note": "Gemini billed by Google per-token; not directly comparable to BFL credits."
+        },
         "klein-4b": {
           "model": "flux-2-klein-4b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
@@ -24,12 +35,13 @@
         "klein-9b": {
           "model": "flux-2-klein-9b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-9b",
-          "time_seconds": 7,
-          "cost_credits": 1.7000000000000002,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260421_183639-klein-9b.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         },
         "pro": {
           "model": "flux-2-pro-preview",
@@ -65,6 +77,17 @@
         "sent_megapixels": 1
       },
       "models": {
+        "gemini": {
+          "model": "gemini-2.5-flash-image",
+          "endpoint": "google-genai-sdk",
+          "time_seconds": 7.35,
+          "cost_credits": null,
+          "output_dimensions": "1184x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-gemini.jpg",
+          "status": "success",
+          "error": null,
+          "note": "Gemini billed by Google per-token; not directly comparable to BFL credits."
+        },
         "klein-4b": {
           "model": "flux-2-klein-4b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
@@ -79,12 +102,13 @@
         "klein-9b": {
           "model": "flux-2-klein-9b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-9b",
-          "time_seconds": 5.23,
-          "cost_credits": 1.7000000000000002,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_094859-klein-9b.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         },
         "pro": {
           "model": "flux-2-pro-preview",
@@ -120,6 +144,17 @@
         "sent_megapixels": 1
       },
       "models": {
+        "gemini": {
+          "model": "gemini-2.5-flash-image",
+          "endpoint": "google-genai-sdk",
+          "time_seconds": 8.65,
+          "cost_credits": null,
+          "output_dimensions": "1184x864",
+          "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-gemini.jpg",
+          "status": "success",
+          "error": null,
+          "note": "Gemini billed by Google per-token; not directly comparable to BFL credits."
+        },
         "klein-4b": {
           "model": "flux-2-klein-4b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
@@ -134,12 +169,13 @@
         "klein-9b": {
           "model": "flux-2-klein-9b",
           "endpoint": "https://api.bfl.ai/v1/flux-2-klein-9b",
-          "time_seconds": 7.79,
-          "cost_credits": 1.7000000000000002,
+          "time_seconds": null,
+          "cost_credits": null,
           "output_dimensions": "1152x864",
           "output_path": "public/test-outputs/flux-comparison/IMG_20260422_095323-klein-9b.jpg",
           "status": "success",
-          "error": null
+          "error": null,
+          "note": "cached — output already on disk, did not re-call API"
         },
         "pro": {
           "model": "flux-2-pro-preview",
@@ -167,11 +203,11 @@
     }
   ],
   "totals": {
-    "successful_renders": 12,
+    "successful_renders": 15,
     "failed_renders": 0,
-    "total_cost_credits": 5.1,
-    "approx_total_cost_usd": 0.0051,
-    "total_time_seconds": 20.02
+    "total_cost_credits": 0,
+    "approx_total_cost_usd": 0,
+    "total_time_seconds": 24.43
   },
   "notes": [
     "BFL `cost` field returns credits, not USD. approx_total_cost_usd uses ~$0.001/credit (verify against BFL pricing).",

@@ -17,8 +17,8 @@
   p.lead { margin: 0 0 24px; color: #9aa0a6; max-width: 780px; }
   .row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
     margin-bottom: 28px;
     padding: 16px;
     background: #161922;
@@ -66,7 +66,7 @@
   .meta a { color: #7aa2ff; }
   .source { background: #1a1410; border-color: #3a2614; }
   .source figcaption { background: #14100c; border-color: #3a2614; }
-  @media (max-width: 1100px) {
+  @media (max-width: 1300px) {
     .row { grid-template-columns: repeat(3, 1fr); }
   }
   @media (max-width: 720px) {
@@ -75,15 +75,18 @@
   @media (max-width: 520px) {
     .row { grid-template-columns: 1fr; }
   }
+  .gemini { background: #102018; border-color: #1f3a2a; }
+  .gemini figcaption { background: #0c1812; border-color: #1f3a2a; }
 </style>
 </head>
 <body>
 
 <h1>FLUX.2 Mono Flat comparison — woonboot</h1>
 <p class="lead">
-  Drie originele woonboot-foto's (auto-downscaled naar ~1 MP) door FLUX.2
-  klein-4b / klein-9b / pro-preview / max met dezelfde Mono Flat prompt.
-  Klik een afbeelding om vol formaat te openen.
+  Drie originele woonboot-foto's (auto-downscaled naar ~1 MP) door
+  Gemini 2.5 Flash Image + FLUX.2 klein-4b / klein-9b / pro-preview / max
+  met dezelfde Mono Flat prompt. Gemini = current production engine,
+  FLUX.2 = candidate for pro-tier. Klik een afbeelding voor vol formaat.
 </p>
 
 <div class="row">
@@ -94,6 +97,12 @@
       <img src="../../test-inputs/IMG_20260421_183639.jpg" alt="source — original photo">
     </a>
     <figcaption><strong>Source</strong><span>original 8 MP</span></figcaption>
+  </figure>
+  <figure class="gemini">
+    <a href="IMG_20260421_183639-gemini.jpg" target="_blank">
+      <img src="IMG_20260421_183639-gemini.jpg" alt="gemini output">
+    </a>
+    <figcaption><strong>gemini</strong><span>8.4s · n/a</span></figcaption>
   </figure>
   <figure>
     <a href="IMG_20260421_183639-klein-4b.jpg" target="_blank">
@@ -130,6 +139,12 @@
     </a>
     <figcaption><strong>Source</strong><span>original 8 MP</span></figcaption>
   </figure>
+  <figure class="gemini">
+    <a href="IMG_20260422_094859-gemini.jpg" target="_blank">
+      <img src="IMG_20260422_094859-gemini.jpg" alt="gemini output">
+    </a>
+    <figcaption><strong>gemini</strong><span>7.4s · n/a</span></figcaption>
+  </figure>
   <figure>
     <a href="IMG_20260422_094859-klein-4b.jpg" target="_blank">
       <img src="IMG_20260422_094859-klein-4b.jpg" alt="klein-4b output">
@@ -165,6 +180,12 @@
     </a>
     <figcaption><strong>Source</strong><span>original 12.5 MP</span></figcaption>
   </figure>
+  <figure class="gemini">
+    <a href="IMG_20260422_095323-gemini.jpg" target="_blank">
+      <img src="IMG_20260422_095323-gemini.jpg" alt="gemini output">
+    </a>
+    <figcaption><strong>gemini</strong><span>8.7s · n/a</span></figcaption>
+  </figure>
   <figure>
     <a href="IMG_20260422_095323-klein-4b.jpg" target="_blank">
       <img src="IMG_20260422_095323-klein-4b.jpg" alt="klein-4b output">
@@ -192,9 +213,9 @@
 </div>
 
 <p class="meta">
-  Totaal: 12 renders, 53.1 credits (~$0.053), 145s wall time.
+  Totaal: 15 renders (3 Gemini + 12 FLUX.2), 53.1 BFL credits (~$0.053) + Gemini token-billed, ~170s wall time.
   <a href="results.json">results.json</a> ·
-  cr = credits (BFL), ~$0.001/credit
+  cr = credits (BFL), ~$0.001/credit · Gemini billed per-token by Google, n/a in cr
 </p>
 
 </body>

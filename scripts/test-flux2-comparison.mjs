@@ -7,6 +7,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { GoogleGenAI, Modality } from "@google/genai";
 
 const INPUT_DIR = "public/test-inputs";
 const OUT_DIR = "public/test-outputs/flux-comparison";
@@ -24,10 +25,11 @@ PRESERVE EXACTLY AS-IS: all windows, glazing, window frames, doors, roof, gutter
 Match the input image framing exactly. No cropping, no zoom change. Output dimensions and composition match input.`;
 
 const MODELS = [
-  { name: "klein-4b", slug: "flux-2-klein-4b" },
-  { name: "klein-9b", slug: "flux-2-klein-9b" },
-  { name: "pro", slug: "flux-2-pro-preview" },
-  { name: "max", slug: "flux-2-max" },
+  { name: "gemini", slug: "gemini-2.5-flash-image", provider: "gemini" },
+  { name: "klein-4b", slug: "flux-2-klein-4b", provider: "bfl" },
+  { name: "klein-9b", slug: "flux-2-klein-9b", provider: "bfl" },
+  { name: "pro", slug: "flux-2-pro-preview", provider: "bfl" },
+  { name: "max", slug: "flux-2-max", provider: "bfl" },
 ];
 
 async function loadEnvKey(name) {
@@ -99,7 +101,18 @@ async function submitAndPoll(slug, body, apiKey) {
   throw new Error(`timeout polling task ${id}`);
 }
 
-async function renderOne(model, inputBase64, dims, apiKey, outPath) {
+function pickGeminiAspectRatio(w, h) {
+  const ratios = { "1:1": 1, "4:3": 4/3, "3:4": 3/4, "16:9": 16/9, "9:16": 9/16, "3:2": 3/2, "2:3": 2/3 };
+  const a = w / h;
+  let best = "1:1", diff = Infinity;
+  for (const [k, v] of Object.entries(ratios)) {
+    const d = Math.abs(a - v);
+    if (d < diff) { diff = d; best = k; }
+  }
+  return best;
+}
+
+async function renderBfl(model, inputBase64, dims, apiKey, outPath) {
   const body = {
     prompt: PROMPT,
     input_image: inputBase64,
@@ -131,6 +144,48 @@ async function renderOne(model, inputBase64, dims, apiKey, outPath) {
     output_path: outPath.replace(/\\/g, "/"),
     status: "success",
     error: null,
+  };
+}
+
+async function renderGemini(model, inputBytes, inputMeta, geminiKey, outPath) {
+  const ai = new GoogleGenAI({ apiKey: geminiKey });
+  const aspectRatio = pickGeminiAspectRatio(inputMeta.width ?? 1, inputMeta.height ?? 1);
+  const photoPart = { inlineData: { mimeType: "image/jpeg", data: inputBytes.toString("base64") } };
+  const parts = [
+    { text: "BASE PHOTO — edit this image. The output must match this image's camera angle, frame edges, and aspect ratio exactly. Modify only the wall cladding surface; everything else (frame, sky, surroundings, windows, doors, roof) stays in place." },
+    photoPart,
+    { text: PROMPT },
+  ];
+
+  const start = Date.now();
+  const response = await ai.models.generateContent({
+    model: model.slug,
+    contents: parts,
+    config: {
+      responseModalities: [Modality.IMAGE, Modality.TEXT],
+      temperature: 0.3,
+      imageConfig: { aspectRatio },
+    },
+  });
+  const elapsed = (Date.now() - start) / 1000;
+
+  const imagePart = response.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+  if (!imagePart?.inlineData?.data) {
+    throw new Error("gemini returned no image");
+  }
+  const buf = Buffer.from(imagePart.inlineData.data, "base64");
+  await fs.writeFile(outPath, buf);
+  const meta = await sharp(buf).metadata();
+  return {
+    model: model.slug,
+    endpoint: "google-genai-sdk",
+    time_seconds: Number(elapsed.toFixed(2)),
+    cost_credits: null, // Gemini billed in tokens not credits
+    output_dimensions: `${meta.width}x${meta.height}`,
+    output_path: outPath.replace(/\\/g, "/"),
+    status: "success",
+    error: null,
+    note: "Gemini billed by Google per-token; not directly comparable to BFL credits.",
   };
 }
 
@@ -168,13 +223,16 @@ async function prepareInput(filename) {
 }
 
 async function main() {
-  const apiKey =
+  const bflKey =
     (await loadEnvKey("renisual_bfl_key")) ??
     (await loadEnvKey("BFL_API_KEY")) ??
     (await loadEnvKey("BFL_API_Key")) ??
     (await loadEnvKey("Flux_API_Key"));
-  if (!apiKey) {
-    console.error("No BFL key found in .env.local. Add e.g. renisual_bfl_key=bfl_...");
+  const geminiKey =
+    (await loadEnvKey("GEMINI_API_KEY")) ??
+    (await loadEnvKey("Gemini_API_Key"));
+  if (!bflKey && !geminiKey) {
+    console.error("No API keys found in .env.local. Add at least one of: renisual_bfl_key, GEMINI_API_KEY");
     process.exit(1);
   }
 
@@ -226,9 +284,16 @@ async function main() {
 
       process.stdout.write(`  [${m.name}] ${m.slug} ... `);
       try {
-        modelResults[m.name] = await renderOne(m, inputBase64, dims, apiKey, outPath);
+        if (m.provider === "gemini") {
+          if (!geminiKey) throw new Error("no GEMINI_API_KEY in .env.local");
+          modelResults[m.name] = await renderGemini(m, input.bytes, input.meta, geminiKey, outPath);
+        } else {
+          if (!bflKey) throw new Error("no BFL key in .env.local");
+          modelResults[m.name] = await renderBfl(m, inputBase64, dims, bflKey, outPath);
+        }
         const r = modelResults[m.name];
-        console.log(`✓ ${r.time_seconds}s  ${r.cost_credits ?? "?"} credits  ${r.output_dimensions}  → ${r.output_path}`);
+        const costStr = r.cost_credits != null ? `${r.cost_credits} cr` : "(n/a)";
+        console.log(`✓ ${r.time_seconds}s  ${costStr}  ${r.output_dimensions}  → ${r.output_path}`);
       } catch (err) {
         modelResults[m.name] = {
           model: m.slug,
