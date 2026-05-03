@@ -174,12 +174,16 @@ function buildBflPromptText(opts: PromptOptions): string {
 
   const isGroove = line === "mono_groove";
   // Rhythm spacing per spec:
-  //   Mono Flat: hairline naad every 37cm (matches Spanl PB-series panel width)
-  //   Mono Groove: visible groove every ~13cm (rabat-style, ~3× Mono Flat density)
+  //   Mono Flat: hairline naad every 37cm
+  //   Mono Groove: visible groove every ~13cm (3× Mono Flat density)
+  // NOTE: avoid "rabat" (Dutch term that biases the model toward wood
+  // planking) and avoid "wood-grain" anywhere in the prompt — both
+  // pull klein-9b toward rendering pale wood instead of metal in the
+  // requested RAL color.
   const orientWord = orientation === "vertical" ? "vertical" : "horizontal";
   const surface = isGroove
-    ? `Mono Groove metal cladding with crisp ${orientWord} grooves every ~13cm across the facade (rabat-style rhythm, three times the line density of Mono Flat). Each groove is a 5mm shadow line recessed into the panel surface — clearly visible, not subtle.`
-    : `matt metal cladding with very faint hairline ${orientWord} seams every 37cm (Spanl PB-series rhythm). The seams are barely visible from facade distance — same-color hairline, slightly darker shade of the panel color, never white, never contrasting. Otherwise the surface is smooth and uniform.`;
+    ? `painted matt metal cladding with crisp ${orientWord} grooves every ~13cm across the facade. Each groove is a 5mm shadow line recessed into the metal surface — clearly visible. The base material is a flat metal sheet painted in the color below; grooves are pressed into the metal, NOT carved wood.`
+    : `painted matt metal cladding with very faint hairline ${orientWord} seams every 37cm. Seams are same-color hairlines (slightly darker shade of the panel color, never white, never contrasting). Otherwise smooth and uniform metal sheet.`;
 
   const orientLine = isGroove
     ? orientation === "vertical"
@@ -198,18 +202,20 @@ function buildBflPromptText(opts: PromptOptions): string {
     : `Powder-coated matt metal finish. No weathering, no patina.`;
 
   const structureLine = hasStructure
-    ? `\n\nSURFACE TEXTURE: subtle linen wood-grain texture embossed on the panel face, running parallel to the panel direction. Soft 3D relief, NOT deep grooves. Catches light to give a tactile woven appearance.`
+    ? `\n\nSURFACE TEXTURE: subtle linen-weave embossing on the painted metal surface, running parallel to the panel direction. Fine fabric-like 3D relief — NOT wood, NOT wood grain, NOT planks. The base material is still a painted metal sheet; the texture is a faint pressed pattern on the metal. Color must remain the matt RAL color specified above, NOT a wood color.`
     : "";
 
   const fasciaLine = includeFascia
     ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
     : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
 
-  return `Transform this facade by replacing the wall cladding with: ${colorPhrase} ${surface}
+  return `Transform this facade by replacing the wall cladding.
 
-${dimsLine}REMOVE: existing wooden plank siding, all wood grain, peeling paint, weathering.
+COLOR (PRIMARY INSTRUCTION — overrides everything else): ${colorPhrase}. ${colorTone} The wall MUST end up this color. Do NOT render as wood, do NOT render as cream/beige.
 
-COLOR: ${colorTone}${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
+${dimsLine}MATERIAL: ${surface}
+
+REMOVE from the source: existing wooden plank siding, all wood grain, peeling paint, weathering. The new wall is PAINTED METAL, NOT wood.${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
 
 APPLY CLADDING ONLY TO the building's exterior wall surfaces between roof and waterline.
 
