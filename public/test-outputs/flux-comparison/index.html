@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<title>FLUX.2 Mono Flat comparison — woonboot</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+    background: #0e1014; color: #e6e8eb;
+  }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  p.lead { margin: 0 0 24px; color: #9aa0a6; max-width: 780px; }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: #161922;
+    border: 1px solid #232733;
+    border-radius: 10px;
+  }
+  .row h2 {
+    grid-column: 1 / -1;
+    margin: 0 0 4px;
+    font-size: 15px; font-weight: 600;
+    color: #cbd0d6;
+  }
+  .row h2 small {
+    font-weight: 400; color: #6b7280; margin-left: 8px;
+  }
+  figure {
+    margin: 0;
+    background: #0a0c10;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #232733;
+    display: flex; flex-direction: column;
+  }
+  figure a { display: block; line-height: 0; }
+  figure img {
+    width: 100%; height: auto; display: block;
+    transition: opacity .15s;
+  }
+  figure img:hover { opacity: .92; }
+  figcaption {
+    padding: 8px 10px;
+    font-size: 12px;
+    background: #11141b;
+    border-top: 1px solid #232733;
+    display: flex; justify-content: space-between; gap: 8px;
+    flex-wrap: wrap;
+  }
+  figcaption strong { color: #e6e8eb; font-weight: 600; }
+  figcaption span { color: #9aa0a6; }
+  .meta {
+    color: #6b7280; font-size: 12px;
+    margin: 24px 0 0; padding-top: 16px;
+    border-top: 1px solid #232733;
+  }
+  .meta a { color: #7aa2ff; }
+  .source { background: #1a1410; border-color: #3a2614; }
+  .source figcaption { background: #14100c; border-color: #3a2614; }
+  @media (max-width: 1300px) {
+    .row { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) {
+    .row { grid-template-columns: 1fr; }
+  }
+  .gemini { background: #102018; border-color: #1f3a2a; }
+  .gemini figcaption { background: #0c1812; border-color: #1f3a2a; }
+</style>
+</head>
+<body>
+
+<h1>FLUX.2 Mono Flat comparison — woonboot</h1>
+<p class="lead">
+  Drie originele woonboot-foto's (auto-downscaled naar ~1 MP) door
+  Gemini 2.5 Flash Image + FLUX.2 klein-4b / klein-9b / pro-preview / max
+  met dezelfde Mono Flat prompt. Gemini = current production engine,
+  FLUX.2 = candidate for pro-tier. Klik een afbeelding voor vol formaat.
+</p>
+
+<div class="row">
+  <h2>Photo 1 — achterkant met hek <small>3264×2448 → 1152×864</small></h2>
+
+  <figure class="source">
+    <a href="../../test-inputs/IMG_20260421_183639.jpg" target="_blank">
+      <img src="../../test-inputs/IMG_20260421_183639.jpg" alt="source — original photo">
+    </a>
+    <figcaption><strong>Source</strong><span>original 8 MP</span></figcaption>
+  </figure>
+  <figure class="gemini">
+    <a href="IMG_20260421_183639-gemini.jpg" target="_blank">
+      <img src="IMG_20260421_183639-gemini.jpg" alt="gemini output">
+    </a>
+    <figcaption><strong>gemini</strong><span>8.4s · n/a</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260421_183639-klein-4b.jpg" target="_blank">
+      <img src="IMG_20260421_183639-klein-4b.jpg" alt="klein-4b output">
+    </a>
+    <figcaption><strong>klein-4b</strong><span>5.4s · 1.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260421_183639-klein-9b.jpg" target="_blank">
+      <img src="IMG_20260421_183639-klein-9b.jpg" alt="klein-9b output">
+    </a>
+    <figcaption><strong>klein-9b</strong><span>7.0s · 1.7 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260421_183639-pro.jpg" target="_blank">
+      <img src="IMG_20260421_183639-pro.jpg" alt="pro-preview output">
+    </a>
+    <figcaption><strong>pro-preview</strong><span>11.2s · 4.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260421_183639-max.jpg" target="_blank">
+      <img src="IMG_20260421_183639-max.jpg" alt="max output">
+    </a>
+    <figcaption><strong>max</strong><span>25.1s · 10 cr</span></figcaption>
+  </figure>
+</div>
+
+<div class="row">
+  <h2>Photo 2 — close-up bestaande damwand <small>3264×2448 → 1152×864 (geen facade-frame)</small></h2>
+
+  <figure class="source">
+    <a href="../../test-inputs/IMG_20260422_094859.jpg" target="_blank">
+      <img src="../../test-inputs/IMG_20260422_094859.jpg" alt="source — original photo">
+    </a>
+    <figcaption><strong>Source</strong><span>original 8 MP</span></figcaption>
+  </figure>
+  <figure class="gemini">
+    <a href="IMG_20260422_094859-gemini.jpg" target="_blank">
+      <img src="IMG_20260422_094859-gemini.jpg" alt="gemini output">
+    </a>
+    <figcaption><strong>gemini</strong><span>7.4s · n/a</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_094859-klein-4b.jpg" target="_blank">
+      <img src="IMG_20260422_094859-klein-4b.jpg" alt="klein-4b output">
+    </a>
+    <figcaption><strong>klein-4b</strong><span>6.9s · 1.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_094859-klein-9b.jpg" target="_blank">
+      <img src="IMG_20260422_094859-klein-9b.jpg" alt="klein-9b output">
+    </a>
+    <figcaption><strong>klein-9b</strong><span>5.2s · 1.7 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_094859-pro.jpg" target="_blank">
+      <img src="IMG_20260422_094859-pro.jpg" alt="pro-preview output">
+    </a>
+    <figcaption><strong>pro-preview</strong><span>12.5s · 4.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_094859-max.jpg" target="_blank">
+      <img src="IMG_20260422_094859-max.jpg" alt="max output">
+    </a>
+    <figcaption><strong>max</strong><span>23.9s · 10 cr</span></figcaption>
+  </figure>
+</div>
+
+<div class="row">
+  <h2>Photo 3 — voorkant vanaf water <small>4080×3072 → 1152×864</small></h2>
+
+  <figure class="source">
+    <a href="../../test-inputs/IMG_20260422_095323.jpg" target="_blank">
+      <img src="../../test-inputs/IMG_20260422_095323.jpg" alt="source — original photo">
+    </a>
+    <figcaption><strong>Source</strong><span>original 12.5 MP</span></figcaption>
+  </figure>
+  <figure class="gemini">
+    <a href="IMG_20260422_095323-gemini.jpg" target="_blank">
+      <img src="IMG_20260422_095323-gemini.jpg" alt="gemini output">
+    </a>
+    <figcaption><strong>gemini</strong><span>8.7s · n/a</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_095323-klein-4b.jpg" target="_blank">
+      <img src="IMG_20260422_095323-klein-4b.jpg" alt="klein-4b output">
+    </a>
+    <figcaption><strong>klein-4b</strong><span>6.2s · 1.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_095323-klein-9b.jpg" target="_blank">
+      <img src="IMG_20260422_095323-klein-9b.jpg" alt="klein-9b output">
+    </a>
+    <figcaption><strong>klein-9b</strong><span>7.8s · 1.7 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_095323-pro.jpg" target="_blank">
+      <img src="IMG_20260422_095323-pro.jpg" alt="pro-preview output">
+    </a>
+    <figcaption><strong>pro-preview</strong><span>11.5s · 4.5 cr</span></figcaption>
+  </figure>
+  <figure>
+    <a href="IMG_20260422_095323-max.jpg" target="_blank">
+      <img src="IMG_20260422_095323-max.jpg" alt="max output">
+    </a>
+    <figcaption><strong>max</strong><span>22.8s · 10 cr</span></figcaption>
+  </figure>
+</div>
+
+<p class="meta">
+  Totaal: 15 renders (3 Gemini + 12 FLUX.2), 53.1 BFL credits (~$0.053) + Gemini token-billed, ~170s wall time.
+  <a href="results.json">results.json</a> ·
+  cr = credits (BFL), ~$0.001/credit · Gemini billed per-token by Google, n/a in cr
+</p>
+
+</body>
+</html>
