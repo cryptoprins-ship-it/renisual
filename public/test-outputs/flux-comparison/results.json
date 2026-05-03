@@ -1,0 +1,32 @@
+{
+  "klein-4b": {
+    "model": "flux-2-klein-4b",
+    "endpoint": "https://api.bfl.ai/v1/flux-2-klein-4b",
+    "time_seconds": 6.96,
+    "estimated_cost_usd": 1.5,
+    "output_dimensions": "1152x864",
+    "output_path": "public/test-outputs/flux-comparison/woonboot-klein-4b.jpg",
+    "status": "success",
+    "error": null
+  },
+  "pro": {
+    "model": "flux-2-pro-preview",
+    "endpoint": "https://api.bfl.ai/v1/flux-2-pro-preview",
+    "time_seconds": 11.82,
+    "estimated_cost_usd": 4.5,
+    "output_dimensions": "1152x864",
+    "output_path": "public/test-outputs/flux-comparison/woonboot-pro.jpg",
+    "status": "success",
+    "error": null
+  },
+  "max": {
+    "model": "flux-2-max",
+    "endpoint": "https://api.bfl.ai/v1/flux-2-max",
+    "time_seconds": 23.86,
+    "estimated_cost_usd": 10,
+    "output_dimensions": "1152x864",
+    "output_path": "public/test-outputs/flux-comparison/woonboot-max.jpg",
+    "status": "success",
+    "error": null
+  }
+}
