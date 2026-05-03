@@ -27,11 +27,11 @@ const PHOTOS = [
 
 type Highlight = "source" | "gemini" | undefined;
 
+// pro-preview removed: scaled object larger than source — framing drift.
 const MODELS: ReadonlyArray<{ name: string; label: string; highlight?: Highlight }> = [
   { name: "gemini", label: "gemini", highlight: "gemini" },
   { name: "klein-4b", label: "klein-4b" },
   { name: "klein-9b", label: "klein-9b" },
-  { name: "pro", label: "pro-preview" },
   { name: "max", label: "max" },
 ];
 
@@ -86,10 +86,11 @@ export default function FluxLabPage() {
           {PHOTOS.map((photo) => {
             const modelsForVariant = variant.bflOnly ? MODELS.filter((m) => m.name !== "gemini") : MODELS;
             const cols = modelsForVariant.length + 1; // +1 for source
+            const colsClass = cols === 5 ? "xl:grid-cols-5" : cols === 4 ? "xl:grid-cols-4" : "xl:grid-cols-6";
             return (
               <div
                 key={`${variant.name}-${photo.base}`}
-                className={`mb-4 grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 ${cols === 5 ? "xl:grid-cols-5" : "xl:grid-cols-6"}`}
+                className={`mb-4 grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 ${colsClass}`}
               >
                 <h3 className="col-span-full text-[14px] font-medium text-[#cbd0d6]">
                   {photo.title}{" "}

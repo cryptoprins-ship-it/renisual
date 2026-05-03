@@ -163,11 +163,12 @@ ${PROMPT_PRESERVE}`,
   },
 ];
 
+// pro-preview eliminated 2026-05-03: occasionally rescaled woonboot larger
+// than source. Framing drift unacceptable for photo-edit use case.
 const MODELS = [
   { name: "gemini", slug: "gemini-2.5-flash-image", provider: "gemini" },
   { name: "klein-4b", slug: "flux-2-klein-4b", provider: "bfl" },
   { name: "klein-9b", slug: "flux-2-klein-9b", provider: "bfl" },
-  { name: "pro", slug: "flux-2-pro-preview", provider: "bfl" },
   { name: "max", slug: "flux-2-max", provider: "bfl" },
 ];
 
