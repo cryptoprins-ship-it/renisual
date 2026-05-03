@@ -113,16 +113,27 @@ function detectStructure(product: ProductForPrompt): boolean {
   return sku.startsWith("YMPB") || sku.startsWith("YPMB") || sku.startsWith("YMSG");
 }
 
-// Darken a #RRGGBB hex by `amount` (0..1). 0.15 → 15% darker. Used to
-// pre-compensate the BFL prompt for klein-9b's lightening bias so the
-// rendered output ends up close to the actual target RAL.
+// Darken a #RRGGBB hex by `amount` (0..1). Used to pre-compensate the
+// BFL prompt for klein-9b's lightening bias on dark/mid colors. White
+// targets are skipped entirely — the model has no upper-lightening
+// headroom on white, and darkening white turns it into grey/cream.
 function darkenHex(hex: string, amount: number): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
   if (!m) return hex;
   const n = parseInt(m[1], 16);
-  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
-  const g = Math.max(0, Math.round(((n >> 8) & 0xff) * (1 - amount)));
-  const b = Math.max(0, Math.round((n & 0xff) * (1 - amount)));
+  const r0 = (n >> 16) & 0xff;
+  const g0 = (n >> 8) & 0xff;
+  const b0 = n & 0xff;
+  // Relative luminance (0..1). Skip compensation entirely on near-white
+  // (>0.82) — those don't suffer from the lightening bias and darkening
+  // makes them visibly off-white.
+  const lum = (0.2126 * r0 + 0.7152 * g0 + 0.0722 * b0) / 255;
+  if (lum > 0.82) return hex;
+  // Taper compensation on light colors so we don't over-darken pastels.
+  const effective = lum > 0.65 ? amount * 0.5 : amount;
+  const r = Math.max(0, Math.round(r0 * (1 - effective)));
+  const g = Math.max(0, Math.round(g0 * (1 - effective)));
+  const b = Math.max(0, Math.round(b0 * (1 - effective)));
   return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
@@ -144,11 +155,15 @@ function buildBflPromptText(opts: PromptOptions): string {
   const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "";
   const colorName = product.color_name ?? "matt grey";
   // Models systematically render the cladding ~15-20% lighter than the
-  // target hex. Compensate by darkening the hex we send to the model by
-  // 15% so the rendered output ends up at the actual RAL value.
+  // target hex (except whites, which are already at ceiling). Compensate
+  // by darkening the hex we send to the model. darkenHex() auto-skips
+  // near-white targets and tapers on pastels.
   const baseHex = product.color_hex_render ?? product.color_hex ?? "";
   const hex = baseHex ? darkenHex(baseHex, 0.15) : "";
-  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${hex ? ` (target hex ${baseHex}, render at hex ${hex} to compensate for the model's lightening bias)` : ""}`;
+  const compensated = hex && hex.toLowerCase() !== baseHex.toLowerCase();
+  const colorPhrase = compensated
+    ? `matt ${colorName}${ralPart ? ` ${ralPart}` : ""} (target hex ${baseHex}, render at hex ${hex} to compensate for the model's lightening bias)`
+    : `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${baseHex ? ` (hex ${baseHex})` : ""}`;
 
   const dimsLine = widthCm && heightCm
     ? `The facade is ${widthCm}cm wide and ${heightCm}cm tall.\n\n`
