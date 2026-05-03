@@ -1,1 +1,6 @@
-[]
+[
+  { "file": "woonboot_achterkant_enkellaags.jpg", "label": "Wijnrood, enkellaags" },
+  { "file": "woonboot_achterkant_enkellaags2.jpg", "label": "Wit met blauwe kozijnen" },
+  { "file": "woonboot_dubbellaags_achterkant.jpg", "label": "Wit, dubbellaags" },
+  { "file": "woonboot_achterkant_dubbelenenkel.jpg", "label": "Wit, deels dubbel/enkel laags" }
+]
