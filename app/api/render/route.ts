@@ -36,6 +36,64 @@ type ProductLine = "mono_flat" | "mono_groove" | "mono_textured" | "other";
 // top of that base. Everything else (Strip, Brick, Spanish Tile, Wood,
 // Keralit free-text) keeps the legacy buildPrompt until those lines
 // get their own targeted prompts.
+// Infer product details from a Spanl SKU when Supabase is unavailable.
+// Spanl SKU convention: <prefix><RAL code><suffix>:
+//   PB     = Mono Flat (smooth, smalle naad)
+//   SG     = Mono Groove (3 grooves per panel face)
+//   YMPB / YPMB = Mono Flat + Structure (linen wood-grain texture)
+//   YMSG   = Mono Groove + Structure (3 grooves + linen texture)
+//   TS     = Strip / Mono Textured
+// E.g. "PB7038A" → Mono Flat in RAL 7038, "YMSG9005A" → Groove+Structure in RAL 9005.
+const RAL_HEX: Record<string, { hex: string; name: string }> = {
+  "7038": { hex: "#B5B8B1", name: "agaatgrijs" },
+  "7021": { hex: "#23282B", name: "zwartgrijs" },
+  "7016": { hex: "#293133", name: "antracietgrijs" },
+  "7012": { hex: "#4D5645", name: "bazaltgrijs" },
+  "9003": { hex: "#F1ECE0", name: "wit" },
+  "9010": { hex: "#F1ECE0", name: "wit" },
+  "9005": { hex: "#0A0A0A", name: "diepzwart" },
+  "9006": { hex: "#A5A8A8", name: "zilver" },
+};
+function inferProductFromSku(sku: string): ProductForPrompt | null {
+  const m = /^(YMSG|YMPB|YPMB|SG|PB|TS)[\s-]?(\d{4})([A-Z0-9-]*)$/i.exec(sku);
+  if (!m) return null;
+  const prefix = m[1].toUpperCase();
+  const ralCode = m[2];
+  const ral = RAL_HEX[ralCode] ?? { hex: null, name: null };
+
+  let name = "";
+  let description = "";
+  if (prefix === "PB") {
+    name = `Mono Flat RAL ${ralCode}`;
+    description = "Spanl Mono Flat smooth metal cladding panels with smalle naad (narrow same-color hairline seam between panels).";
+  } else if (prefix === "SG") {
+    name = `Mono Groove RAL ${ralCode}`;
+    description = "Spanl Mono Groove metal cladding panels with three decorative grooves cut into each panel face plus a smalle naad between adjacent panels.";
+  } else if (prefix === "YMPB" || prefix === "YPMB") {
+    name = `Mono Flat + Structure RAL ${ralCode}`;
+    description = "Spanl Mono Flat metal cladding panels with embossed linen wood-grain surface texture, smalle naad between panels.";
+  } else if (prefix === "YMSG") {
+    name = `Mono Groove + Structure RAL ${ralCode}`;
+    description = "Spanl Mono Groove metal cladding with three decorative grooves per panel face plus embossed linen wood-grain surface texture.";
+  } else if (prefix === "TS") {
+    name = `Mono Textured strip RAL ${ralCode}`;
+    description = "Spanl strip-style cladding with textured surface.";
+  } else {
+    return null;
+  }
+
+  return {
+    sku,
+    name,
+    description,
+    ral_code: ralCode,
+    color_name: ral.name,
+    color_hex: ral.hex,
+    color_hex_render: null,
+    image_url: null,
+  };
+}
+
 function detectLine(product: ProductForPrompt): ProductLine {
   const haystack = `${product.name} ${product.description ?? ""}`.toLowerCase();
   if (haystack.includes("mono flat")) return "mono_flat";
@@ -803,7 +861,12 @@ export async function POST(request: Request) {
       product = dbProduct;
       brandPrefix = "Spanl ";
     } else {
-      product = {
+      // No DB row available — try to infer product line + RAL from the
+      // SKU prefix so the prompt still gets correct mono-flat vs
+      // mono-groove + correct color hex. Fall back to plain stub if
+      // the SKU shape doesn't match a known Spanl prefix.
+      const inferred = inferProductFromSku(body.productSku);
+      product = inferred ?? {
         sku: body.productSku,
         name: body.productLabel ?? body.productSku,
         description: body.productDescription ?? null,
