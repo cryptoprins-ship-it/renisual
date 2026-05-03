@@ -59,12 +59,25 @@ export default function FluxLabPage() {
   return (
     <main className="min-h-screen bg-[#0e1014] p-6 text-[#e6e8eb]">
       <h1 className="mb-2 text-[22px] font-semibold">FLUX.2 + Gemini comparison — woonboot</h1>
+
+      {/* Artistic-impression disclaimer — required next to all renders. */}
+      <aside className="mb-5 max-w-[820px] rounded-md border border-[#5a4a1a] bg-[#1f1a0d] px-4 py-3 text-sm text-[#e8d790]">
+        <strong className="font-semibold">⚠ Artistieke impressie — niet exact.</strong>{" "}
+        De rendermodellen interpreteren paneel-aantallen stilistisch, niet
+        wiskundig. Een 13,5 m brede gevel met 370mm panelen geeft ~37 panelen
+        in werkelijkheid; in de render zie je er ~8–12. Gebruik deze
+        weergave als sfeerimpressie, niet als maatvaste tekening. Exacte
+        aantallen en m² komen uit de gevelcalc / offerte.
+      </aside>
+
       <p className="mb-6 max-w-[820px] text-sm text-[#9aa0a6]">
-        Drie originele woonboot-foto&apos;s door 5 modellen (Gemini 2.5 Flash Image
-        + FLUX.2 klein-4b / klein-9b / pro-preview / max) met 4 prompt-varianten
-        — Mono Flat en Mono Groove, telkens in vertical en horizontal panel-
-        oriëntatie. Inputs auto-downscaled naar ~1 MP voor eerlijke vergelijking.
-        Klik een afbeelding voor vol formaat. Springen tussen secties:{" "}
+        Sole primary candidate na elimination round: <strong>FLUX.2
+        klein-9b</strong> (BFL, EU/GDPR). Gemini blijft als referentie
+        zichtbaar op de niet-Structure varianten (in productie alleen
+        fallback bij BFL outage). Klik een afbeelding voor vol formaat.
+        Springen tussen secties:{" "}
+        <a href="#ral-picker" className="text-[#7aa2ff] hover:underline">RAL grey picker</a>
+        {" · "}
         {VARIANTS.map((v, i) => (
           <span key={v.name}>
             {i > 0 && " · "}
@@ -74,6 +87,42 @@ export default function FluxLabPage() {
           </span>
         ))}
       </p>
+
+      {/* RAL grey-shade picker prototype */}
+      <section id="ral-picker" className="mb-10 scroll-mt-4">
+        <h2 className="mb-1 border-b border-[#232733] pb-2 text-lg font-semibold text-[#e6e8eb]">
+          RAL grey-shade picker — klein-9b prototype
+        </h2>
+        <p className="mb-3 max-w-[820px] text-xs text-[#9aa0a6]">
+          Photo 3 (voorkant vanaf water) gerenderd in 6 grijstinten op Mono
+          Flat — vertical. Productie-UI krijgt deze als clickable swatches
+          naast het beeld; hier alle 6 naast elkaar zodat je het verloop
+          ziet. Klik een afbeelding voor vol formaat.
+        </p>
+        <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
+          <Cell src={`/test-inputs/IMG_20260422_095323.jpg`} label="Source" highlight="source" />
+          {[
+            { code: "7044", name: "zijdegrijs", hex: "#CAC4B0", src: `${OUT_BASE}/ral-picker/ral-7044-klein-9b.jpg` },
+            { code: "7037", name: "stofgrijs", hex: "#7D7F7D", src: `${OUT_BASE}/ral-picker/ral-7037-klein-9b.jpg` },
+            { code: "7038", name: "agaatgrijs (default)", hex: "#B5B8B1", src: `${OUT_BASE}/IMG_20260422_095323-mono-flat-vertical-klein-9b.jpg` },
+            { code: "7012", name: "bazaltgrijs", hex: "#4D5645", src: `${OUT_BASE}/ral-picker/ral-7012-klein-9b.jpg` },
+            { code: "7016", name: "antracietgrijs", hex: "#293133", src: `${OUT_BASE}/ral-picker/ral-7016-klein-9b.jpg` },
+            { code: "7021", name: "zwartgrijs", hex: "#23282B", src: `${OUT_BASE}/ral-picker/ral-7021-klein-9b.jpg` },
+          ].map((g) => (
+            <figure key={g.code} className="m-0 flex flex-col overflow-hidden rounded-md border border-[#232733] bg-[#0a0c10]">
+              <a href={g.src} target="_blank" rel="noopener noreferrer" className="block leading-none">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={g.src} alt={`RAL ${g.code} render`} loading="lazy" className="block w-full h-auto transition-opacity hover:opacity-90" />
+              </a>
+              <figcaption className="flex items-center gap-2 border-t border-[#232733] bg-[#11141b] px-2.5 py-2 text-xs">
+                <span className="inline-block h-3 w-3 rounded-sm border border-[#444]" style={{ backgroundColor: g.hex }} />
+                <strong className="font-semibold text-[#e6e8eb]">RAL {g.code}</strong>
+                <span className="text-[#9aa0a6]">{g.name}</span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
 
       {VARIANTS.map((variant) => (
         <section key={variant.name} id={variant.name} className="mb-10 scroll-mt-4">
