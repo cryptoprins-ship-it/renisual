@@ -96,10 +96,26 @@ function inferProductFromSku(sku: string): ProductForPrompt | null {
 
 function detectLine(product: ProductForPrompt): ProductLine {
   const haystack = `${product.name} ${product.description ?? ""}`.toLowerCase();
-  if (haystack.includes("mono flat")) return "mono_flat";
+  // Check more specific keywords first — "mono groove" must beat "mono flat"
+  // for products like "Mono Groove + Structure" where both names could match.
   if (haystack.includes("mono groove")) return "mono_groove";
+  if (haystack.includes("mono flat")) return "mono_flat";
   if (haystack.includes("mono textured")) return "mono_textured";
   return "other";
+}
+
+// Structure (linen wood-grain embossing) is an ADDITIVE finish that can
+// sit on top of either Mono Flat (YMPB / YPMB) or Mono Groove (YMSG).
+function detectStructure(product: ProductForPrompt): boolean {
+  const haystack = `${product.name} ${product.description ?? ""}`.toLowerCase();
+  if (haystack.includes("structure") || haystack.includes("structuur") || haystack.includes("linen")) return true;
+  const sku = (product.sku ?? "").toUpperCase();
+  return sku.startsWith("YMPB") || sku.startsWith("YPMB") || sku.startsWith("YMSG");
+}
+
+function structureBlock(): string {
+  return `STRUCTURE / LINEN TEXTURE (ADDITIVE — overrides "no texture, no wood grain"):
+On top of every panel face, render a fine linen wood-grain texture — subtle 3D relief running parallel to the panel direction (top-to-bottom for vertical panels, left-to-right for horizontal). Like brushed wood-grain. The texture is surface detail only — panels remain flat overall, no deep grooves from the texture. The texture catches light differently across each panel, giving a tactile woven appearance. Texture follows each panel face individually — does NOT bleed across panel boundaries or coupling joints.`;
 }
 
 type PromptOptions = {
@@ -120,15 +136,18 @@ type PromptOptions = {
 // textured products exist in the catalog.
 function buildRenderPrompt(opts: PromptOptions): string {
   const line = detectLine(opts.product);
+  const hasStructure = detectStructure(opts.product);
+  const structureAppendix = hasStructure ? `\n\n${structureBlock()}` : "";
+
   if (line === "mono_flat") {
-    return buildMonoFlatPrompt(opts);
+    return `${buildMonoFlatPrompt(opts)}${structureAppendix}`;
   }
   if (line === "mono_groove") {
-    return `${buildMonoFlatPrompt(opts)}\n\n${groovePatternBlock(opts)}`;
+    return `${buildMonoFlatPrompt(opts)}\n\n${groovePatternBlock(opts)}${structureAppendix}`;
   }
   if (line === "mono_textured") {
     const tex = texturePatternBlock(opts);
-    return tex ? `${buildBasePrompt(opts)}\n\n${tex}` : buildBasePrompt(opts);
+    return tex ? `${buildBasePrompt(opts)}\n\n${tex}${structureAppendix}` : buildBasePrompt(opts);
   }
   return legacyPromptBlock(opts);
 }
@@ -316,7 +335,7 @@ REFERENCE IMAGE INTERPRETATION: the product reference photo shows the panel SURF
 
 ORIENTATION: ${orientationLine}
 
-${rhythmSection}SEAMS: subtle thin shadow lines between adjacent panels (every ${visibleWidthMm}mm in the direction perpendicular to panel length). These are narrow shadow gaps, NOT deep grooves. Visible but understated.
+${rhythmSection}SEAMS (smalle naad): hairline shadow lines between adjacent panels every ${visibleWidthMm}mm. The seam color is a slightly darker shade of the panel color itself (same hue, ~10-15% darker) — never white, never light grey, never contrasting. On dark cladding the seams must remain dark; do NOT add bright white or light shadow lines on dark colors. These are subtle same-color hairlines, not contrasting grooves.
 
 JOINTS: ${jointBlock({
     orientation,
