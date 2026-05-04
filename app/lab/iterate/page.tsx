@@ -11,10 +11,11 @@ const OUT_BASE = "/test-outputs/iterate";
 // users to upload a photo without obstacles (no fences, no clutter
 // in front). The earlier p2-back-fence test is excluded because it
 // represents an out-of-spec input.
+// p1-canal dropped — its foreground handrail counts as an obstacle
+// per the /render disclaimer. Test set is now clean facade-only.
 const PHOTOS = [
-  { id: "p1-canal", file: "IMG_20260422_095323.jpg", title: "Boat 1 — canal front", subtitle: "single-storey, water front" },
-  { id: "p3-white2story", file: "woonboot_dubbellaags_achterkant.jpg", title: "Boat 2 — white 2-storey", subtitle: "double-layer back view" },
-  { id: "p4-mixed-back", file: "woonboot_achterkant_dubbelenenkel.jpg", title: "Boat 3 — mixed back", subtitle: "double + single layer" },
+  { id: "p3-white2story", file: "woonboot_dubbellaags_achterkant.jpg", title: "Boat 1 — white 2-storey", subtitle: "double-layer back view" },
+  { id: "p4-mixed-back", file: "woonboot_achterkant_dubbelenenkel.jpg", title: "Boat 2 — mixed back", subtitle: "double + single layer" },
 ] as const;
 
 const CASES = [

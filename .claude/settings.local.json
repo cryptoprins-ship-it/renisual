@@ -54,6 +54,9 @@
       "Bash(npx supabase *)",
       "Bash(void)",
       "PowerShell(npm run *)"
+    ],
+    "additionalDirectories": [
+      "C:\\projects\\renisual\\public\\test-outputs\\iterate"
     ]
   }
 }

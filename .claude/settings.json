@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(cp /tmp/claudecode.json __TRACKED_VAR__/claudecode.json)",
+      "Bash(cp /tmp/claudeai.json __TRACKED_VAR__/claudeai.json)"
+    ]
+  }
+}
