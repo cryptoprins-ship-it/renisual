@@ -19,15 +19,14 @@ const VARIANTS: ReadonlyArray<Variant> = [
   { name: "groove-structure-vertical", label: "Mono Groove + Structure — vertical (3 grooves + linen texture, no couplings)", bflOnly: true },
 ];
 
+// Only clean facade photos — fence/obstacle boats excluded per the
+// disclaimer on /render asking users to upload obstacle-free shots.
 const PHOTOS = [
-  { base: "IMG_20260421_183639", title: "Boat 1 — achterkant met hek", subtitle: "originele test, hek voor de gevel" },
-  { base: "IMG_20260422_094859", title: "Boat 1 — close-up damwand", subtitle: "geen facade-frame" },
   { base: "IMG_20260422_095323", title: "Boat 1 — voorkant vanaf water", subtitle: "originele test, schone gevel" },
-  { base: "voorkant_gedeelte_woonboot", title: "Boat 2 — wit, horizontale planken", subtitle: "achter-zijkant met dakterras" },
-  { base: "woonboot_achterkant_dubbelenenkel", title: "Boat 3 — wit, deels dubbel/enkel laags", subtitle: "achterkant vanaf water" },
-  { base: "woonboot_achterkant_enkellaags", title: "Boat 4 — wijnrood, enkellaags", subtitle: "achterkant vanaf water" },
-  { base: "woonboot_achterkant_enkellaags2", title: "Boat 5 — wit met blauwe kozijnen, enkellaags", subtitle: "achterkant vanaf water" },
-  { base: "woonboot_dubbellaags_achterkant", title: "Boat 6 — wit, dubbellaags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_achterkant_dubbelenenkel", title: "Boat 2 — wit, deels dubbel/enkel laags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_achterkant_enkellaags", title: "Boat 3 — wijnrood, enkellaags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_achterkant_enkellaags2", title: "Boat 4 — wit met blauwe kozijnen, enkellaags", subtitle: "achterkant vanaf water" },
+  { base: "woonboot_dubbellaags_achterkant", title: "Boat 5 — wit, dubbellaags", subtitle: "achterkant vanaf water" },
 ] as const;
 
 type Highlight = "source" | "gemini" | undefined;

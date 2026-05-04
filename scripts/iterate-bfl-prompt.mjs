@@ -24,13 +24,15 @@ const ENV_PATH = ".env.local";
 
 // Test matrix: 5 products covering Flat/Groove × dark/mid/light + Structure.
 const CASES = [
-  { id: "PB7038A",   line: "flat",   color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false },
-  { id: "PB9005A",   line: "flat",   color: { name: "diepzwart",         ral: "9005", hex: "#0A0A0A" }, structure: false },
-  { id: "SG7038A",   line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false },
+  { id: "PB7038A-V",    line: "flat",   color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "vertical" },
+  { id: "PB9005A-V",    line: "flat",   color: { name: "diepzwart",         ral: "9005", hex: "#0A0A0A" }, structure: false, orientation: "vertical" },
+  { id: "SG7038A-V",    line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "vertical" },
+  { id: "SG7038A-H",    line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "horizontal" },
   // RAL 9003 = signal white. Use cool pure-white hex (#F4F4F4) — the
   // warm RAL 9010 cream value (#F1ECE0) was rendering beige.
-  { id: "SG9003A",   line: "groove", color: { name: "pure cool white",   ral: "9003", hex: "#F4F4F4" }, structure: false },
-  { id: "YMSG7038A", line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: true  },
+  { id: "SG9003A-V",    line: "groove", color: { name: "pure cool white",   ral: "9003", hex: "#F4F4F4" }, structure: false, orientation: "vertical" },
+  { id: "YMSG7038A-V",  line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: true,  orientation: "vertical" },
+  { id: "YMSG7038A-H",  line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: true,  orientation: "horizontal" },
 ];
 
 // Hex compensation — luminance-aware, skips whites.
@@ -58,12 +60,16 @@ function buildPrompt(c) {
     : `${c.color.name} ${ralLine} (hex ${targetHex})`;
 
   const isGroove = c.line === "groove";
+  const orient = c.orientation === "horizontal" ? "horizontal" : "vertical";
+  const grooveDirection = orient === "vertical" ? "vertical (running top-to-bottom)" : "horizontal (running left-to-right)";
+  const seamDirection = orient === "vertical" ? "vertical" : "horizontal";
+
   const surface = isGroove
-    ? `painted metal cladding with crisp vertical grooves cut into the surface every ~13cm. The grooves are 5mm shadow lines pressed into a flat painted metal sheet.`
-    : `painted metal cladding — smooth flat painted metal sheet with very faint hairline seams every 37cm (same-color hairlines, never contrasting).`;
+    ? `painted metal cladding with ${grooveDirection} grooves pressed into the surface at REGULAR ${orient === "vertical" ? "13cm horizontal intervals across the facade width" : "13cm vertical intervals across the facade height"}. CONSTANT spacing — every groove is the same width (5mm) and the spacing between grooves is uniform. Do NOT vary groove width or spacing across the facade. Grooves are clean shadow lines pressed into a flat painted metal sheet, like a precision-machined panel.`
+    : `painted metal cladding — smooth flat painted metal sheet with very faint ${seamDirection} hairline seams every 37cm at REGULAR ${orient === "vertical" ? "horizontal" : "vertical"} intervals. Constant spacing. Same-color hairlines, never contrasting.`;
 
   const structureLine = c.structure
-    ? `\n\nThe metal surface has a fine linen-weave embossing pattern — soft fabric-like texture pressed into the painted metal. NOT wood, NOT wood grain, NOT planks. Color stays the matt RAL above.`
+    ? `\n\nThe metal surface has a fine linen-weave embossing pattern — soft fabric-like texture pressed into the painted metal, running parallel to panel direction (${grooveDirection}). NOT wood, NOT wood grain, NOT planks. Color stays the matt RAL above.`
     : "";
 
   // Per-color anti-bias notes — append a tiny clarifier when the

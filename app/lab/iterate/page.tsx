@@ -18,11 +18,13 @@ const PHOTOS = [
 ] as const;
 
 const CASES = [
-  { id: "PB7038A", label: "PB7038A", desc: "Mono Flat · matt grey 7038" },
-  { id: "PB9005A", label: "PB9005A", desc: "Mono Flat · diepzwart 9005" },
-  { id: "SG7038A", label: "SG7038A", desc: "Mono Groove · matt grey 7038" },
-  { id: "SG9003A", label: "SG9003A", desc: "Mono Groove · pure cool white 9003" },
-  { id: "YMSG7038A", label: "YMSG7038A", desc: "Mono Groove + Structure · matt grey 7038" },
+  { id: "PB7038A-V", label: "PB7038A", desc: "Mono Flat · matt grey 7038 · vertical" },
+  { id: "PB9005A-V", label: "PB9005A", desc: "Mono Flat · diepzwart 9005 · vertical" },
+  { id: "SG7038A-V", label: "SG7038A V", desc: "Mono Groove · matt grey 7038 · vertical" },
+  { id: "SG7038A-H", label: "SG7038A H", desc: "Mono Groove · matt grey 7038 · horizontal" },
+  { id: "SG9003A-V", label: "SG9003A", desc: "Mono Groove · pure cool white 9003 · vertical" },
+  { id: "YMSG7038A-V", label: "YMSG7038A V", desc: "Mono Groove + Structure 7038 · vertical" },
+  { id: "YMSG7038A-H", label: "YMSG7038A H", desc: "Mono Groove + Structure 7038 · horizontal" },
 ] as const;
 
 function Cell({ src, label, desc, isSource }: { src: string; label: string; desc?: string; isSource?: boolean }) {
@@ -49,7 +51,7 @@ export default function IterateLabPage() {
     <main className="min-h-screen bg-[#0e1014] p-6 text-[#e6e8eb]">
       <h1 className="mb-2 text-[22px] font-semibold">Production prompt iteration — klein-9b</h1>
       <p className="mb-6 max-w-[820px] text-sm text-[#9aa0a6]">
-        3 schone woonboot-foto&apos;s × 5 product-varianten = 15 renders, gegenereerd
+        3 schone woonboot-foto&apos;s × 7 product-varianten (incl. horizontale Mono Groove + horizontale Mono Groove+Structure) = 21 renders, gegenereerd
         met de productie BFL klein-9b prompt zoals die nu in <code className="rounded bg-[#1a1d24] px-1 py-0.5">/api/render</code>{" "}
         leeft. Klik een afbeelding voor vol formaat. Springen naar:
         {" "}
@@ -67,7 +69,7 @@ export default function IterateLabPage() {
             {photo.title}{" "}
             <small className="ml-2 font-normal text-[#6b7280]">{photo.subtitle}</small>
           </h2>
-          <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-8">
             <Cell src={`/test-inputs/${photo.file}`} label="Source" desc="origineel" isSource />
             {CASES.map((c) => (
               <Cell
@@ -83,7 +85,7 @@ export default function IterateLabPage() {
 
       <p className="mt-6 border-t border-[#232733] pt-4 text-xs text-[#6b7280]">
         Sole engine: BFL FLUX.2 klein-9b. Same prompt as production /api/render.
-        Cost per run: ~25 credits ≈ $0.025 for 15 renders.
+        Cost per run: ~36 credits ≈ $0.036 for 21 renders.
       </p>
     </main>
   );
