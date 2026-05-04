@@ -23,16 +23,20 @@ const OUT_DIR = "public/test-outputs/iterate";
 const ENV_PATH = ".env.local";
 
 // Test matrix: 5 products covering Flat/Groove × dark/mid/light + Structure.
+// Architectural rule (per user 2026-05-04):
+//   HORIZONTAL panels on a rabat-clad woonboot = same horizontal rhythm,
+//     so just RECOLOR + adjust shadow depth, preserve source rhythm.
+//   VERTICAL panels = different mounting style than horizontal rabat,
+//     so RESTRUCTURE to vertical strips, override source rhythm.
 const CASES = [
-  { id: "PB7038A-V",    line: "flat",   color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "vertical" },
-  { id: "PB9005A-V",    line: "flat",   color: { name: "diepzwart",         ral: "9005", hex: "#0A0A0A" }, structure: false, orientation: "vertical" },
-  { id: "SG7038A-V",    line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "vertical" },
-  { id: "SG7038A-H",    line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "horizontal" },
-  // RAL 9003 = signal white. Use cool pure-white hex (#F4F4F4) — the
-  // warm RAL 9010 cream value (#F1ECE0) was rendering beige.
-  { id: "SG9003A-V",    line: "groove", color: { name: "pure cool white",   ral: "9003", hex: "#F4F4F4" }, structure: false, orientation: "vertical" },
-  { id: "YMSG7038A-V",  line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: true,  orientation: "vertical" },
-  { id: "YMSG7038A-H",  line: "groove", color: { name: "matt grey",         ral: "7038", hex: "#B5B8B1" }, structure: true,  orientation: "horizontal" },
+  { id: "PB7038A-V",    line: "flat",   color: { name: "matt grey",       ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "vertical" },
+  { id: "PB7038A-H",    line: "flat",   color: { name: "matt grey",       ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "horizontal" },
+  { id: "PB9005A-H",    line: "flat",   color: { name: "diepzwart",       ral: "9005", hex: "#0A0A0A" }, structure: false, orientation: "horizontal" },
+  { id: "SG7038A-V",    line: "groove", color: { name: "matt grey",       ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "vertical" },
+  { id: "SG7038A-H",    line: "groove", color: { name: "matt grey",       ral: "7038", hex: "#B5B8B1" }, structure: false, orientation: "horizontal" },
+  { id: "SG9003A-H",    line: "groove", color: { name: "pure cool white", ral: "9003", hex: "#F4F4F4" }, structure: false, orientation: "horizontal" },
+  { id: "YMSG7038A-V",  line: "groove", color: { name: "matt grey",       ral: "7038", hex: "#B5B8B1" }, structure: true,  orientation: "vertical" },
+  { id: "YMSG7038A-H",  line: "groove", color: { name: "matt grey",       ral: "7038", hex: "#B5B8B1" }, structure: true,  orientation: "horizontal" },
 ];
 
 // Hex compensation — luminance-aware, skips whites.
@@ -73,6 +77,8 @@ function buildPrompt(c) {
     : `${c.color.name} ${ralLine} (hex ${targetHex})`;
 
   const isGroove = c.line === "groove";
+  const orient = c.orientation === "horizontal" ? "horizontal" : "vertical";
+  const isHorizontal = orient === "horizontal";
 
   // Per-color anti-bias notes
   const isWhite = ["9003", "9010"].includes(c.color.ral);
@@ -83,19 +89,52 @@ function buildPrompt(c) {
     ? "Render as TRUE COOL BLACK. NOT brown, NOT warm-tinted."
     : "Render at the matt RAL color. NOT warm-tinted, NOT shifted.";
 
-  const variantDetail = c.structure
-    ? `Mono Groove + Structure: keep the plank-to-plank shadows of the source AS-IS in their existing rhythm. Add 2 extra shallow vertical grooves within each plank face (3 visible vertical lines per plank). On TOP of that, render a fine vertical fabric-weave / linen relief on each panel face — many close-spaced fine vertical lines pressed into the matt metal surface, like a brushed grain texture. Subtle 3D relief, NOT deep grooves, NOT wood, NOT planking texture.`
-    : isGroove
-    ? `Mono Groove: keep the plank-to-plank shadows of the source AS-IS in their existing rhythm. Add 2 extra shallow vertical grooves within each plank face (3 visible vertical lines per plank). Surface between grooves is smooth matt metal in the chosen RAL.`
-    : `Mono Flat: SMOOTH matt metal cladding with nearly invisible plank-to-plank seams. Lighten / soften the plank-to-plank shadow lines from the source so they read as hairline naden, NOT prominent plank gaps. From facade distance the wall reads as one continuous matt-painted metal surface.`;
+  // Orientation-aware variant text. For VERTICAL we lean on the
+  // source's existing plank rhythm (most woonboten have vertical
+  // rabat). For HORIZONTAL we explicitly restructure — the source
+  // rhythm is overridden because the user is asking to see what
+  // horizontally-mounted panels would look like.
+  const grooveDirWord = isHorizontal ? "horizontal" : "vertical";
+  const grooveRunWord = isHorizontal ? "left-to-right" : "top-to-bottom";
 
-  return `RECOLOR AND RE-CLAD this wall. Take the EXISTING wall siding rhythm (the wood-plank pattern visible in the source photo) and re-render it as Spanl-style painted matt metal cladding in the chosen RAL color. The wall's existing plank rhythm, panel positions, and overall geometry stay the same — only the color, material, and surface finish change.
+  let variantDetail;
+  let rhythmInstruction;
+
+  if (isHorizontal) {
+    // HORIZONTAL = preserve source rhythm. Most woonboten have horizontal
+    // rabat (overlapping horizontal planks); horizontal Spanl panels
+    // mount in the same rhythm so just recolor + adjust shadow depth.
+    rhythmInstruction = `PRESERVE the source's existing horizontal plank/rabat rhythm exactly — the existing horizontal plank lines, their positions, widths, and shadows stay where they are in the source photo. The new cladding follows the same horizontal rhythm as the source. Only color, material, and shadow depth change.`;
+    if (c.structure) {
+      variantDetail = `Mono Groove + Structure horizontal: keep horizontal plank shadows AS-IS. Add 2 extra shallow horizontal grooves within each plank face — EVENLY SPACED, uniform spacing (3 visible horizontal lines per plank, equally divided). On TOP of that, fine horizontal fabric-weave / linen relief — many close-spaced fine horizontal lines, all parallel and uniformly spaced (NOT random, NOT variable, NOT organic).`;
+    } else if (isGroove) {
+      variantDetail = `Mono Groove horizontal: keep horizontal plank shadows AS-IS. Add 2 extra shallow horizontal grooves within each plank face — EVENLY SPACED, uniform spacing (3 visible horizontal lines per plank, equally divided). Smooth matt metal between grooves. Lines must be parallel, regular, machine-precise — NOT random, NOT wavy, NOT organic.`;
+    } else {
+      variantDetail = `Mono Flat horizontal: SMOOTH matt metal cladding. Soften the horizontal plank shadows from the source so they read as hairline naden, NOT prominent plank gaps. Naden are EVENLY SPACED at the source's rhythm — uniform parallel lines, NOT random.`;
+    }
+  } else {
+    // VERTICAL = restructure. Source has horizontal rabat rhythm by
+    // default, so vertical panel mounting OVERRIDES that with vertical
+    // strips. Do NOT preserve the source's horizontal rhythm.
+    rhythmInstruction = `OVERRIDE the source's existing horizontal plank/rabat pattern. The new cladding is mounted VERTICALLY — panels run top-to-bottom as full-height vertical strips ~37cm wide, EVENLY SPACED at uniform 37cm intervals. The wall's plank rhythm is now VERTICAL, not horizontal. Do NOT preserve the source's horizontal plank shadows — replace them entirely with vertical panel rhythm. Vertical strips are parallel, regular, uniform width — NOT random, NOT wavy.`;
+    if (c.structure) {
+      variantDetail = `Mono Groove + Structure vertical: full-height vertical panel strips ~37cm wide, uniform spacing. Each strip has 3 visible vertical grooves cut into its face — EVENLY SPACED, machine-precise (NOT random). On TOP of the grooves, fine vertical fabric-weave / linen relief — uniform parallel fine vertical lines. Hairline seams between adjacent strips, all at the same 37cm spacing.`;
+    } else if (isGroove) {
+      variantDetail = `Mono Groove vertical: full-height vertical panel strips ~37cm wide, uniform spacing. Each strip has 3 visible vertical grooves cut into its face — EVENLY SPACED, machine-precise (NOT random, NOT wavy). Smooth matt metal between grooves. Hairline seams between adjacent strips at uniform 37cm intervals.`;
+    } else {
+      variantDetail = `Mono Flat vertical: full-height vertical panel strips ~37cm wide at UNIFORM 37cm spacing, smooth matt metal, near-invisible hairline naden between adjacent strips. Lines are parallel, regular, machine-precise — NOT random, NOT wavy.`;
+    }
+  }
+
+  return `RECOLOR AND RE-CLAD this wall as Spanl-style matt painted metal cladding in the chosen RAL color, mounted ${grooveDirWord.toUpperCase()}LY (panel rhythm runs ${grooveRunWord}).
+
+RHYTHM: ${rhythmInstruction}
 
 WALL COLOR: ${colorLine}. ${colorWarn} The existing wood color of the source is REPLACED entirely with this RAL color.
 
 WALL MATERIAL: matt painted metal cladding (Spanl PB / SG / YMSG style). The metal is non-reflective, NOT glossy, NOT weathered, NOT wood. Powder-coated finish.
 
-VARIANT DETAIL — ${variantDetail}
+VARIANT — ${variantDetail}
 
 SOURCE-CONTEXT PRESERVATION:
 - KEEP the wall's existing plank rhythm, plank widths, and plank positions as visible in the source photo. Do NOT invent a different plank arrangement.

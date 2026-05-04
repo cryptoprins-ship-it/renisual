@@ -18,13 +18,14 @@ const PHOTOS = [
 ] as const;
 
 const CASES = [
-  { id: "PB7038A-V", label: "PB7038A", desc: "Mono Flat · matt grey 7038 · vertical" },
-  { id: "PB9005A-V", label: "PB9005A", desc: "Mono Flat · diepzwart 9005 · vertical" },
-  { id: "SG7038A-V", label: "SG7038A V", desc: "Mono Groove · matt grey 7038 · vertical" },
-  { id: "SG7038A-H", label: "SG7038A H", desc: "Mono Groove · matt grey 7038 · horizontal" },
-  { id: "SG9003A-V", label: "SG9003A", desc: "Mono Groove · pure cool white 9003 · vertical" },
-  { id: "YMSG7038A-V", label: "YMSG7038A V", desc: "Mono Groove + Structure 7038 · vertical" },
-  { id: "YMSG7038A-H", label: "YMSG7038A H", desc: "Mono Groove + Structure 7038 · horizontal" },
+  { id: "PB7038A-V", label: "PB7038A V", desc: "Mono Flat · grey 7038 · vertical (restructure)" },
+  { id: "PB7038A-H", label: "PB7038A H", desc: "Mono Flat · grey 7038 · horizontal (preserve)" },
+  { id: "PB9005A-H", label: "PB9005A H", desc: "Mono Flat · diepzwart 9005 · horizontal (preserve)" },
+  { id: "SG7038A-V", label: "SG7038A V", desc: "Mono Groove · grey 7038 · vertical (restructure)" },
+  { id: "SG7038A-H", label: "SG7038A H", desc: "Mono Groove · grey 7038 · horizontal (preserve)" },
+  { id: "SG9003A-H", label: "SG9003A H", desc: "Mono Groove · pure cool white 9003 · horizontal" },
+  { id: "YMSG7038A-V", label: "YMSG7038A V", desc: "Groove + Structure · grey 7038 · vertical (restructure)" },
+  { id: "YMSG7038A-H", label: "YMSG7038A H", desc: "Groove + Structure · grey 7038 · horizontal (preserve)" },
 ] as const;
 
 function Cell({ src, label, desc, isSource }: { src: string; label: string; desc?: string; isSource?: boolean }) {
@@ -69,7 +70,7 @@ export default function IterateLabPage() {
             {photo.title}{" "}
             <small className="ml-2 font-normal text-[#6b7280]">{photo.subtitle}</small>
           </h2>
-          <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-8">
+          <div className="grid grid-cols-1 gap-2.5 rounded-lg border border-[#232733] bg-[#161922] p-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-9">
             <Cell src={`/test-inputs/${photo.file}`} label="Source" desc="origineel" isSource />
             {CASES.map((c) => (
               <Cell
