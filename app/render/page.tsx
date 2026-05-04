@@ -282,6 +282,14 @@ export default function RenderPage() {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [toast, setToast] = useState<string | null>(null);
 
+  // Advanced manual overrides — when the user comes to /render directly
+  // (not via gevelcalc) facadeDims is undefined and the prompt loses its
+  // panel-count enforcement. These manual fields let the user feed
+  // facade size directly so the render is more reliable.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [manualFacadeWidthCm, setManualFacadeWidthCm] = useState<string>("");
+  const [manualFacadeHeightCm, setManualFacadeHeightCm] = useState<string>("");
+
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => setToast(null), 3500);
@@ -554,8 +562,9 @@ export default function RenderPage() {
         productDescription,
         orientation,
         panelWidthCm,
-        facadeWidthCm: facadeDims?.widthCm,
-        facadeHeightCm: facadeDims?.heightCm,
+        // Manual advanced inputs win over gevelcalc-imported dims when set.
+        facadeWidthCm: Number(manualFacadeWidthCm) > 0 ? Number(manualFacadeWidthCm) : facadeDims?.widthCm,
+        facadeHeightCm: Number(manualFacadeHeightCm) > 0 ? Number(manualFacadeHeightCm) : facadeDims?.heightCm,
         windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
         door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
           ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
@@ -1108,8 +1117,67 @@ export default function RenderPage() {
         </section>
 
         <section>
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((v) => !v)}
+            className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600 hover:text-ink"
+          >
+            <span>04 — {locale === "nl" ? "Geavanceerd (optioneel)" : "Advanced (optional)"}</span>
+            <span aria-hidden className="text-base leading-none">{advancedOpen ? "−" : "+"}</span>
+          </button>
+          {advancedOpen && (
+            <div className="space-y-3 border border-stone-200 bg-stone-50 p-4">
+              <p className="text-xs text-stone-600">
+                {locale === "nl"
+                  ? "Vul de werkelijke gevel-afmetingen in voor een betrouwbaardere render. Het AI-model gebruikt deze waardes om paneel-aantal en -ritme correct weer te geven. Laat leeg om de default te gebruiken."
+                  : "Fill in actual facade dimensions for a more reliable render. The AI model uses these to correctly portray panel count and rhythm. Leave empty for the default."}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="block font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                    {locale === "nl" ? "Gevel breedte (cm)" : "Facade width (cm)"}
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    value={manualFacadeWidthCm}
+                    onChange={(e) => setManualFacadeWidthCm(e.target.value)}
+                    placeholder={facadeDims?.widthCm ? String(facadeDims.widthCm) : "1350"}
+                    className="mt-1 w-full border border-stone-300 bg-paper px-3 py-2 text-sm focus:border-ink focus:outline-none"
+                  />
+                </label>
+                <label className="block">
+                  <span className="block font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                    {locale === "nl" ? "Gevel hoogte (cm)" : "Facade height (cm)"}
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    value={manualFacadeHeightCm}
+                    onChange={(e) => setManualFacadeHeightCm(e.target.value)}
+                    placeholder={facadeDims?.heightCm ? String(facadeDims.heightCm) : "355"}
+                    className="mt-1 w-full border border-stone-300 bg-paper px-3 py-2 text-sm focus:border-ink focus:outline-none"
+                  />
+                </label>
+              </div>
+              {facadeDims && (
+                <p className="text-[11px] text-stone-500">
+                  {locale === "nl"
+                    ? `Uit gevelcalc geïmporteerd: ${facadeDims.widthCm} × ${facadeDims.heightCm} cm. Vul hierboven in om te overschrijven.`
+                    : `Imported from gevelcalc: ${facadeDims.widthCm} × ${facadeDims.heightCm} cm. Fill above to override.`}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section>
           <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-            04 — {t("boeideel_section_title")}
+            05 — {t("boeideel_section_title")}
           </p>
           <p className="mb-4 text-xs text-stone-500">{t("boeideel_explanation")}</p>
           <div className="flex flex-col gap-2 sm:flex-row">

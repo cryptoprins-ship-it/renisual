@@ -65,7 +65,11 @@ function buildPrompt(c) {
   const seamDirection = orient === "vertical" ? "vertical" : "horizontal";
 
   const surface = isGroove
-    ? `painted metal cladding with ${grooveDirection} grooves pressed into the surface at REGULAR ${orient === "vertical" ? "13cm horizontal intervals across the facade width" : "13cm vertical intervals across the facade height"}. CONSTANT spacing — every groove is the same width (5mm) and the spacing between grooves is uniform. Do NOT vary groove width or spacing across the facade. Grooves are clean shadow lines pressed into a flat painted metal sheet, like a precision-machined panel.`
+    ? `painted metal cladding with ${grooveDirection} GROOVES (recessed channels) cut into the panel surface. Each groove is a CHANNEL RECESSED BELOW the surrounding flat metal — picture a shallow trench scored into a sheet of metal, 5mm wide and 3-5mm deep. The metal around the groove sits at the surface level; the groove floor sits below. Light catches the surrounding flat metal but does NOT reach the groove floor, creating a clear DARK SHADOW LINE inside each groove.
+
+The grooves are NOT raised strips, NOT applied slats on top, NOT thin ribs sitting above the surface, NOT bands stuck onto the wall. They are CUTS DOWN INTO the metal sheet — like the recessed seams between standing-seam roofing panels.
+
+Spacing: every groove is the same 5mm width, with REGULAR ${orient === "vertical" ? "13cm horizontal intervals across the facade width" : "13cm vertical intervals across the facade height"}. Constant spacing across the entire facade — do NOT vary groove width or spacing.`
     : `painted metal cladding — smooth flat painted metal sheet with very faint ${seamDirection} hairline seams every 37cm at REGULAR ${orient === "vertical" ? "horizontal" : "vertical"} intervals. Constant spacing. Same-color hairlines, never contrasting.`;
 
   const structureLine = c.structure
