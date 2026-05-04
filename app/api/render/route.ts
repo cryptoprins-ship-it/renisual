@@ -49,7 +49,10 @@ const RAL_HEX: Record<string, { hex: string; name: string }> = {
   "7021": { hex: "#23282B", name: "zwartgrijs" },
   "7016": { hex: "#293133", name: "antracietgrijs" },
   "7012": { hex: "#4D5645", name: "bazaltgrijs" },
-  "9003": { hex: "#F1ECE0", name: "wit" },
+  // RAL 9003 = signal white, cool/pure. RAL 9010 = pure white, slightly
+  // warm. We use a cool pure-white hex for 9003 — the warmer 9010 hex
+  // makes klein-9b render beige/cream.
+  "9003": { hex: "#F4F4F4", name: "pure cool white" },
   "9010": { hex: "#F1ECE0", name: "wit" },
   "9005": { hex: "#0A0A0A", name: "diepzwart" },
   "9006": { hex: "#A5A8A8", name: "zilver" },
@@ -195,10 +198,15 @@ function buildBflPromptText(opts: PromptOptions): string {
 
   const isDark = product.ral_code === "9005" || product.ral_code === "7021" || product.ral_code === "7016" || product.ral_code === "7012";
   const isWhite = product.ral_code === "9003" || product.ral_code === "9010";
+  const colorWarn = isWhite
+    ? "  IMPORTANT: render as PURE COOL WHITE. NOT cream, NOT beige, NOT off-white, NOT yellow-tinted, NOT warm-tinted."
+    : isDark
+    ? `  IMPORTANT: render as TRUE COOL ${product.ral_code === "9005" ? "BLACK" : "DARK GREY"}. NOT brown, NOT dark brown, NOT warm-tinted, NOT yellow-shifted.`
+    : "";
   const colorTone = isDark
-    ? `Pure ${product.ral_code === "9005" ? "deep black" : "dark grey"} powder-coated matt finish. NOT warm-tinted, NOT brown, NOT yellow.`
+    ? `Pure ${product.ral_code === "9005" ? "deep black" : "dark grey"} powder-coated matt finish.`
     : isWhite
-    ? `Pure white powder-coated matt finish. NOT cream, NOT yellow.`
+    ? `Pure cool white powder-coated matt finish.`
     : `Powder-coated matt metal finish. No weathering, no patina.`;
 
   const structureLine = hasStructure
@@ -209,13 +217,14 @@ function buildBflPromptText(opts: PromptOptions): string {
     ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
     : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
 
-  return `Transform this facade by replacing the wall cladding.
+  return `REPLACE the wall cladding on this facade. The new cladding is PAINTED METAL — explicitly NOT wood, NOT wood plank, NOT siding, NOT cream-colored.
 
-COLOR (PRIMARY INSTRUCTION — overrides everything else): ${colorPhrase}. ${colorTone} The wall MUST end up this color. Do NOT render as wood, do NOT render as cream/beige.
+WALL COLOR: ${colorPhrase}. ${colorTone}${colorWarn}
+The walls MUST end up this exact color. Do NOT render walls as wood, do NOT render as cream/beige, do NOT keep them white if the requested color is grey or black.
 
-${dimsLine}MATERIAL: ${surface}
+${dimsLine}WALL MATERIAL: ${surface}
 
-REMOVE from the source: existing wooden plank siding, all wood grain, peeling paint, weathering. The new wall is PAINTED METAL, NOT wood.${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
+REMOVE from source: existing wooden plank siding, wood grain, peeling paint, weathering. Source is wood, target is painted metal.${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
 
 APPLY CLADDING ONLY TO the building's exterior wall surfaces between roof and waterline.
 
