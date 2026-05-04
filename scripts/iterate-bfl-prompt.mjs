@@ -11,9 +11,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
+// Only "clean" facade photos — matches the disclaimer asking users to
+// upload a photo without fences/obstacles. The fence boat is excluded
+// from prompt iteration because it's out-of-spec input.
 const PHOTOS = [
   { id: "p1-canal",       file: "IMG_20260422_095323.jpg" },                    // single-storey canal front
-  { id: "p2-back-fence",  file: "IMG_20260421_183639.jpg" },                    // back with fence
   { id: "p3-white2story", file: "woonboot_dubbellaags_achterkant.jpg" },        // white 2-storey back
   { id: "p4-mixed-back",  file: "woonboot_achterkant_dubbelenenkel.jpg" },      // mixed double/single back
 ];

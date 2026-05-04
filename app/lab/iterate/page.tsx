@@ -7,11 +7,14 @@ export const metadata: Metadata = {
 
 const OUT_BASE = "/test-outputs/iterate";
 
+// Only "clean" facade photos here — matches the disclaimer that asks
+// users to upload a photo without obstacles (no fences, no clutter
+// in front). The earlier p2-back-fence test is excluded because it
+// represents an out-of-spec input.
 const PHOTOS = [
   { id: "p1-canal", file: "IMG_20260422_095323.jpg", title: "Boat 1 — canal front", subtitle: "single-storey, water front" },
-  { id: "p2-back-fence", file: "IMG_20260421_183639.jpg", title: "Boat 2 — back with fence", subtitle: "obstacles in foreground" },
-  { id: "p3-white2story", file: "woonboot_dubbellaags_achterkant.jpg", title: "Boat 3 — white 2-storey", subtitle: "double-layer back view" },
-  { id: "p4-mixed-back", file: "woonboot_achterkant_dubbelenenkel.jpg", title: "Boat 4 — mixed back", subtitle: "double + single layer" },
+  { id: "p3-white2story", file: "woonboot_dubbellaags_achterkant.jpg", title: "Boat 2 — white 2-storey", subtitle: "double-layer back view" },
+  { id: "p4-mixed-back", file: "woonboot_achterkant_dubbelenenkel.jpg", title: "Boat 3 — mixed back", subtitle: "double + single layer" },
 ] as const;
 
 const CASES = [
@@ -46,7 +49,7 @@ export default function IterateLabPage() {
     <main className="min-h-screen bg-[#0e1014] p-6 text-[#e6e8eb]">
       <h1 className="mb-2 text-[22px] font-semibold">Production prompt iteration — klein-9b</h1>
       <p className="mb-6 max-w-[820px] text-sm text-[#9aa0a6]">
-        4 woonboot-foto&apos;s × 5 product-varianten = 20 renders, gegenereerd
+        3 schone woonboot-foto&apos;s × 5 product-varianten = 15 renders, gegenereerd
         met de productie BFL klein-9b prompt zoals die nu in <code className="rounded bg-[#1a1d24] px-1 py-0.5">/api/render</code>{" "}
         leeft. Klik een afbeelding voor vol formaat. Springen naar:
         {" "}
@@ -80,7 +83,7 @@ export default function IterateLabPage() {
 
       <p className="mt-6 border-t border-[#232733] pt-4 text-xs text-[#6b7280]">
         Sole engine: BFL FLUX.2 klein-9b. Same prompt as production /api/render.
-        Cost per run: ~32 credits ≈ $0.032 for 20 renders.
+        Cost per run: ~25 credits ≈ $0.025 for 15 renders.
       </p>
     </main>
   );
