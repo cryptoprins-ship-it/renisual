@@ -217,14 +217,22 @@ function buildBflPromptText(opts: PromptOptions): string {
     ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
     : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
 
-  return `REPLACE the wall cladding on this facade. The new cladding is PAINTED METAL — explicitly NOT wood, NOT wood plank, NOT siding, NOT cream-colored.
+  return `COMPLETE WALL TRANSFORMATION — every visible wall surface of the facade is FULLY REPLACED with new painted metal cladding. The original wood plank siding is COMPLETELY GONE — covered, replaced, removed. The walls in the output must look NOTHING like the source walls except in shape and position.
 
-WALL COLOR: ${colorPhrase}. ${colorTone}${colorWarn}
-The walls MUST end up this exact color. Do NOT render walls as wood, do NOT render as cream/beige, do NOT keep them white if the requested color is grey or black.
+The new cladding is PAINTED METAL SHEET — explicitly:
+  - NOT wood
+  - NOT wood plank
+  - NOT siding boards
+  - NOT planking
+  - NOT cream-colored
+  - Has NO wood grain
+  - Has NO horizontal plank lines from the original wood
+  - Has NO peeling paint or weathering
 
-${dimsLine}WALL MATERIAL: ${surface}
+WALL COLOR (PRIMARY): ${colorPhrase}. ${colorTone}${colorWarn}
+EVERY square centimeter of wall surface MUST be this exact color. Do NOT tint the wood with this color — REPLACE the wood entirely with this colored metal. Do NOT render walls as wood-with-grey-paint, render as solid metal sheet.
 
-REMOVE from source: existing wooden plank siding, wood grain, peeling paint, weathering. Source is wood, target is painted metal.${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
+${dimsLine}WALL MATERIAL / SURFACE: ${surface}${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
 
 APPLY CLADDING ONLY TO the building's exterior wall surfaces between roof and waterline.
 

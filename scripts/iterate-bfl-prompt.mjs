@@ -11,7 +11,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-const PHOTO = "public/test-inputs/IMG_20260422_095323.jpg";
+const PHOTOS = [
+  { id: "p1-canal",       file: "IMG_20260422_095323.jpg" },                    // single-storey canal front
+  { id: "p2-back-fence",  file: "IMG_20260421_183639.jpg" },                    // back with fence
+  { id: "p3-white2story", file: "woonboot_dubbellaags_achterkant.jpg" },        // white 2-storey back
+  { id: "p4-mixed-back",  file: "woonboot_achterkant_dubbelenenkel.jpg" },      // mixed double/single back
+];
 const OUT_DIR = "public/test-outputs/iterate";
 const ENV_PATH = ".env.local";
 
@@ -69,22 +74,30 @@ function buildPrompt(c) {
     ? "  IMPORTANT: render as TRUE COOL BLACK. NOT brown, NOT dark brown, NOT warm-tinted."
     : "";
 
-  return `REPLACE the wall cladding on this houseboat facade. The new cladding is PAINTED METAL — explicitly NOT wood, NOT wood plank, NOT siding, NOT cream-colored.
+  return `COMPLETE WALL TRANSFORMATION — every visible wall surface of the houseboat is FULLY REPLACED with new painted metal cladding. The original wood plank siding is COMPLETELY GONE — covered, replaced, removed. The walls in the output must look NOTHING like the source walls except in shape and position.
 
-WALL COLOR: ${colorLine}.${colorWarn}
-The walls MUST end up this exact color. Do NOT render walls as wood, do NOT render as cream/beige, do NOT keep them white if the requested color is grey or black.
+The new cladding is PAINTED METAL SHEET — explicitly:
+  - NOT wood
+  - NOT wood plank
+  - NOT siding boards
+  - NOT planking
+  - NOT cream-colored
+  - Has NO wood grain
+  - Has NO horizontal plank lines from the original wood
+  - Has NO peeling paint or weathering
 
-WALL MATERIAL: ${surface}${structureLine}
+WALL COLOR (PRIMARY): ${colorLine}.${colorWarn}
+EVERY square centimeter of wall surface MUST be this exact color. Do NOT tint the wood with this color — REPLACE the wood entirely with this colored metal. Do NOT render walls as wood-with-grey-paint, render as solid grey metal sheet.
 
-REMOVE from source: existing wooden plank siding, wood grain, peeling paint. Source is wood, target is painted metal.
+WALL MATERIAL / SURFACE: ${surface}${structureLine}
 
-KEEP ORIGINAL (do not change):
-- Windows, glazing, window frames (kozijnen)
-- Doors and door frames
+KEEP ORIGINAL (do not change, keep exactly as in source):
+- Windows, glazing, window frames (kozijnen) — keep ORIGINAL color
+- Doors, door frames — keep ORIGINAL color
 - Roof, gutters, chimneys
 - Sky, water, vegetation, neighbors, fences, foreground objects
 
-Match input image framing exactly.`;
+DO NOT INVENT new windows, doors, or features. Match input framing exactly.`;
 }
 
 async function loadEnvKey(name) {
@@ -105,7 +118,7 @@ function targetDims(w, h) {
   return { width: r(width), height: r(height) };
 }
 
-async function renderCase(c, baseB64, dims, apiKey) {
+async function renderCase(c, photo, baseB64, dims, apiKey) {
   const prompt = buildPrompt(c);
   const submitRes = await fetch("https://api.bfl.ai/v1/flux-2-klein-9b", {
     method: "POST",
@@ -132,7 +145,7 @@ async function renderCase(c, baseB64, dims, apiKey) {
     if (j.status === "Ready") {
       const dl = await fetch(j.result?.sample);
       const buf = Buffer.from(await dl.arrayBuffer());
-      const out = path.join(OUT_DIR, `${c.id}.jpg`);
+      const out = path.join(OUT_DIR, `${photo.id}-${c.id}.jpg`);
       await fs.writeFile(out, buf);
       return { ok: true, cost, out };
     }
@@ -149,27 +162,35 @@ async function main() {
 
   await fs.mkdir(OUT_DIR, { recursive: true });
 
-  const sourceBytes = await fs.readFile(PHOTO);
-  const meta = await sharp(sourceBytes).rotate().metadata();
-  const dims = targetDims(meta.width, meta.height);
-  const baseBytes = await sharp(sourceBytes).rotate().resize(dims.width, dims.height, { fit: "fill" }).toBuffer();
-  const baseB64 = baseBytes.toString("base64");
-
-  console.log(`Source ${meta.width}x${meta.height} → ${dims.width}x${dims.height}`);
-  console.log(`Cases:  ${CASES.map((c) => c.id).join(", ")}\n`);
-
   let totalCr = 0;
-  for (const c of CASES) {
-    process.stdout.write(`[${c.id} ${c.color.name} ${c.line}${c.structure ? "+struct" : ""}] `);
-    try {
-      const r = await renderCase(c, baseB64, dims, apiKey);
-      console.log(`✓ ${r.cost ?? "?"} cr → ${r.out}`);
-      totalCr += r.cost ?? 0;
-    } catch (e) {
-      console.log(`✗ ${e.message}`);
+  for (const photo of PHOTOS) {
+    const sourceBytes = await fs.readFile(`public/test-inputs/${photo.file}`);
+    const meta = await sharp(sourceBytes).rotate().metadata();
+    const dims = targetDims(meta.width, meta.height);
+    const baseBytes = await sharp(sourceBytes).rotate().resize(dims.width, dims.height, { fit: "fill" }).toBuffer();
+    const baseB64 = baseBytes.toString("base64");
+    console.log(`\n=== ${photo.id} (${photo.file}) ${meta.width}x${meta.height} → ${dims.width}x${dims.height} ===`);
+
+    for (const c of CASES) {
+      const out = path.join(OUT_DIR, `${photo.id}-${c.id}.jpg`);
+      try {
+        const stat = await fs.stat(out);
+        if (stat.isFile() && stat.size > 0) {
+          console.log(`  [${c.id}] ⊘ skip cached`);
+          continue;
+        }
+      } catch {}
+      process.stdout.write(`  [${c.id} ${c.color.name} ${c.line}${c.structure ? "+struct" : ""}] `);
+      try {
+        const r = await renderCase(c, photo, baseB64, dims, apiKey);
+        console.log(`✓ ${r.cost ?? "?"} cr`);
+        totalCr += r.cost ?? 0;
+      } catch (e) {
+        console.log(`✗ ${e.message}`);
+      }
     }
   }
-  console.log(`\nTotal: ${totalCr.toFixed(1)} cr (~$${(totalCr * 0.001).toFixed(4)})`);
+  console.log(`\nTotal new: ${totalCr.toFixed(1)} cr (~$${(totalCr * 0.001).toFixed(4)})`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
