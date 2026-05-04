@@ -50,7 +50,20 @@ function darkenHex(hex, amount) {
   return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
-// === EXPERIMENTAL PROMPT — iterate this ===
+// === EXPERIMENTAL PROMPT — recolor existing plank rhythm approach ===
+//
+// Insight from real Spanl product photos (2026-05-04): on a woonboot
+// already clad with rabat (wood plank), the panels mount in essentially
+// the same plank rhythm as the existing wood. The visual difference
+// between Mono Flat and Mono Groove is the depth of the inter-plank
+// shadow + extra in-panel grooves. Mono Flat panels have a near-invisible
+// naad; Mono Groove has 3 grooves per panel face; +Structure adds a
+// fine fabric-weave-like vertical relief.
+//
+// So instead of "tear off the wood, build new cladding", the prompt is
+// "recolor the existing plank surface, adjust shadow depth per variant,
+// optionally add fine relief". This preserves the photo's lighting,
+// perspective, and architectural detail and avoids AI hallucination.
 function buildPrompt(c) {
   const targetHex = c.color.hex;
   const renderHex = darkenHex(targetHex, 0.15);
@@ -60,56 +73,39 @@ function buildPrompt(c) {
     : `${c.color.name} ${ralLine} (hex ${targetHex})`;
 
   const isGroove = c.line === "groove";
-  const orient = c.orientation === "horizontal" ? "horizontal" : "vertical";
-  const grooveDirection = orient === "vertical" ? "vertical (running top-to-bottom)" : "horizontal (running left-to-right)";
-  const seamDirection = orient === "vertical" ? "vertical" : "horizontal";
 
-  const surface = isGroove
-    ? `painted metal cladding with ${grooveDirection} GROOVES (recessed channels) cut into the panel surface. Each groove is a CHANNEL RECESSED BELOW the surrounding flat metal — picture a shallow trench scored into a sheet of metal, 5mm wide and 3-5mm deep. The metal around the groove sits at the surface level; the groove floor sits below. Light catches the surrounding flat metal but does NOT reach the groove floor, creating a clear DARK SHADOW LINE inside each groove.
-
-The grooves are NOT raised strips, NOT applied slats on top, NOT thin ribs sitting above the surface, NOT bands stuck onto the wall. They are CUTS DOWN INTO the metal sheet — like the recessed seams between standing-seam roofing panels.
-
-Spacing: every groove is the same 5mm width, with REGULAR ${orient === "vertical" ? "13cm horizontal intervals across the facade width" : "13cm vertical intervals across the facade height"}. Constant spacing across the entire facade — do NOT vary groove width or spacing.`
-    : `painted metal cladding — smooth flat painted metal sheet with very faint ${seamDirection} hairline seams every 37cm at REGULAR ${orient === "vertical" ? "horizontal" : "vertical"} intervals. Constant spacing. Same-color hairlines, never contrasting.`;
-
-  const structureLine = c.structure
-    ? `\n\nThe metal surface has a fine linen-weave embossing pattern — soft fabric-like texture pressed into the painted metal, running parallel to panel direction (${grooveDirection}). NOT wood, NOT wood grain, NOT planks. Color stays the matt RAL above.`
-    : "";
-
-  // Per-color anti-bias notes — append a tiny clarifier when the
-  // requested color is in a known klein-9b drift zone.
+  // Per-color anti-bias notes
   const isWhite = ["9003", "9010"].includes(c.color.ral);
   const isBlack = c.color.ral === "9005";
   const colorWarn = isWhite
-    ? "  IMPORTANT: render as PURE COOL WHITE. NOT cream, NOT beige, NOT off-white, NOT yellow-tinted, NOT warm-tinted."
+    ? "Render as PURE COOL WHITE. NOT cream, NOT beige, NOT yellow-tinted."
     : isBlack
-    ? "  IMPORTANT: render as TRUE COOL BLACK. NOT brown, NOT dark brown, NOT warm-tinted."
-    : "";
+    ? "Render as TRUE COOL BLACK. NOT brown, NOT warm-tinted."
+    : "Render at the matt RAL color. NOT warm-tinted, NOT shifted.";
 
-  return `COMPLETE WALL TRANSFORMATION — every visible wall surface of the houseboat is FULLY REPLACED with new painted metal cladding. The original wood plank siding is COMPLETELY GONE — covered, replaced, removed. The walls in the output must look NOTHING like the source walls except in shape and position.
+  const variantDetail = c.structure
+    ? `Mono Groove + Structure: keep the plank-to-plank shadows of the source AS-IS in their existing rhythm. Add 2 extra shallow vertical grooves within each plank face (3 visible vertical lines per plank). On TOP of that, render a fine vertical fabric-weave / linen relief on each panel face — many close-spaced fine vertical lines pressed into the matt metal surface, like a brushed grain texture. Subtle 3D relief, NOT deep grooves, NOT wood, NOT planking texture.`
+    : isGroove
+    ? `Mono Groove: keep the plank-to-plank shadows of the source AS-IS in their existing rhythm. Add 2 extra shallow vertical grooves within each plank face (3 visible vertical lines per plank). Surface between grooves is smooth matt metal in the chosen RAL.`
+    : `Mono Flat: SMOOTH matt metal cladding with nearly invisible plank-to-plank seams. Lighten / soften the plank-to-plank shadow lines from the source so they read as hairline naden, NOT prominent plank gaps. From facade distance the wall reads as one continuous matt-painted metal surface.`;
 
-The new cladding is PAINTED METAL SHEET — explicitly:
-  - NOT wood
-  - NOT wood plank
-  - NOT siding boards
-  - NOT planking
-  - NOT cream-colored
-  - Has NO wood grain
-  - Has NO horizontal plank lines from the original wood
-  - Has NO peeling paint or weathering
+  return `RECOLOR AND RE-CLAD this wall. Take the EXISTING wall siding rhythm (the wood-plank pattern visible in the source photo) and re-render it as Spanl-style painted matt metal cladding in the chosen RAL color. The wall's existing plank rhythm, panel positions, and overall geometry stay the same — only the color, material, and surface finish change.
 
-WALL COLOR (PRIMARY): ${colorLine}.${colorWarn}
-EVERY square centimeter of wall surface MUST be this exact color. Do NOT tint the wood with this color — REPLACE the wood entirely with this colored metal. Do NOT render walls as wood-with-grey-paint, render as solid grey metal sheet.
+WALL COLOR: ${colorLine}. ${colorWarn} The existing wood color of the source is REPLACED entirely with this RAL color.
 
-WALL MATERIAL / SURFACE: ${surface}${structureLine}
+WALL MATERIAL: matt painted metal cladding (Spanl PB / SG / YMSG style). The metal is non-reflective, NOT glossy, NOT weathered, NOT wood. Powder-coated finish.
 
-KEEP ORIGINAL (do not change, keep exactly as in source):
-- Windows, glazing, window frames (kozijnen) — keep ORIGINAL color
-- Doors, door frames — keep ORIGINAL color
-- Roof, gutters, chimneys
-- Sky, water, vegetation, neighbors, fences, foreground objects
+VARIANT DETAIL — ${variantDetail}
 
-DO NOT INVENT new windows, doors, or features. Match input framing exactly.`;
+SOURCE-CONTEXT PRESERVATION:
+- KEEP the wall's existing plank rhythm, plank widths, and plank positions as visible in the source photo. Do NOT invent a different plank arrangement.
+- KEEP all windows, glazing, window frames (kozijnen) in their ORIGINAL color from the source.
+- KEEP doors and door frames in their ORIGINAL color.
+- KEEP the roof, gutters, chimneys, sky, water, vegetation, neighbors, fences, and any foreground objects unchanged.
+- DO NOT apply cladding to fences, mesh, balustrades, vegetation, foreground objects.
+- DO NOT INVENT new windows, doors, or architectural features.
+
+Match the input image framing exactly. No cropping, no zoom change.`;
 }
 
 async function loadEnvKey(name) {
