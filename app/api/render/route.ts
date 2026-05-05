@@ -225,37 +225,14 @@ function buildBflPromptText(opts: PromptOptions): string {
     ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
     : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
 
-  return `COMPLETE WALL TRANSFORMATION — every visible wall surface of the facade is FULLY REPLACED with new painted metal cladding. The original wood plank siding is COMPLETELY GONE — covered, replaced, removed. The walls in the output must look NOTHING like the source walls except in shape and position.
+  // Minimal prompt modelled on what works in BFL Flux playground:
+  // a few clear sentences, no shouted caps, no exhaustive don'ts.
+  // klein-9b is prompt-faithful — less micromanagement is more.
+  return `Recolour the wall surfaces of this building in ${colorPhrase}. ${surface} ${orientLine}${structureLine}
 
-The new cladding is PAINTED METAL SHEET — explicitly:
-  - NOT wood
-  - NOT wood plank
-  - NOT siding boards
-  - NOT planking
-  - NOT cream-colored
-  - Has NO wood grain
-  - Has NO horizontal plank lines from the original wood
-  - Has NO peeling paint or weathering
+${dimsLine}Keep the roof, gutters, chimneys, windows, glass, window frames, doors, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape. Do not invent new windows or features. Match the source framing exactly.
 
-WALL COLOR (PRIMARY): ${colorPhrase}. ${colorTone}${colorWarn}
-EVERY square centimeter of wall surface MUST be this exact color. Do NOT tint the wood with this color — REPLACE the wood entirely with this colored metal. Do NOT render walls as wood-with-grey-paint, render as solid metal sheet.
-
-${dimsLine}WALL MATERIAL / SURFACE: ${surface}${orientLine ? `\n\n${orientLine}` : ""}${structureLine}
-
-APPLY CLADDING ONLY TO the building's exterior wall surfaces between roof and waterline.
-
-DO NOT TOUCH and keep ORIGINAL colors/materials of:
-- Fences, hekken, gates, mesh, railings — these are NOT walls
-- Vegetation, foreground objects, sky, water, neighbors
-- Roof, gutters, chimneys
-- Windows, glazing, window frames (kozijnen) — keep ORIGINAL color
-- Doors and door frames — keep ORIGINAL color
-
-DO NOT INVENT new windows, doors, or architectural features.
-
-${fasciaLine}
-
-Match input image framing exactly. No cropping, no zoom change.`;
+${fasciaLine}${colorWarn ? `\n${colorWarn.trim()}` : ""}`;
 }
 
 type PromptOptions = {
