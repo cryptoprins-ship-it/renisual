@@ -831,15 +831,44 @@ function resolveGeminiKey(): string | undefined {
   return readEnvCaseInsensitive("GEMINI_API_KEY")?.trim();
 }
 
+// Strip everything that isn't a printable-ASCII char fit for an HTTP
+// header. Catches the bullet "•" (U+2022) and other rich-text leftovers
+// that sneak in via copy-paste from masked env-var UIs and would
+// otherwise blow up `fetch` with a ByteString conversion error and
+// silently route every request to the Gemini fallback.
+function sanitizeApiKey(s: string): string {
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c >= 33 && c <= 126) out += s[i];
+  }
+  return out;
+}
+
 // BFL FLUX.2 klein-9b key. Mixed-case names per user convention; we read
 // case-insensitively so Vercel/Hostinger casing differences don't matter.
 function resolveBflKey(): string | undefined {
+  let raw: string | undefined;
   for (const name of ["renisual_bfl_key", "BFL_API_KEY", "Flux_API_Key", "FLUX_API_KEY"]) {
-    const raw = process.env[name];
-    if (typeof raw === "string" && raw.trim().length > 0) return raw.trim();
+    const v = process.env[name];
+    if (typeof v === "string" && v.trim().length > 0) {
+      raw = v.trim();
+      break;
+    }
   }
-  return readEnvCaseInsensitive("renisual_bfl_key")?.trim()
-    ?? readEnvCaseInsensitive("BFL_API_KEY")?.trim();
+  if (!raw) {
+    raw = readEnvCaseInsensitive("renisual_bfl_key")?.trim()
+      ?? readEnvCaseInsensitive("BFL_API_KEY")?.trim();
+  }
+  if (!raw) return undefined;
+  const cleaned = sanitizeApiKey(raw);
+  if (cleaned.length !== raw.length) {
+    logger.warn(
+      { stripped: raw.length - cleaned.length, sample: raw.charCodeAt(0) },
+      "render_bfl_key_sanitised",
+    );
+  }
+  return cleaned.length > 0 ? cleaned : undefined;
 }
 
 // Round to a multiple of 32 with a 64-pixel floor — BFL accepts any
