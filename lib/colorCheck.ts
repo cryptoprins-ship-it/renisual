@@ -65,7 +65,7 @@ export async function sampleFacadeColor(dataUrl: string): Promise<Rgb | null> {
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
   ctx.drawImage(img, 0, 0);
 

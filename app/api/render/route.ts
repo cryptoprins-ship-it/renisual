@@ -897,17 +897,13 @@ async function renderViaBfl(args: {
   const srcH = meta.height ?? 1024;
   const dims = bflTargetDims(srcW, srcH);
 
-  // White-balance neutralise the source before BFL sees it. klein-9b
-  // weighs `input_image` heavily for color and the source's own lighting
-  // cast (overcast Dutch sky, water reflection, etc) bleeds into the
-  // recolored wall — measured contamination on RAL 7038: target #B5B8B1
-  // came back greenish-grey #707378 with ΔE 20+. .normalise({1,99})
-  // does a per-channel histogram stretch using 1st/99th percentiles —
-  // gentle enough not to over-correct well-balanced photos, strong
-  // enough to neutralise typical phone-camera casts.
+  // Earlier attempt at .normalise({1,99}) for white-balance neutralisation
+  // turned out too aggressive (RAL 9003 white blew out, RAL 9005 black
+  // shifted lighter). Removed — instead we lean on image_prompt_strength
+  // below to reduce how heavily klein-9b weighs the source photo's
+  // lighting/wb when recoloring.
   const baseDownscaled = await sharp(args.sourceBytes)
     .rotate()
-    .normalise({ lower: 1, upper: 99 })
     .resize(dims.width, dims.height, { fit: "fill" })
     .toBuffer();
 

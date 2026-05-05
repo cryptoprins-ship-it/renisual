@@ -16,7 +16,6 @@ import { useLocale } from "@/lib/i18n";
 import { useProjectStore } from "@/lib/projectStore";
 import { getPhotoUrl } from "@/lib/photoStorage";
 import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
-import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
@@ -60,6 +59,7 @@ type RenderVariant = {
   dataUrl: string;
   createdAt: number;
   colorCheck?: ColorCheck;
+  engine?: string;
 };
 
 type WindowMaterial = "hardwood" | "plastic-white" | "plastic-anthracite" | "aluminium";
@@ -130,37 +130,6 @@ const DOOR_COLOUR_EN: Record<DoorColour, string> = {
 
 function cleanSku(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-const ZOOM_LEVELS = [1, 2, 3] as const;
-type ZoomLevel = (typeof ZOOM_LEVELS)[number];
-
-function ZoomControls() {
-  const { setTransform } = useControls();
-  const [active, setActive] = useState<ZoomLevel>(1);
-  const goToLevel = (level: ZoomLevel) => {
-    setActive(level);
-    setTransform(0, 0, level, 250, "easeOut");
-  };
-  return (
-    <div className="absolute bottom-2 right-2 z-10 flex gap-1 rounded border border-stone-200 bg-white/95 p-0.5 shadow-sm">
-      {ZOOM_LEVELS.map((level) => (
-        <button
-          key={level}
-          type="button"
-          onClick={() => goToLevel(level)}
-          aria-label={`Zoom ${level}x`}
-          className={`px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-            active === level
-              ? "bg-ink text-paper"
-              : "text-stone-600 hover:bg-stone-100"
-          }`}
-        >
-          {level}x
-        </button>
-      ))}
-    </div>
-  );
 }
 
 function findImagesForSku(index: SpanlImageProduct[], sku: string): { main?: string; variant?: string } {
@@ -610,6 +579,7 @@ export default function RenderPage() {
       let renderDataUrl: string | null = null;
       let lastErrorKey: string = "render.error.retry";
       let lastStatus = 0;
+      let engineTag: string | undefined;
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         setAttemptCount(attempt);
         const res = await fetch("/api/render", {
@@ -626,7 +596,7 @@ export default function RenderPage() {
         const bodyText = await res.text();
 
         if (res.ok) {
-          let data: { renderDataUrl?: string; error?: string };
+          let data: { renderDataUrl?: string; error?: string; engine?: string; segMethod?: string; bflFailReason?: string };
           try {
             data = JSON.parse(bodyText);
           } catch (parseErr) {
@@ -636,6 +606,8 @@ export default function RenderPage() {
           }
           if (data.renderDataUrl) {
             renderDataUrl = data.renderDataUrl;
+            console.log("[render] engine:", data.engine, "segMethod:", data.segMethod, "bflFailReason:", data.bflFailReason);
+            engineTag = data.engine;
             break;
           }
           // 200 + no renderDataUrl: treat as a soft retryable failure.
@@ -688,6 +660,7 @@ export default function RenderPage() {
         prompt: "",
         dataUrl: renderDataUrl,
         createdAt: Date.now(),
+        engine: engineTag,
       };
       setVariants((prev) => [variant, ...prev]);
       const key = await sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${variant.id}`);
@@ -1312,35 +1285,12 @@ export default function RenderPage() {
           <div className="mt-4 space-y-4">
             {variants.map((v) => (
               <article key={v.id} className="overflow-hidden rounded-xl border border-black">
-                {/* Fixed-size viewport so the zoom transform stays inside its
-                    box (otherwise scaling pushes content outside the article
-                    border and the user sees a white gap). centerOnInit fits
-                    the image to the box on first paint; double-click resets. */}
-                <div className="relative h-56 w-full overflow-hidden bg-stone-100">
-                  <TransformWrapper
-                    initialScale={1}
-                    minScale={1}
-                    maxScale={3}
-                    centerOnInit
-                    wheel={{ disabled: true }}
-                    pinch={{ disabled: true }}
-                    doubleClick={{ disabled: true }}
-                    panning={{ disabled: false }}
-                    limitToBounds
-                  >
-                    <TransformComponent
-                      wrapperStyle={{ width: "100%", height: "100%" }}
-                      contentStyle={{ width: "100%", height: "100%" }}
-                    >
-                      <img
-                        src={v.dataUrl}
-                        alt={v.panelLabel}
-                        className="h-full w-full object-contain"
-                      />
-                    </TransformComponent>
-                    <ZoomControls />
-                  </TransformWrapper>
-                </div>
+                <img
+                  src={v.dataUrl}
+                  alt={v.panelLabel}
+                  className="block w-full"
+                />
+
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     {v.colorCheck && (
@@ -1366,6 +1316,20 @@ export default function RenderPage() {
                           style={{ background: v.colorCheck.targetHex }}
                         />
                         ΔE {v.colorCheck.deltaE}
+                      </span>
+                    )}
+                    {v.engine && (
+                      <span
+                        className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono ${
+                          v.engine === "bfl-protected"
+                            ? "bg-green-100 text-green-800"
+                            : v.engine === "bfl-raw"
+                            ? "bg-amber-100 text-amber-900"
+                            : "bg-stone-200 text-stone-700"
+                        }`}
+                        title="Engine that produced this render"
+                      >
+                        {v.engine}
                       </span>
                     )}
                     <span className="font-semibold">{v.panelLabel}</span>
