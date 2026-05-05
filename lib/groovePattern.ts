@@ -33,12 +33,16 @@ export function generateGrooveSvg(opts: PatternOpts): string {
   }
 
   if (variant === "groove") {
-    // Mono Groove: panel edges + 1 internal groove → ~18.5cm spacing
+    // Mono Groove: panel edges + 1 internal groove → ~18.5cm spacing.
+    // Stronger opacity now that the overlay sits on a solid (flatten=true)
+    // wall fill rather than a textured BFL render — the prior 0.30 was
+    // tuned against a render that already had panel rhythm; on a solid
+    // base 0.30 reads as barely visible.
     return buildSvg(W, H, {
       orientation,
       spacingCm: 37 / 2,
-      lineWidthCm: 0.5,
-      opacity: 0.30,
+      lineWidthCm: 0.6,
+      opacity: 0.55,
       pxPerCm: orientation === "vertical" ? W / facadeWidthCm : H / facadeHeightCm,
     });
   }
@@ -48,8 +52,8 @@ export function generateGrooveSvg(opts: PatternOpts): string {
   return buildSvg(W, H, {
     orientation,
     spacingCm: 37 / 4,
-    lineWidthCm: 0.4,
-    opacity: 0.22,
+    lineWidthCm: 0.5,
+    opacity: 0.45,
     pxPerCm: orientation === "vertical" ? W / facadeWidthCm : H / facadeHeightCm,
   });
 }

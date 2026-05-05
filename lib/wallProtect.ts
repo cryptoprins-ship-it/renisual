@@ -122,34 +122,47 @@ export async function buildProtectedWallRender(args: {
       const tR = (target >> 16) & 0xff;
       const tG = (target >> 8) & 0xff;
       const tB = target & 0xff;
-      // BFL luminance + per-channel mean of wall-like pixels inside the mask.
-      // The mask covers the whole boat; we still need to distinguish wall
-      // from windows/doors/dark trim because SAM is loose. Windows in BFL
-      // are coloured very differently from the wall, so we use the BFL wall
-      // mean as a soft anchor and exclude pixels far from it.
+      // BFL pixels for shading + as the second voter on whether a mask
+      // pixel is a feature (window/door/frame).
       const { data: rgbData } = await sharp(aiRenderResized).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-      let sumLum = 0, sumR = 0, sumG = 0, sumB = 0, count = 0;
+      // Source pixels: first voter on feature detection. A pixel only
+      // counts as a feature if BOTH source AND BFL disagree with their
+      // respective wall means — that filters out source weathering noise
+      // (peeling paint reads as "different" in source but is uniform in
+      // BFL) and BFL's window-color drift (windows look wall-coloured in
+      // BFL but stand out in source).
+      const { data: srcData } = await sharp(sourceResized).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+      let sumLum = 0;
+      let bflSumR = 0, bflSumG = 0, bflSumB = 0;
+      let srcSumR = 0, srcSumG = 0, srcSumB = 0;
+      let count = 0;
       const lum = new Float32Array(maskData.length);
       for (let i = 0, j = 0; j < maskData.length; i += 3, j++) {
         const l = 0.2126 * rgbData[i] + 0.7152 * rgbData[i + 1] + 0.0722 * rgbData[i + 2];
         lum[j] = l;
         if (maskData[j] > 128) {
           sumLum += l;
-          sumR += rgbData[i];
-          sumG += rgbData[i + 1];
-          sumB += rgbData[i + 2];
+          bflSumR += rgbData[i];
+          bflSumG += rgbData[i + 1];
+          bflSumB += rgbData[i + 2];
+          srcSumR += srcData[i];
+          srcSumG += srcData[i + 1];
+          srcSumB += srcData[i + 2];
           count++;
         }
       }
       if (count > 100) {
         const meanLum = Math.max(1, sumLum / count);
-        const bflMeanR = sumR / count;
-        const bflMeanG = sumG / count;
-        const bflMeanB = sumB / count;
-        // Color-distance threshold: pixels in BFL render this far from the
-        // wall mean count as "feature" (window, door, frame) and stay
-        // transparent so the source photo shows through.
-        const featureThreshold = 75;
+        const bflMeanR = bflSumR / count;
+        const bflMeanG = bflSumG / count;
+        const bflMeanB = bflSumB / count;
+        const srcMeanR = srcSumR / count;
+        const srcMeanG = srcSumG / count;
+        const srcMeanB = srcSumB / count;
+        // Independent thresholds for each voter. Both must fire for a
+        // pixel to count as a feature.
+        const srcFeatureThreshold = 55;
+        const bflFeatureThreshold = 50;
         // Build RGBA directly so we can hand it to composite as a real
         // alpha-bearing image (joinChannel/png round-trips have proven
         // unreliable when the source started as raw RGB).
@@ -160,11 +173,19 @@ export async function buildProtectedWallRender(args: {
             fillRgba[k + 3] = 0;
             continue;
           }
-          const dR = rgbData[i] - bflMeanR;
-          const dG = rgbData[i + 1] - bflMeanG;
-          const dB = rgbData[i + 2] - bflMeanB;
-          if (dR * dR + dG * dG + dB * dB > featureThreshold * featureThreshold) {
-            // window / door / dark trim: keep source visible by leaving alpha 0
+          const sR = srcData[i] - srcMeanR;
+          const sG = srcData[i + 1] - srcMeanG;
+          const sB = srcData[i + 2] - srcMeanB;
+          const srcDiff2 = sR * sR + sG * sG + sB * sB;
+          const bR = rgbData[i] - bflMeanR;
+          const bG = rgbData[i + 1] - bflMeanG;
+          const bB = rgbData[i + 2] - bflMeanB;
+          const bflDiff2 = bR * bR + bG * bG + bB * bB;
+          if (
+            srcDiff2 > srcFeatureThreshold * srcFeatureThreshold &&
+            bflDiff2 > bflFeatureThreshold * bflFeatureThreshold
+          ) {
+            // both source and BFL disagree with their wall mean → feature
             fillRgba[k + 3] = 0;
             continue;
           }
