@@ -167,16 +167,14 @@ function buildBflPromptText(opts: PromptOptions): string {
 
   const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "";
   const colorName = product.color_name ?? "matt grey";
-  // Models systematically render the cladding ~15-20% lighter than the
-  // target hex (except whites, which are already at ceiling). Compensate
-  // by darkening the hex we send to the model. darkenHex() auto-skips
-  // near-white targets and tapers on pastels.
-  const baseHex = product.color_hex_render ?? product.color_hex ?? "";
-  const hex = baseHex ? darkenHex(baseHex, 0.15) : "";
-  const compensated = hex && hex.toLowerCase() !== baseHex.toLowerCase();
-  const colorPhrase = compensated
-    ? `matt ${colorName}${ralPart ? ` ${ralPart}` : ""} (target hex ${baseHex}, render at hex ${hex} to compensate for the model's lightening bias)`
-    : `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${baseHex ? ` (hex ${baseHex})` : ""}`;
+  // BFL klein-9b is prompt-faithful and has the panel reference photos to
+  // anchor the colour from. The earlier darkenHex compensation was tuned
+  // for Gemini's ~15% lightening bias and over-darkened BFL output by
+  // ~80 RGB units (e.g. RAL 7038 target #B5B8B1 → wandMean #5E6574,
+  // measured 2026-05-05). Send the raw target hex now; the SAM ΔE-shift
+  // post-pas in lib/wallProtect handles any residual drift cleanly.
+  const baseHex = product.color_hex ?? "";
+  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${baseHex ? ` (hex ${baseHex})` : ""}`;
 
   const dimsLine = widthCm && heightCm
     ? `The facade is ${widthCm}cm wide and ${heightCm}cm tall.\n\n`
@@ -1235,11 +1233,13 @@ export async function POST(request: Request) {
         const isMonoFlat = productLine === "mono_flat";
         const isMonoGroove = productLine === "mono_groove";
         const hasStructure = detectStructure(product);
-        // Solid wall fill for both Mono Flat and Mono Groove — fixes BFL's
-        // irregular panel rhythm. Mono Flat keeps the uniform seam hairlines;
-        // Mono Groove gets a deterministic procedural groove overlay drawn
-        // on top instead of relying on BFL's stochastic groove rendering.
-        const useFlatten = isMonoFlat || isMonoGroove;
+        // Don't solid-fill — SAM masks the whole boat outline including
+        // windows, so flatten over-paints kozijnen/ramen which BFL had
+        // rendered correctly. ΔE-shift on BFL keeps every detail BFL drew
+        // (windows, frames, boeideel) and only nudges the wall hue toward
+        // target. Mono Groove still gets the procedural groove overlay on
+        // top via the existing branch below.
+        const useFlatten = false;
         const seamOrientation = body.orientation === "vertical" ? "vertical" : "horizontal";
         const facadeAlongSeams = seamOrientation === "horizontal"
           ? Number(facadeHeightMeters) * 100
