@@ -1,11 +1,20 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import sharp from "sharp";
+
+// Vercel serverless functions reuse warm instances; sharp's libvips cache
+// accumulates buffers across invocations and pushes the second/third call
+// over the memory ceiling. Disable cache, SIMD, and force single-thread
+// concurrency for predictable per-request memory use.
+sharp.cache(false);
+sharp.simd(false);
+sharp.concurrency(1);
 import { z } from "zod";
 import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/utils/supabase/server";
 import { buildProtectedWallRender } from "@/lib/wallProtect";
+import { generateGrooveSvg } from "@/lib/groovePattern";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -1186,29 +1195,70 @@ export async function POST(request: Request) {
       // bubbling out to the Gemini fallback (BFL itself succeeded).
       let engineTag = "bfl-raw";
       try {
-        const isMonoFlat = detectLine(product) === "mono_flat";
-        // Compute uniform panel count from facade dims so seams match the
-        // physical Spanl 37cm panel pitch instead of guessing 10 evenly.
+        const productLine = detectLine(product);
+        const isMonoFlat = productLine === "mono_flat";
+        const isMonoGroove = productLine === "mono_groove";
+        const hasStructure = detectStructure(product);
+        // Solid wall fill for both Mono Flat and Mono Groove — fixes BFL's
+        // irregular panel rhythm. Mono Flat keeps the uniform seam hairlines;
+        // Mono Groove gets a deterministic procedural groove overlay drawn
+        // on top instead of relying on BFL's stochastic groove rendering.
+        const useFlatten = isMonoFlat || isMonoGroove;
         const seamOrientation = body.orientation === "vertical" ? "vertical" : "horizontal";
         const facadeAlongSeams = seamOrientation === "horizontal"
           ? Number(facadeHeightMeters) * 100
           : Number(facadeWidthMeters) * 100;
         const panelPitchCm = 37;
-        const seamCount = facadeAlongSeams > 0
+        const seamCount = isMonoFlat && facadeAlongSeams > 0
           ? Math.max(2, Math.round(facadeAlongSeams / panelPitchCm))
-          : undefined;
+          : isMonoGroove ? 0 : undefined;
         const wp = await buildProtectedWallRender({
           sourceBytes,
           aiRenderBytes: matched.bytes,
           targetHex: product.color_hex ?? undefined,
-          flatten: isMonoFlat,
+          flatten: useFlatten,
           flatSeamOrientation: seamOrientation,
           flatSeamCount: seamCount,
         });
         if (wp) {
-          const finalJpeg = await sharp(wp.bytes).jpeg({ quality: 92 }).toBuffer();
+          let finalBytes: Buffer = wp.bytes;
+          // Mono Groove: composite a uniform procedural overlay on top of the
+          // protected layer. The mask multiplies into the SVG's own alpha so
+          // grooves only appear on wall pixels.
+          if (isMonoGroove && facadeWidthMeters && facadeHeightMeters) {
+            const grooveSvg = generateGrooveSvg({
+              width: wp.width,
+              height: wp.height,
+              facadeWidthCm: facadeWidthMeters * 100,
+              facadeHeightCm: facadeHeightMeters * 100,
+              variant: hasStructure ? "groove-structure" : "groove",
+              orientation: body.orientation === "vertical" ? "vertical" : "horizontal",
+            });
+            const grooveRaw = await sharp(Buffer.from(grooveSvg))
+              .ensureAlpha()
+              .resize(wp.width, wp.height, { fit: "fill" })
+              .raw()
+              .toBuffer({ resolveWithObject: true });
+            const grooveData = Buffer.from(grooveRaw.data);
+            for (let i = 0; i < wp.maskRaw.length; i++) {
+              grooveData[i * 4 + 3] = Math.round((grooveData[i * 4 + 3] * wp.maskRaw[i]) / 255);
+            }
+            const maskedGroove = await sharp(grooveData, {
+              raw: { width: wp.width, height: wp.height, channels: 4 },
+            }).png().toBuffer();
+            finalBytes = await sharp(wp.bytes)
+              .composite([{ input: maskedGroove, blend: "over" }])
+              .toBuffer();
+          }
+          const finalJpeg = await sharp(finalBytes).jpeg({ quality: 92 }).toBuffer();
           logger.info(
-            { segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
+            {
+              segMethod: wp.segMethod,
+              colorDelta: wp.colorDelta,
+              wallMean: wp.wallMean,
+              line: productLine,
+              structure: hasStructure,
+            },
             "render_bfl_wall_protected",
           );
           engineTag = "bfl-protected";
@@ -1217,6 +1267,7 @@ export async function POST(request: Request) {
             engine: engineTag,
             segMethod: wp.segMethod,
             colorDelta: wp.colorDelta,
+            line: productLine,
           });
         }
         logger.warn("render_bfl_wall_protect_unavailable");

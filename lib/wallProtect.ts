@@ -178,8 +178,10 @@ export async function buildProtectedWallRender(args: {
 
         // Uniform panel seams: thin (~2px) hairlines slightly darker than the
         // wall color, only inside the wall mask. Default 10 seams horizontal.
+        // Pass flatSeamCount=0 to skip seams entirely (caller will draw their
+        // own overlay — e.g. groove SVG for Mono Groove).
         const seamOrientation = flatSeamOrientation ?? "horizontal";
-        const seamCount = Math.max(2, Math.min(40, flatSeamCount ?? 10));
+        const seamCount = flatSeamCount === 0 ? 0 : Math.max(2, Math.min(40, flatSeamCount ?? 10));
         const seamFactor = 0.85;
         const seamThickness = 2;
         const darken = (k: number) => {
@@ -187,7 +189,9 @@ export async function buildProtectedWallRender(args: {
           fillRgba[k + 1] = Math.round(fillRgba[k + 1] * seamFactor);
           fillRgba[k + 2] = Math.round(fillRgba[k + 2] * seamFactor);
         };
-        if (seamOrientation === "horizontal") {
+        if (seamCount === 0) {
+          // skip seam drawing
+        } else if (seamOrientation === "horizontal") {
           const spacing = Math.floor(H / seamCount);
           if (spacing > seamThickness) {
             for (let s = 1; s < seamCount; s++) {

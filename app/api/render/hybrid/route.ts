@@ -10,6 +10,11 @@
 
 import sharp from "sharp";
 import { z } from "zod";
+
+// Vercel warm-instance memory hygiene — see /api/render for rationale.
+sharp.cache(false);
+sharp.simd(false);
+sharp.concurrency(1);
 import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
