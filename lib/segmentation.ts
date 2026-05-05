@@ -17,6 +17,7 @@ function readEnv(name: string): string | undefined {
 export async function segmentWallMask(args: {
   sourceBytes: Buffer;
   renderBytes: Buffer;
+  targetHex?: string;
 }): Promise<{ maskBytes: Buffer; width: number; height: number; method: string } | null> {
   const url = readEnv("SEG_API_URL");
   const token = readEnv("SEG_API_TOKEN");
@@ -37,6 +38,7 @@ export async function segmentWallMask(args: {
       body: JSON.stringify({
         sourceB64: args.sourceBytes.toString("base64"),
         renderB64: args.renderBytes.toString("base64"),
+        targetHex: args.targetHex,
       }),
     });
     if (!res.ok) {

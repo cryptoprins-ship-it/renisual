@@ -36,6 +36,7 @@ const schema = z.object({
   colorName: z.string().max(64).optional(),
   facadeWidthCm: z.number().finite().positive().max(100000).default(1350),
   facadeHeightCm: z.number().finite().positive().max(100000).default(355),
+  debug: z.boolean().optional(),
 });
 
 type Body = z.infer<typeof schema>;
@@ -80,15 +81,23 @@ function buildHybridPrompt(body: Body): string {
     ? "Render as TRUE COOL BLACK. NOT brown."
     : "Render at the matt RAL color. NOT warm-tinted.";
 
-  // For the hybrid pipeline the AI only needs to produce a CLEAN MONO FLAT
-  // render in the target color — grooves/structure are added procedurally
-  // later. So we always ask for the smooth flat variant regardless of the
-  // requested final variant. Less stochasticity, cleaner template.
+  // For the hybrid pipeline the AI produces a Mono Flat painted-metal
+  // render in the target color. If klein-9b shows any panel rhythm at all
+  // (it usually does — cladding has visible panel breaks every 37cm), it
+  // MUST follow the requested orientation. Otherwise the result looks
+  // inconsistent vs. the user's choice.
+  const orientLine =
+    body.orientation === "vertical"
+      ? "Panels are mounted VERTICALLY — visible panel seams run TOP-TO-BOTTOM (vertical hairlines spaced ~37cm apart across the facade WIDTH). NO horizontal seams. NO horizontal break lines. NO horizontal floor divisions."
+      : "Panels are mounted HORIZONTALLY — visible panel seams run LEFT-TO-RIGHT (horizontal hairlines spaced ~37cm apart across the facade HEIGHT). NO vertical seams. NO vertical break lines.";
+
   return `RECOLOR AND RE-CLAD this wall as smooth matt painted metal cladding. Take the existing wall siding rhythm from the source photo and re-render it in the new color. Keep all positions and geometry — only color and material change.
 
 WALL COLOR: ${colorPhrase}. ${colorWarn} The walls MUST end up this exact color. Do NOT render walls as wood, do NOT render as cream/beige, do NOT keep them white if the requested color is grey or black.
 
-WALL MATERIAL: smooth matt painted metal sheet. NOT wood, NOT planks, NOT siding boards. Soften plank-to-plank shadows to near-invisible hairlines.
+WALL MATERIAL: smooth matt painted metal sheet. NOT wood, NOT planks, NOT siding boards. Panel-to-panel shadows must be near-invisible hairlines, NOT deep grooves.
+
+PANEL ORIENTATION (mandatory): ${orientLine}
 
 KEEP UNCHANGED in original colors:
 - Windows, glazing, window frames (kozijnen)
@@ -154,8 +163,23 @@ export async function POST(request: Request) {
     return Response.json({ error: "ai_render_failed" }, { status: 502 });
   }
 
-  // 2. Wall mask via seg service
-  const seg = await segmentWallMask({ sourceBytes, renderBytes: aiRender });
+  // 2a. Mono Flat: return the AI render as-is. The smooth painted-metal
+  //     surface IS the product look — adding any overlay only degrades it.
+  if (body.variant === "flat") {
+    logger.info("render_hybrid_flat_returns_ai_render");
+    return Response.json({
+      renderDataUrl: `data:image/jpeg;base64,${aiRender.toString("base64")}`,
+      variant: body.variant,
+      segMethod: "none",
+    });
+  }
+
+  // 2b. Groove / structure variants need a wall mask for the procedural overlay
+  const seg = await segmentWallMask({
+    sourceBytes,
+    renderBytes: aiRender,
+    targetHex: body.colorHex,
+  });
   if (!seg) {
     // Seg service down — return AI render as-is (graceful degradation)
     logger.warn("render_hybrid_seg_unavailable_returning_ai_render");
@@ -166,33 +190,50 @@ export async function POST(request: Request) {
     });
   }
 
-  // 3. Procedural groove/structure pattern
+  // 3. Smooth the SAM mask: light blur fills small holes around windows / details
+  const W = seg.width;
+  const H = seg.height;
+  const tightMaskPng = await sharp(seg.maskBytes)
+    .greyscale()
+    .blur(2)
+    .threshold(100)
+    .png()
+    .toBuffer();
+
+  // 4. Procedural groove/structure pattern
   const grooveSvg = generateGrooveSvg({
-    width: seg.width,
-    height: seg.height,
+    width: W,
+    height: H,
     facadeWidthCm: body.facadeWidthCm,
     facadeHeightCm: body.facadeHeightCm,
     variant: body.variant as Variant,
     orientation: body.orientation,
   });
   const groovePng = await sharp(Buffer.from(grooveSvg)).png().toBuffer();
-  const maskPng = await sharp(seg.maskBytes).png().toBuffer();
 
-  // 4. Mask the pattern to wall pixels only, then composite onto AI render
+  // 5. Mask the pattern to wall pixels only, then composite onto AI render
   const maskedPattern = await sharp(groovePng)
-    .composite([{ input: maskPng, blend: "dest-in" }])
+    .composite([{ input: tightMaskPng, blend: "dest-in" }])
     .png()
     .toBuffer();
 
-  const final = await sharp(aiRender)
+  const aiRenderResized = await sharp(aiRender).resize(W, H, { fit: "fill" }).toBuffer();
+  const final = await sharp(aiRenderResized)
     .composite([{ input: maskedPattern, blend: "over" }])
     .jpeg({ quality: 92 })
     .toBuffer();
 
   logger.info({ variant: body.variant, segMethod: seg.method }, "render_hybrid_ok");
-  return Response.json({
+  const response: Record<string, unknown> = {
     renderDataUrl: `data:image/jpeg;base64,${final.toString("base64")}`,
     variant: body.variant,
     segMethod: seg.method,
-  });
+  };
+  if (body.debug) {
+    const segMaskPng = await sharp(seg.maskBytes).resize(W, H, { fit: "fill" }).png().toBuffer();
+    response.debugSegMaskDataUrl = `data:image/png;base64,${segMaskPng.toString("base64")}`;
+    response.debugTightMaskDataUrl = `data:image/png;base64,${tightMaskPng.toString("base64")}`;
+    response.debugAiRenderDataUrl = `data:image/jpeg;base64,${aiRender.toString("base64")}`;
+  }
+  return Response.json(response);
 }
