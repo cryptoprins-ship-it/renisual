@@ -198,6 +198,13 @@ async function sha256(text: string): Promise<string> {
     .join("");
 }
 
+// Approximate decoded byte size of a base64 data URL.
+function dataUrlBytes(dataUrl: string): number {
+  const i = dataUrl.indexOf(",");
+  if (i < 0) return 0;
+  return Math.floor((dataUrl.length - i - 1) * 0.75);
+}
+
 async function compressDataUrl(dataUrl: string, maxEdge: number, quality = 0.85): Promise<string> {
   if (!dataUrl.startsWith("data:")) return dataUrl;
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -220,6 +227,26 @@ async function compressDataUrl(dataUrl: string, maxEdge: number, quality = 0.85)
   if (!ctx) return dataUrl;
   ctx.drawImage(img, 0, 0, cw, ch);
   return canvas.toDataURL("image/jpeg", quality);
+}
+
+// Compress until decoded payload is at or under maxBytes. Drops quality
+// first (0.85 → 0.55 in 0.1 steps); if still too big, shrinks the longest
+// edge by 15% and retries. Caps at 6 outer iterations to bound work.
+async function compressUnderSize(
+  dataUrl: string,
+  maxEdge: number,
+  maxBytes: number,
+): Promise<string> {
+  let edge = maxEdge;
+  for (let pass = 0; pass < 6; pass++) {
+    for (let q = 0.85; q >= 0.55; q -= 0.1) {
+      const out = await compressDataUrl(dataUrl, edge, q);
+      if (dataUrlBytes(out) <= maxBytes) return out;
+    }
+    edge = Math.max(640, Math.round(edge * 0.85));
+  }
+  // Last-resort attempt at the smallest tried size + lowest quality.
+  return compressDataUrl(dataUrl, edge, 0.5);
 }
 
 async function urlToDataUrl(url: string): Promise<string | null> {
@@ -495,7 +522,9 @@ export default function RenderPage() {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const raw = await fileToDataUrl(file);
-      const compressed = await compressDataUrl(raw, 1600, 0.85);
+      // Cap upload at ~1MB decoded so the server doesn't have to chew
+      // through 5-10MB phone photos through the SAM/sharp post-pass.
+      const compressed = await compressUnderSize(raw, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
     } catch {
@@ -529,7 +558,9 @@ export default function RenderPage() {
         const swatch = await urlToDataUrl(selectedKeralitColor.thumbnailUrl);
         if (swatch) refUrls.push(await compressDataUrl(swatch, 1024, 0.82));
       }
-      const photoLarge = await compressDataUrl(sourcePhoto, 1600, 0.85);
+      // Re-compress at submit time too in case sourcePhoto came from a
+      // saved gevelcalc photo that wasn't size-capped on its way in.
+      const photoLarge = await compressUnderSize(sourcePhoto, 1600, 1_000_000);
 
       let productSku: string | undefined;
       let productLabel: string;
