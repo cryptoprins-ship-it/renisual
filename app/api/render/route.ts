@@ -1165,23 +1165,42 @@ export async function POST(request: Request) {
       // SAM-mask post-pass: protect boeideel/kozijnen/sky/water from BFL
       // recolor and pull wall pixels toward target_hex (closes ΔE on dark
       // RAL where prompt-side darkenHex can't compensate). Best-effort —
-      // if the seg microservice is unreachable we return the raw BFL render.
-      const wp = await buildProtectedWallRender({
-        sourceBytes,
-        aiRenderBytes: matched.bytes,
-        targetHex: product.color_hex ?? undefined,
-      });
-      if (wp) {
-        const finalJpeg = await sharp(wp.bytes).jpeg({ quality: 92 }).toBuffer();
-        logger.info(
-          { segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
-          "render_bfl_wall_protected",
-        );
-        return Response.json({
-          renderDataUrl: `data:image/jpeg;base64,${finalJpeg.toString("base64")}`,
+      // any failure here falls back to the raw BFL render rather than
+      // bubbling out to the Gemini fallback (BFL itself succeeded).
+      try {
+        const isMonoFlat = detectLine(product) === "mono_flat";
+        // Compute uniform panel count from facade dims so seams match the
+        // physical Spanl 37cm panel pitch instead of guessing 10 evenly.
+        const seamOrientation = body.orientation === "vertical" ? "vertical" : "horizontal";
+        const facadeAlongSeams = seamOrientation === "horizontal"
+          ? Number(facadeHeightMeters) * 100
+          : Number(facadeWidthMeters) * 100;
+        const panelPitchCm = 37;
+        const seamCount = facadeAlongSeams > 0
+          ? Math.max(2, Math.round(facadeAlongSeams / panelPitchCm))
+          : undefined;
+        const wp = await buildProtectedWallRender({
+          sourceBytes,
+          aiRenderBytes: matched.bytes,
+          targetHex: product.color_hex ?? undefined,
+          flatten: isMonoFlat,
+          flatSeamOrientation: seamOrientation,
+          flatSeamCount: seamCount,
         });
+        if (wp) {
+          const finalJpeg = await sharp(wp.bytes).jpeg({ quality: 92 }).toBuffer();
+          logger.info(
+            { segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
+            "render_bfl_wall_protected",
+          );
+          return Response.json({
+            renderDataUrl: `data:image/jpeg;base64,${finalJpeg.toString("base64")}`,
+          });
+        }
+        logger.warn("render_bfl_wall_protect_unavailable");
+      } catch (wpErr) {
+        logger.warn({ err: wpErr }, "render_bfl_wall_protect_threw");
       }
-      logger.warn("render_bfl_wall_protect_unavailable");
       return Response.json({
         renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
       });

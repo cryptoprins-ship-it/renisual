@@ -165,10 +165,19 @@ export async function POST(request: Request) {
 
   // 2. SAM seg + ΔE correction + boeideel/kozijn protection (shared with
   //    /api/render via lib/wallProtect).
+  const isFlat = body.variant === "flat";
+  const seamOrientation = body.orientation === "vertical" ? "vertical" : "horizontal";
+  const facadeAlongSeamsCm = seamOrientation === "horizontal" ? body.facadeHeightCm : body.facadeWidthCm;
+  const flatSeamCount = isFlat && facadeAlongSeamsCm > 0
+    ? Math.max(2, Math.round(facadeAlongSeamsCm / 37))
+    : undefined;
   const wp = await buildProtectedWallRender({
     sourceBytes,
     aiRenderBytes: aiRender,
     targetHex: body.colorHex,
+    flatten: isFlat,
+    flatSeamOrientation: seamOrientation,
+    flatSeamCount,
   });
   if (!wp) {
     logger.warn("render_hybrid_seg_unavailable_returning_ai_render");
