@@ -1167,7 +1167,12 @@ export async function POST(request: Request) {
   // BFL uses a simpler prompt than Gemini — klein-9b is more prompt-
   // faithful than Gemini and the elaborate compensation language hurts
   // its color accuracy.
+  let bflFailReason: string | undefined;
   const bflKey = resolveBflKey();
+  if (!bflKey) {
+    bflFailReason = "no_bfl_key_configured";
+    logger.warn("render_bfl_no_key_configured");
+  }
   if (bflKey) {
     try {
       logger.info({}, "render_bfl_attempt");
@@ -1282,6 +1287,7 @@ export async function POST(request: Request) {
         engine: engineTag,
       });
     } catch (err) {
+      bflFailReason = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200);
       logger.warn({ err }, "render_bfl_failed_fallback_to_gemini");
       // intentional fall-through
     }
@@ -1320,6 +1326,7 @@ export async function POST(request: Request) {
     return Response.json({
       renderDataUrl: `data:${outMime};base64,${outBytes.toString("base64")}`,
       engine: "gemini",
+      bflFailReason,
     });
   } catch (err) {
     logger.error({ err }, "render_gemini_failed");
