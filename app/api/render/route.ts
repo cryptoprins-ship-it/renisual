@@ -1267,6 +1267,9 @@ export async function POST(request: Request) {
             engine: engineTag,
             segMethod: wp.segMethod,
             colorDelta: wp.colorDelta,
+            wallMean: wp.wallMean,
+            flattenFillRatio: wp.flattenFillRatio,
+            flattenSkipped: wp.flattenSkipped,
             line: productLine,
           });
         }

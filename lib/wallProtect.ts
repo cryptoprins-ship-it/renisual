@@ -33,6 +33,13 @@ export interface ProtectedRender {
   sampledSegHex?: string;
   colorDelta?: { dR: number; dG: number; dB: number };
   wallMean?: { r: number; g: number; b: number };
+  // For flatten path: fraction of mask pixels that were actually filled with
+  // target color (rest stayed source as features). 0.0-1.0. undefined when
+  // flatten didn't run.
+  flattenFillRatio?: number;
+  // True when flatten was requested but the count > 100 guard failed
+  // (mask too small to be a real wall).
+  flattenSkipped?: boolean;
 }
 
 export async function buildProtectedWallRender(args: {
@@ -115,6 +122,8 @@ export async function buildProtectedWallRender(args: {
   let colorCorrected = aiRenderResized;
   let colorDelta: { dR: number; dG: number; dB: number } | undefined;
   let wallMean: { r: number; g: number; b: number } | undefined;
+  let flattenFillRatio: number | undefined;
+  let flattenSkipped = false;
   if (flatten && targetHex) {
     const m = /^#([0-9a-f]{6})$/i.exec(targetHex);
     if (m) {
@@ -151,6 +160,9 @@ export async function buildProtectedWallRender(args: {
           count++;
         }
       }
+      if (count <= 100) {
+        flattenSkipped = true;
+      }
       if (count > 100) {
         const meanLum = Math.max(1, sumLum / count);
         const bflMeanR = bflSumR / count;
@@ -160,43 +172,60 @@ export async function buildProtectedWallRender(args: {
         const srcMeanG = srcSumG / count;
         const srcMeanB = srcSumB / count;
         // Independent thresholds for each voter. Both must fire for a
-        // pixel to count as a feature.
-        const srcFeatureThreshold = 55;
-        const bflFeatureThreshold = 50;
+        // pixel to count as a feature. Tuned permissive — we'd rather
+        // over-paint a window edge than leave the whole wall un-recolored
+        // because peeling-paint patches got classified as features.
+        const srcFeatureThreshold = 95;
+        const bflFeatureThreshold = 85;
         // Build RGBA directly so we can hand it to composite as a real
         // alpha-bearing image (joinChannel/png round-trips have proven
         // unreliable when the source started as raw RGB).
         const fillRgba = Buffer.alloc(maskData.length * 4);
         const compress = 0.08;
-        for (let j = 0, i = 0, k = 0; j < maskData.length; j++, i += 3, k += 4) {
-          if (maskData[j] <= 128) {
-            fillRgba[k + 3] = 0;
-            continue;
+        let filledCount = 0;
+        // First pass: with feature gate. If too few mask pixels survive
+        // we redo without the gate — a wall that obviously isn't recolored
+        // is a worse outcome than a window edge that got over-painted.
+        const fillPass = (useGate: boolean) => {
+          filledCount = 0;
+          for (let j = 0, i = 0, k = 0; j < maskData.length; j++, i += 3, k += 4) {
+            if (maskData[j] <= 128) {
+              fillRgba[k + 3] = 0;
+              continue;
+            }
+            if (useGate) {
+              const sR = srcData[i] - srcMeanR;
+              const sG = srcData[i + 1] - srcMeanG;
+              const sB = srcData[i + 2] - srcMeanB;
+              const srcDiff2 = sR * sR + sG * sG + sB * sB;
+              const bR = rgbData[i] - bflMeanR;
+              const bG = rgbData[i + 1] - bflMeanG;
+              const bB = rgbData[i + 2] - bflMeanB;
+              const bflDiff2 = bR * bR + bG * bG + bB * bB;
+              if (
+                srcDiff2 > srcFeatureThreshold * srcFeatureThreshold &&
+                bflDiff2 > bflFeatureThreshold * bflFeatureThreshold
+              ) {
+                fillRgba[k + 3] = 0;
+                continue;
+              }
+            }
+            const ratio = 1 + compress * ((lum[j] / meanLum) - 1);
+            const clamped = Math.max(0.85, Math.min(1.15, ratio));
+            fillRgba[k] = Math.min(255, Math.max(0, Math.round(tR * clamped)));
+            fillRgba[k + 1] = Math.min(255, Math.max(0, Math.round(tG * clamped)));
+            fillRgba[k + 2] = Math.min(255, Math.max(0, Math.round(tB * clamped)));
+            fillRgba[k + 3] = 255;
+            filledCount++;
           }
-          const sR = srcData[i] - srcMeanR;
-          const sG = srcData[i + 1] - srcMeanG;
-          const sB = srcData[i + 2] - srcMeanB;
-          const srcDiff2 = sR * sR + sG * sG + sB * sB;
-          const bR = rgbData[i] - bflMeanR;
-          const bG = rgbData[i + 1] - bflMeanG;
-          const bB = rgbData[i + 2] - bflMeanB;
-          const bflDiff2 = bR * bR + bG * bG + bB * bB;
-          if (
-            srcDiff2 > srcFeatureThreshold * srcFeatureThreshold &&
-            bflDiff2 > bflFeatureThreshold * bflFeatureThreshold
-          ) {
-            // both source and BFL disagree with their wall mean → feature
-            fillRgba[k + 3] = 0;
-            continue;
-          }
-          const ratio = 1 + compress * ((lum[j] / meanLum) - 1);
-          const clamped = Math.max(0.85, Math.min(1.15, ratio));
-          fillRgba[k] = Math.min(255, Math.max(0, Math.round(tR * clamped)));
-          fillRgba[k + 1] = Math.min(255, Math.max(0, Math.round(tG * clamped)));
-          fillRgba[k + 2] = Math.min(255, Math.max(0, Math.round(tB * clamped)));
-          fillRgba[k + 3] = 255;
+        };
+        fillPass(true);
+        if (filledCount < count * 0.5) {
+          // gate over-rejected (probably weathered source / BFL drift):
+          // drop the gate and fill all mask pixels.
+          fillPass(false);
         }
-
+        flattenFillRatio = count > 0 ? filledCount / count : 0;
         // Uniform panel seams: thin (~2px) hairlines slightly darker than the
         // wall color, only inside the wall mask. Default 10 seams horizontal.
         // Pass flatSeamCount=0 to skip seams entirely (caller will draw their
@@ -264,6 +293,8 @@ export async function buildProtectedWallRender(args: {
           sampledSegHex,
           colorDelta,
           wallMean,
+          flattenFillRatio,
+          flattenSkipped: false,
         };
       }
     }
@@ -323,5 +354,7 @@ export async function buildProtectedWallRender(args: {
     sampledSegHex,
     colorDelta,
     wallMean,
+    flattenFillRatio,
+    flattenSkipped,
   };
 }
