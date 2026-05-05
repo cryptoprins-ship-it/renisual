@@ -95,12 +95,15 @@ export async function buildProtectedWallRender(args: {
   const W = seg.width;
   const H = seg.height;
 
-  // Tight wall mask as raw single-channel buffer
+  // Tight wall mask as raw single-channel buffer. Heavier blur and NO
+  // threshold gives a soft alpha gradient at the boundary — the previous
+  // 0/255 binary mask put painted-grey wall pixels next to original photo
+  // pixels with no transition, which read as a posterized "tekening" cut
+  // along the boat outline.
   const tightMaskRaw = await sharp(seg.maskBytes)
     .resize(W, H, { fit: "fill" })
     .greyscale()
-    .blur(2)
-    .threshold(100)
+    .blur(8)
     .raw()
     .toBuffer({ resolveWithObject: true });
   const maskData = tightMaskRaw.data;
@@ -146,10 +149,13 @@ export async function buildProtectedWallRender(args: {
       let srcSumR = 0, srcSumG = 0, srcSumB = 0;
       let count = 0;
       const lum = new Float32Array(maskData.length);
+      // Use deep-inside-mask pixels only (>200/255) so the feathered edge
+      // doesn't contaminate the wall mean with sky/water.
+      const meanThreshold = 200;
       for (let i = 0, j = 0; j < maskData.length; i += 3, j++) {
         const l = 0.2126 * rgbData[i] + 0.7152 * rgbData[i + 1] + 0.0722 * rgbData[i + 2];
         lum[j] = l;
-        if (maskData[j] > 128) {
+        if (maskData[j] > meanThreshold) {
           sumLum += l;
           bflSumR += rgbData[i];
           bflSumG += rgbData[i + 1];
@@ -189,7 +195,8 @@ export async function buildProtectedWallRender(args: {
         const fillPass = (useGate: boolean) => {
           filledCount = 0;
           for (let j = 0, i = 0, k = 0; j < maskData.length; j++, i += 3, k += 4) {
-            if (maskData[j] <= 128) {
+            const m = maskData[j];
+            if (m === 0) {
               fillRgba[k + 3] = 0;
               continue;
             }
@@ -215,8 +222,11 @@ export async function buildProtectedWallRender(args: {
             fillRgba[k] = Math.min(255, Math.max(0, Math.round(tR * clamped)));
             fillRgba[k + 1] = Math.min(255, Math.max(0, Math.round(tG * clamped)));
             fillRgba[k + 2] = Math.min(255, Math.max(0, Math.round(tB * clamped)));
-            fillRgba[k + 3] = 255;
-            filledCount++;
+            // Use the feathered mask value directly as alpha so the
+            // boundary blends source<->target smoothly instead of a hard
+            // 1px cut along the SAM outline.
+            fillRgba[k + 3] = m;
+            if (m > 128) filledCount++;
           }
         };
         fillPass(true);

@@ -522,9 +522,11 @@ export default function RenderPage() {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const raw = await fileToDataUrl(file);
-      // Cap upload at ~1MB decoded so the server doesn't have to chew
-      // through 5-10MB phone photos through the SAM/sharp post-pass.
-      const compressed = await compressUnderSize(raw, 1600, 1_000_000);
+      // Cap upload at ~2.5MB decoded — large enough that JPEG quality
+      // doesn't drop below 0.8 for typical phone photos (so the source
+      // isn't visibly degraded before BFL sees it), but still well under
+      // the server's 8MB schema limit.
+      const compressed = await compressUnderSize(raw, 1600, 2_500_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
     } catch {
@@ -560,7 +562,7 @@ export default function RenderPage() {
       }
       // Re-compress at submit time too in case sourcePhoto came from a
       // saved gevelcalc photo that wasn't size-capped on its way in.
-      const photoLarge = await compressUnderSize(sourcePhoto, 1600, 1_000_000);
+      const photoLarge = await compressUnderSize(sourcePhoto, 1600, 2_500_000);
 
       let productSku: string | undefined;
       let productLabel: string;

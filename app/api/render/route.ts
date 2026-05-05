@@ -1026,6 +1026,8 @@ export async function POST(request: Request) {
   // post-pass would otherwise spike memory and trigger VipsJpeg ENOMEM on
   // Vercel's serverless runtime. 1600px is enough to look sharp at typical
   // viewing sizes and stays well under BFL's own ~1200px output.
+  // Quality 92 to avoid layering JPEG compression artefacts onto an
+  // already-compressed client upload.
   let sourceBytes = photoResult.bytes;
   try {
     const meta = await sharp(sourceBytes).metadata();
@@ -1033,7 +1035,7 @@ export async function POST(request: Request) {
       sourceBytes = await sharp(sourceBytes)
         .rotate()
         .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: 88 })
+        .jpeg({ quality: 92 })
         .toBuffer();
     }
   } catch (err) {
