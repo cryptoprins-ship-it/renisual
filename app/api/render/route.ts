@@ -983,7 +983,24 @@ export async function POST(request: Request) {
     return Response.json({ error: photoResult.error }, { status: photoResult.status });
   }
   const photoPart = photoResult.part;
-  const sourceBytes = photoResult.bytes;
+  // Cap source dimensions before sharp ops touch it. Phone photos can be
+  // 4032×3024; decoding to raw RGB plus the multiple sharp pipelines in the
+  // post-pass would otherwise spike memory and trigger VipsJpeg ENOMEM on
+  // Vercel's serverless runtime. 1600px is enough to look sharp at typical
+  // viewing sizes and stays well under BFL's own ~1200px output.
+  let sourceBytes = photoResult.bytes;
+  try {
+    const meta = await sharp(sourceBytes).metadata();
+    if ((meta.width ?? 0) > 1600 || (meta.height ?? 0) > 1600) {
+      sourceBytes = await sharp(sourceBytes)
+        .rotate()
+        .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 88 })
+        .toBuffer();
+    }
+  } catch (err) {
+    logger.warn({ err }, "render_source_downscale_failed");
+  }
 
   // Resolve the product. Preferred path: productSku → DB row carrying
   // ral_code/color_name/color_hex/description/image_url. Fallback path:
@@ -1167,6 +1184,7 @@ export async function POST(request: Request) {
       // RAL where prompt-side darkenHex can't compensate). Best-effort —
       // any failure here falls back to the raw BFL render rather than
       // bubbling out to the Gemini fallback (BFL itself succeeded).
+      let engineTag = "bfl-raw";
       try {
         const isMonoFlat = detectLine(product) === "mono_flat";
         // Compute uniform panel count from facade dims so seams match the
@@ -1193,8 +1211,12 @@ export async function POST(request: Request) {
             { segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
             "render_bfl_wall_protected",
           );
+          engineTag = "bfl-protected";
           return Response.json({
             renderDataUrl: `data:image/jpeg;base64,${finalJpeg.toString("base64")}`,
+            engine: engineTag,
+            segMethod: wp.segMethod,
+            colorDelta: wp.colorDelta,
           });
         }
         logger.warn("render_bfl_wall_protect_unavailable");
@@ -1203,6 +1225,7 @@ export async function POST(request: Request) {
       }
       return Response.json({
         renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
+        engine: engineTag,
       });
     } catch (err) {
       logger.warn({ err }, "render_bfl_failed_fallback_to_gemini");
@@ -1242,6 +1265,7 @@ export async function POST(request: Request) {
     );
     return Response.json({
       renderDataUrl: `data:${outMime};base64,${outBytes.toString("base64")}`,
+      engine: "gemini",
     });
   } catch (err) {
     logger.error({ err }, "render_gemini_failed");
