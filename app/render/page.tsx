@@ -15,7 +15,7 @@ import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale } from "@/lib/i18n";
 import { useProjectStore } from "@/lib/projectStore";
 import { getPhotoUrl } from "@/lib/photoStorage";
-import { checkRenderColor, type ColorCheck } from "@/lib/colorCheck";
+import { checkRenderColor, deltaE76, hexToRgb, rgbToHex, verdictFromDeltaE, type ColorCheck } from "@/lib/colorCheck";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
@@ -580,6 +580,7 @@ export default function RenderPage() {
       let lastErrorKey: string = "render.error.retry";
       let lastStatus = 0;
       let engineTag: string | undefined;
+      let wallMean: { r: number; g: number; b: number } | undefined;
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         setAttemptCount(attempt);
         const res = await fetch("/api/render", {
@@ -596,7 +597,14 @@ export default function RenderPage() {
         const bodyText = await res.text();
 
         if (res.ok) {
-          let data: { renderDataUrl?: string; error?: string; engine?: string; segMethod?: string; bflFailReason?: string };
+          let data: {
+            renderDataUrl?: string;
+            error?: string;
+            engine?: string;
+            segMethod?: string;
+            bflFailReason?: string;
+            wallMean?: { r: number; g: number; b: number };
+          };
           try {
             data = JSON.parse(bodyText);
           } catch (parseErr) {
@@ -606,8 +614,9 @@ export default function RenderPage() {
           }
           if (data.renderDataUrl) {
             renderDataUrl = data.renderDataUrl;
-            console.log("[render] engine:", data.engine, "segMethod:", data.segMethod, "bflFailReason:", data.bflFailReason);
+            console.log("[render] engine:", data.engine, "segMethod:", data.segMethod, "bflFailReason:", data.bflFailReason, "wallMean:", data.wallMean);
             engineTag = data.engine;
+            wallMean = data.wallMean;
             break;
           }
           // 200 + no renderDataUrl: treat as a soft retryable failure.
@@ -667,7 +676,26 @@ export default function RenderPage() {
       await saveRender(key, renderDataUrl).catch(() => {});
       if (targetHex) {
         try {
-          const check = await checkRenderColor(renderDataUrl, targetHex);
+          // Prefer server-side wallMean (sampled inside the SAM wall mask)
+          // over a client-side pixel sample — the client samples fixed
+          // percentage regions which often miss the houseboat entirely
+          // (e.g. when the boat is in the bottom third) and instead read
+          // sky/water, producing meaningless ΔE 20+ readings on otherwise
+          // correct renders. wallMean is the actual mean wall colour.
+          let check: ColorCheck | null = null;
+          if (wallMean) {
+            const sampledHex = rgbToHex([wallMean.r, wallMean.g, wallMean.b]);
+            const target = hexToRgb(targetHex);
+            const deltaE = Math.round(deltaE76([wallMean.r, wallMean.g, wallMean.b], target) * 10) / 10;
+            check = {
+              deltaE,
+              verdict: verdictFromDeltaE(deltaE),
+              sampledHex,
+              targetHex,
+            };
+          } else {
+            check = await checkRenderColor(renderDataUrl, targetHex);
+          }
           if (check) {
             setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, colorCheck: check } : v)));
           }

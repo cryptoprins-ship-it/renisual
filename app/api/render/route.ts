@@ -216,9 +216,24 @@ function buildBflPromptText(opts: PromptOptions): string {
   // pull klein-9b toward rendering pale wood instead of metal in the
   // requested RAL color.
   const orientWord = orientation === "vertical" ? "vertical" : "horizontal";
+  const isDark = product.ral_code === "9005" || product.ral_code === "7021" || product.ral_code === "7016" || product.ral_code === "7012";
+  const isWhite = product.ral_code === "9003" || product.ral_code === "9010";
+  // Seam contrast direction is luminance-aware: on dark RAL the seams must
+  // be slightly LIGHTER than the panel (otherwise they vanish into black);
+  // on light RAL they're slightly darker. Mid colours can go either way.
+  // Same logic for groove shadow lines — on darks the recess is shown via
+  // a highlight on one edge, on lights via a shadow line.
+  const seamContrast = isDark
+    ? `Seams are very subtly LIGHTER than the panel color — about 5% in luminance — so the panel orientation stays visible on dark colours. Never bright, never white, never contrasting.`
+    : isWhite
+    ? `Seams are very subtly DARKER than the panel color — about 5% in luminance — so the panel orientation stays visible on light colours. Never grey, never contrasting.`
+    : `Seams are same-tone hairlines, very subtly different in luminance from the panel color (never white, never black, never contrasting).`;
+  const grooveContrast = isDark
+    ? `Each groove is a 5mm recess shown as a thin highlight along one edge from indirect lighting — making the orientation clearly readable on dark colours. Never bright, never white, never contrasting.`
+    : `Each groove is a 5mm recess shown as a thin shadow line — clearly visible against light panels.`;
   const surface = isGroove
-    ? `painted matt metal cladding with crisp ${orientWord} grooves every ~13cm across the facade. Each groove is a 5mm shadow line recessed into the metal surface — clearly visible. The base material is a flat metal sheet painted in the color below; grooves are pressed into the metal, NOT carved wood.`
-    : `painted matt metal cladding with very faint hairline ${orientWord} seams every 37cm. Seams are same-color hairlines (slightly darker shade of the panel color, never white, never contrasting). Otherwise smooth and uniform metal sheet.`;
+    ? `painted matt metal cladding with crisp ${orientWord} grooves every ~13cm across the facade. ${grooveContrast} The base material is a flat metal sheet painted in the color below; grooves are pressed into the metal, NOT carved wood.`
+    : `painted matt metal cladding with very faint hairline ${orientWord} seams every 37cm. ${seamContrast} Otherwise smooth and uniform metal sheet.`;
 
   const orientLine = isGroove
     ? orientation === "vertical"
@@ -227,9 +242,6 @@ function buildBflPromptText(opts: PromptOptions): string {
     : orientation === "vertical"
     ? `Hairline seams run top-to-bottom across the facade.`
     : `Hairline seams run left-to-right across the facade.`;
-
-  const isDark = product.ral_code === "9005" || product.ral_code === "7021" || product.ral_code === "7016" || product.ral_code === "7012";
-  const isWhite = product.ral_code === "9003" || product.ral_code === "9010";
   const colorWarn = isWhite
     ? "  IMPORTANT: render as PURE COOL WHITE. NOT cream, NOT beige, NOT off-white, NOT yellow-tinted, NOT warm-tinted."
     : isDark
