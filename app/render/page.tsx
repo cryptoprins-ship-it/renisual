@@ -1287,6 +1287,11 @@ export default function RenderPage() {
             </span>
           </div>
 
+          <div className="mb-3 flex items-start gap-2 rounded-md border border-stone-300 bg-stone-50 p-3 text-xs text-stone-700">
+            <span aria-hidden className="text-base leading-none">ⓘ</span>
+            <p>{t("render.disclaimer")}</p>
+          </div>
+
           {variants.length >= MAX_VARIANTS && (
             <div className="mt-3 flex items-start gap-2 rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900">
               <span aria-hidden className="text-base leading-none">⚠</span>

@@ -150,6 +150,31 @@ function darkenHex(hex: string, amount: number): string {
   return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
+// Compensation for BFL FLUX.2 klein-9b's midtone darkening bias.
+// Playground tests on 2026-05-05 (4-image batches per RAL):
+//   RAL 7038 #B5B8B1 → output ~#707378 (~25 RGB too dark, ΔE≈22)
+//   RAL 7038 #D0D3CC → output ~#A0A3A0 (close to target)
+//   RAL 7021 #2A2D2F → on target without compensation
+//   RAL 9005 #0E0E10 → on target without compensation
+// So bias is midtone-specific, not universal. Whites untested but
+// expected to have a yellow-shift bias (different axis), handled
+// separately if/when we add cool-shift. Skips both extremes here.
+function lightenHexForBfl(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r0 = (n >> 16) & 0xff;
+  const g0 = (n >> 8) & 0xff;
+  const b0 = n & 0xff;
+  const lum = (0.2126 * r0 + 0.7152 * g0 + 0.0722 * b0) / 255;
+  if (lum < 0.20 || lum > 0.85) return hex;
+  const effective = lum > 0.75 ? amount * 0.5 : amount;
+  const r = Math.min(255, Math.round(r0 + (255 - r0) * effective));
+  const g = Math.min(255, Math.round(g0 + (255 - g0) * effective));
+  const b = Math.min(255, Math.round(b0 + (255 - b0) * effective));
+  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 function structureBlock(): string {
   return `STRUCTURE / LINEN TEXTURE (ADDITIVE — overrides "no texture, no wood grain"):
 On top of every panel face, render a fine linen wood-grain texture — subtle 3D relief running parallel to the panel direction (top-to-bottom for vertical panels, left-to-right for horizontal). Like brushed wood-grain. The texture is surface detail only — panels remain flat overall, no deep grooves from the texture. The texture catches light differently across each panel, giving a tactile woven appearance. Texture follows each panel face individually — does NOT bleed across panel boundaries or coupling joints.`;
@@ -167,14 +192,13 @@ function buildBflPromptText(opts: PromptOptions): string {
 
   const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "";
   const colorName = product.color_name ?? "matt grey";
-  // BFL klein-9b is prompt-faithful and has the panel reference photos to
-  // anchor the colour from. The earlier darkenHex compensation was tuned
-  // for Gemini's ~15% lightening bias and over-darkened BFL output by
-  // ~80 RGB units (e.g. RAL 7038 target #B5B8B1 → wandMean #5E6574,
-  // measured 2026-05-05). Send the raw target hex now; the SAM ΔE-shift
-  // post-pas in lib/wallProtect handles any residual drift cleanly.
+  // BFL klein-9b has a midtone darkening bias (~15%, measured in /lab/flux
+  // playground on 2026-05-05). Pre-lighten the prompt-hex so klein-9b's
+  // own bias lands the output near the actual RAL target. Darks and whites
+  // pass through unchanged — see lightenHexForBfl for the band logic.
   const baseHex = product.color_hex ?? "";
-  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${baseHex ? ` (hex ${baseHex})` : ""}`;
+  const promptHex = baseHex ? lightenHexForBfl(baseHex, 0.15) : "";
+  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${promptHex ? ` (hex ${promptHex})` : ""}`;
 
   const dimsLine = widthCm && heightCm
     ? `The facade is ${widthCm}cm wide and ${heightCm}cm tall.\n\n`
@@ -873,8 +897,17 @@ async function renderViaBfl(args: {
   const srcH = meta.height ?? 1024;
   const dims = bflTargetDims(srcW, srcH);
 
+  // White-balance neutralise the source before BFL sees it. klein-9b
+  // weighs `input_image` heavily for color and the source's own lighting
+  // cast (overcast Dutch sky, water reflection, etc) bleeds into the
+  // recolored wall — measured contamination on RAL 7038: target #B5B8B1
+  // came back greenish-grey #707378 with ΔE 20+. .normalise({1,99})
+  // does a per-channel histogram stretch using 1st/99th percentiles —
+  // gentle enough not to over-correct well-balanced photos, strong
+  // enough to neutralise typical phone-camera casts.
   const baseDownscaled = await sharp(args.sourceBytes)
     .rotate()
+    .normalise({ lower: 1, upper: 99 })
     .resize(dims.width, dims.height, { fit: "fill" })
     .toBuffer();
 
