@@ -14,7 +14,7 @@ import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/rate
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { resolveBflKey, renderViaBfl } from "@/lib/bflRender";
-import { segmentWallMask } from "@/lib/segmentation";
+import { buildProtectedWallRender } from "@/lib/wallProtect";
 import { generateGrooveSvg, type Variant } from "@/lib/groovePattern";
 
 export const runtime = "nodejs";
@@ -163,43 +163,14 @@ export async function POST(request: Request) {
     return Response.json({ error: "ai_render_failed" }, { status: 502 });
   }
 
-  // 2. Sample a central band of the BFL render to estimate the actual wall
-  //    color BFL produced. The seg service finds the wall via colour
-  //    similarity; sending the requested target_hex fails when BFL has
-  //    drifted (RGB distance grows beyond the seg threshold), so we feed it
-  //    the rendered hue instead.
-  let segTargetHex: string | undefined = body.colorHex;
-  try {
-    const meta = await sharp(aiRender).metadata();
-    if (meta.width && meta.height) {
-      const W2 = meta.width;
-      const H2 = meta.height;
-      const stats = await sharp(aiRender)
-        .extract({
-          left: Math.floor(W2 * 0.3),
-          top: Math.floor(H2 * 0.3),
-          width: Math.max(1, Math.floor(W2 * 0.4)),
-          height: Math.max(1, Math.floor(H2 * 0.2)),
-        })
-        .stats();
-      const r = Math.round(stats.channels[0].mean);
-      const g = Math.round(stats.channels[1].mean);
-      const b = Math.round(stats.channels[2].mean);
-      segTargetHex = "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
-      logger.info({ sampled: segTargetHex, requested: body.colorHex }, "render_hybrid_seg_target_sampled");
-    }
-  } catch {
-    // sampling is best-effort; fall back to the user's target hex
-  }
-
-  // Always segment so we can color-correct the wall and protect non-wall
-  // pixels (boeideel, sky, water) from BFL drift.
-  const seg = await segmentWallMask({
+  // 2. SAM seg + ΔE correction + boeideel/kozijn protection (shared with
+  //    /api/render via lib/wallProtect).
+  const wp = await buildProtectedWallRender({
     sourceBytes,
-    renderBytes: aiRender,
-    targetHex: segTargetHex,
+    aiRenderBytes: aiRender,
+    targetHex: body.colorHex,
   });
-  if (!seg) {
+  if (!wp) {
     logger.warn("render_hybrid_seg_unavailable_returning_ai_render");
     return Response.json({
       renderDataUrl: `data:image/jpeg;base64,${aiRender.toString("base64")}`,
@@ -207,79 +178,11 @@ export async function POST(request: Request) {
       note: "segmentation service unavailable — returned raw AI render",
     });
   }
-
-  const W = seg.width;
-  const H = seg.height;
-
-  // Tight wall mask as raw single-channel buffer. Sharp's composite needs the
-  // mask wired in via joinChannel as alpha — feeding a grayscale PNG to
-  // dest-in is a no-op because there is no real alpha channel on a 1-band
-  // image. We keep a PNG copy too for debug output.
-  const tightMaskRaw = await sharp(seg.maskBytes)
-    .resize(W, H, { fit: "fill" })
-    .greyscale()
-    .blur(2)
-    .threshold(100)
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const maskData = tightMaskRaw.data;
+  const W = wp.width;
+  const H = wp.height;
+  const maskData = wp.maskRaw;
+  const protectedLayer = wp.bytes;
   const tightMaskPng = await sharp(maskData, { raw: { width: W, height: H, channels: 1 } })
-    .png()
-    .toBuffer();
-  const aiRenderResized = await sharp(aiRender).resize(W, H, { fit: "fill" }).toBuffer();
-  const sourceResized = await sharp(sourceBytes).resize(W, H, { fit: "fill" }).toBuffer();
-
-  const applyMaskAsAlpha = (rgb: Buffer) =>
-    sharp(rgb)
-      .removeAlpha()
-      .joinChannel(maskData, { raw: { width: W, height: H, channels: 1 } })
-      .png()
-      .toBuffer();
-
-  // 3. ΔE correction inside the wall: pull mean wall color toward target_hex
-  //    via per-channel offset. darkenHex pre-compensation is too weak on dark
-  //    RAL like 7021 (anthracite); this post-pass closes the gap.
-  let colorCorrected = aiRenderResized;
-  let colorDelta: { dR: number; dG: number; dB: number } | undefined;
-  let wallMean: { r: number; g: number; b: number } | undefined;
-  if (body.colorHex) {
-    const { data: rgbData } = await sharp(aiRenderResized).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-    let sumR = 0, sumG = 0, sumB = 0, count = 0;
-    for (let i = 0, j = 0; j < maskData.length; i += 3, j++) {
-      if (maskData[j] > 128) {
-        sumR += rgbData[i];
-        sumG += rgbData[i + 1];
-        sumB += rgbData[i + 2];
-        count++;
-      }
-    }
-    if (count > 100) {
-      const meanR = sumR / count, meanG = sumG / count, meanB = sumB / count;
-      wallMean = { r: Math.round(meanR), g: Math.round(meanG), b: Math.round(meanB) };
-      const m = /^#([0-9a-f]{6})$/i.exec(body.colorHex);
-      if (m) {
-        const target = parseInt(m[1], 16);
-        const tR = (target >> 16) & 0xff;
-        const tG = (target >> 8) & 0xff;
-        const tB = target & 0xff;
-        const dR = tR - meanR, dG = tG - meanG, dB = tB - meanB;
-        colorDelta = { dR: Math.round(dR), dG: Math.round(dG), dB: Math.round(dB) };
-        const shifted = await sharp(aiRenderResized).linear([1, 1, 1], [dR, dG, dB]).toBuffer();
-        const shiftedWall = await applyMaskAsAlpha(shifted);
-        colorCorrected = await sharp(aiRenderResized)
-          .composite([{ input: shiftedWall, blend: "over" }])
-          .toBuffer();
-      }
-    }
-  }
-
-  // 4. Boeideel protection: layer the corrected wall pixels over the original
-  //    source photo. Wall pixels (where mask=opaque) come from the corrected
-  //    BFL render; everything else (boeideel, kozijnen, sky, water) stays
-  //    pixel-identical to the source.
-  const wallLayer = await applyMaskAsAlpha(colorCorrected);
-  const protectedLayer = await sharp(sourceResized)
-    .composite([{ input: wallLayer, blend: "over" }])
     .png()
     .toBuffer();
 
@@ -291,14 +194,17 @@ export async function POST(request: Request) {
     };
   };
 
-  // 5. Mono Flat: protected layer is the final result (no overlay).
+  // 3. Mono Flat: protected layer is the final result (no overlay).
   if (body.variant === "flat") {
     const finalFlat = await sharp(protectedLayer).jpeg({ quality: 92 }).toBuffer();
-    logger.info({ variant: "flat", segMethod: seg.method, colorDelta, wallMean }, "render_hybrid_ok");
+    logger.info(
+      { variant: "flat", segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
+      "render_hybrid_ok",
+    );
     const response: Record<string, unknown> = {
       renderDataUrl: `data:image/jpeg;base64,${finalFlat.toString("base64")}`,
       variant: body.variant,
-      segMethod: seg.method,
+      segMethod: wp.segMethod,
     };
     if (body.debug) Object.assign(response, await buildDebugFields());
     return Response.json(response);
@@ -335,11 +241,14 @@ export async function POST(request: Request) {
     .jpeg({ quality: 92 })
     .toBuffer();
 
-  logger.info({ variant: body.variant, segMethod: seg.method, colorDelta, wallMean }, "render_hybrid_ok");
+  logger.info(
+    { variant: body.variant, segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
+    "render_hybrid_ok",
+  );
   const response: Record<string, unknown> = {
     renderDataUrl: `data:image/jpeg;base64,${final.toString("base64")}`,
     variant: body.variant,
-    segMethod: seg.method,
+    segMethod: wp.segMethod,
   };
   if (body.debug) Object.assign(response, await buildDebugFields());
   return Response.json(response);

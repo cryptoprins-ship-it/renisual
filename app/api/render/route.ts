@@ -5,6 +5,7 @@ import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/rate
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/utils/supabase/server";
+import { buildProtectedWallRender } from "@/lib/wallProtect";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -1160,6 +1161,27 @@ export async function POST(request: Request) {
       });
       const matched = await matchSourceAspect(outBytes, outMime, sourceBytes);
       logger.info({ outBytes: matched.bytes.length }, "render_bfl_ok");
+
+      // SAM-mask post-pass: protect boeideel/kozijnen/sky/water from BFL
+      // recolor and pull wall pixels toward target_hex (closes ΔE on dark
+      // RAL where prompt-side darkenHex can't compensate). Best-effort —
+      // if the seg microservice is unreachable we return the raw BFL render.
+      const wp = await buildProtectedWallRender({
+        sourceBytes,
+        aiRenderBytes: matched.bytes,
+        targetHex: product.color_hex ?? undefined,
+      });
+      if (wp) {
+        const finalJpeg = await sharp(wp.bytes).jpeg({ quality: 92 }).toBuffer();
+        logger.info(
+          { segMethod: wp.segMethod, colorDelta: wp.colorDelta, wallMean: wp.wallMean },
+          "render_bfl_wall_protected",
+        );
+        return Response.json({
+          renderDataUrl: `data:image/jpeg;base64,${finalJpeg.toString("base64")}`,
+        });
+      }
+      logger.warn("render_bfl_wall_protect_unavailable");
       return Response.json({
         renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
       });
