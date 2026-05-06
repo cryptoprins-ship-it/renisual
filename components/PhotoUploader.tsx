@@ -74,10 +74,10 @@ export default function PhotoUploader({
               onChange={handle}
             />
           </label>
-          {/* Mobile-only camera capture — uses the rear camera via the
-              "environment" hint. Hidden on md+ where a physical camera
-              button only confuses desktop users. */}
-          <label className="cursor-pointer md:hidden">
+          {/* `capture="environment"` triggers the rear camera on mobile.
+              Desktop browsers ignore the hint and fall back to the file
+              picker, so this button is safe to show everywhere. */}
+          <label className="cursor-pointer">
             <span className="block border border-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-paper">
               {camText}
             </span>
