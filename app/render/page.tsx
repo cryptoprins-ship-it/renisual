@@ -749,6 +749,55 @@ export default function RenderPage() {
     return runRenderBatch([-1, -2], false);
   }
 
+  // Mobile-safe download for a render variant. data: URLs don't trigger
+  // a download on iOS Safari (the URL just opens inline). Convert to a
+  // same-origin Blob, then offer Web Share (iOS share sheet) or anchor
+  // download (everyone else). Same pattern as offerte + exportConfig.
+  async function downloadVariant(v: RenderVariant) {
+    const filename = `renisual-render-${v.panelSku}-${v.orientation}-${v.id.slice(0, 6)}.jpg`;
+    try {
+      const m = /^data:([^;,]+);base64,(.+)$/.exec(v.dataUrl);
+      let blob: Blob;
+      let mime: string;
+      if (m) {
+        const bytes = atob(m[2]);
+        const buf = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i);
+        mime = m[1];
+        blob = new Blob([buf], { type: mime });
+      } else {
+        const res = await fetch(v.dataUrl);
+        blob = await res.blob();
+        mime = blob.type || "image/jpeg";
+      }
+      const file = new File([blob], filename, { type: mime });
+      if (
+        typeof navigator !== "undefined" &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          return;
+        } catch {
+          // user cancelled — fall through to anchor download
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      console.error("[render] download failed", err);
+      setErrorMsg(t("render.error.generic"));
+    }
+  }
+
   // Reset for a different panel choice on the same facade photo.
   // Keeps the source photo and frame/door/fascia settings; clears
   // the panel selection (so the user picks a different Spanl SKU
@@ -1418,13 +1467,13 @@ export default function RenderPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400">{new Date(v.createdAt).toLocaleString(localeForDate)}</span>
-                    <a
-                      href={v.dataUrl}
-                      download={`renisual-render-${v.panelSku}-${v.orientation}-${v.id.slice(0, 6)}.png`}
+                    <button
+                      type="button"
+                      onClick={() => downloadVariant(v)}
                       className="rounded-lg border border-black px-2 py-1"
                     >
                       {t("render.download")}
-                    </a>
+                    </button>
                     <button
                       type="button"
                       onClick={() => setVariants((prev) => prev.filter((x) => x.id !== v.id))}
