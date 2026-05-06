@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import PwaInstallButton from "@/components/PwaInstallButton";
@@ -76,19 +76,10 @@ const FEATURE_CARDS: Array<{ icon: string; titleKey: string; descKey: string }> 
 export default function HomeClient() {
   const { locale, t } = useLocale();
   const showSubsidies = locale === "nl";
-  const [calcHref, setCalcHref] = useState("/gevelcalc?modus=quick");
-  const [proHref, setProHref] = useState("/gevelcalc?modus=pro");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const isMobile =
-      window.matchMedia?.("(max-width: 768px)").matches ||
-      /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-    if (isMobile) {
-      setCalcHref("/gevelcalc/mobile?modus=quick");
-      setProHref("/gevelcalc/mobile?modus=pro");
-    }
-  }, []);
+  // Single calculator entry point. The /gevelcalc page renders responsively
+  // on mobile and desktop, and the modus is now a state-toggle inside the
+  // calculator — not a homepage choice.
+  const calcHref = "/gevelcalc";
 
   const [waitEmail, setWaitEmail] = useState("");
   // Honeypot — invisible field that real users never fill. Bots that
@@ -177,19 +168,16 @@ export default function HomeClient() {
           <p className="mt-8 max-w-xl text-base leading-relaxed text-paper/80 md:text-lg">
             {t("home.hero.subtitle")}
           </p>
-          <div className="mt-10 flex items-center gap-6">
+          <div className="mt-10 flex flex-col items-start gap-3">
             <Link
               href={calcHref}
               className="bg-paper px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100"
             >
               {t("home.hero.cta")}
             </Link>
-            <Link
-              href={proHref}
-              className="font-mono text-xs uppercase tracking-[0.15em] text-paper/70 transition-colors hover:text-paper"
-            >
-              {t("home.hero.proLink")} →
-            </Link>
+            <p className="font-mono text-[11px] tracking-[0.05em] text-paper/70">
+              {t("home.hero.ctaHint")}
+            </p>
           </div>
         </div>
       </section>
