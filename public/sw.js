@@ -1,9 +1,8 @@
 /* Renisual service worker */
-const CACHE_VERSION = "renisual-v2";
+const CACHE_VERSION = "renisual-v3";
 const APP_SHELL = [
   "/",
   "/gevelcalc",
-  "/gevelcalc/mobile",
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -38,7 +37,6 @@ self.addEventListener("fetch", (event) => {
   const isNavigation = req.mode === "navigate";
   const isShell =
     url.pathname === "/gevelcalc" ||
-    url.pathname === "/gevelcalc/mobile" ||
     url.pathname === "/manifest.json" ||
     url.pathname.startsWith("/icons/");
   const isStaticAsset =
