@@ -44,26 +44,75 @@ export function validateImageFile(file: File): void {
   }
 }
 
+// Decode a File into a CanvasImageSource. createImageBitmap is the fast
+// path (no DOM, no objectURL) but it throws on iPhone HEIC files in
+// Chromium/WebKit. The <img> + URL.createObjectURL fallback delegates
+// decoding to the browser's image pipeline, which handles HEIC natively
+// on iOS Safari/Chrome (both use WebKit). On Android/desktop Chrome
+// HEIC has no native decoder — both paths fail there and the caller
+// surfaces a compression_failed error, which is correct.
+async function decodeFileToCanvasSource(file: File): Promise<{
+  width: number;
+  height: number;
+  src: CanvasImageSource;
+  release: () => void;
+}> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    return {
+      width: bitmap.width,
+      height: bitmap.height,
+      src: bitmap,
+      release: () => bitmap.close?.(),
+    };
+  } catch {
+    // fall through to <img> path
+  }
+
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("img decode failed"));
+      i.src = url;
+    });
+    return {
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      src: img,
+      release: () => URL.revokeObjectURL(url),
+    };
+  } catch (err) {
+    URL.revokeObjectURL(url);
+    throw err;
+  }
+}
+
 export async function compressImage(
   file: File,
   maxSize = 1600,
   quality = 0.85
 ): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const ratio = Math.min(maxSize / bitmap.width, maxSize / bitmap.height, 1);
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * ratio);
-  canvas.height = Math.round(bitmap.height * ratio);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas context unavailable");
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
-      "image/jpeg",
-      quality
-    );
-  });
+  const decoded = await decodeFileToCanvasSource(file);
+  try {
+    const ratio = Math.min(maxSize / decoded.width, maxSize / decoded.height, 1);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(decoded.width * ratio);
+    canvas.height = Math.round(decoded.height * ratio);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas context unavailable");
+    ctx.drawImage(decoded.src, 0, 0, canvas.width, canvas.height);
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
+        "image/jpeg",
+        quality
+      );
+    });
+  } finally {
+    decoded.release();
+  }
 }
 
 export async function uploadPhoto(
