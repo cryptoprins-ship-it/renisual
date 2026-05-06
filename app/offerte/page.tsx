@@ -54,7 +54,7 @@ export default function OffertePage() {
             <div className="text-4xl">✓</div>
             <h1 className="text-2xl font-bold">Aanvraag ontvangen!</h1>
             <p className="text-sm text-gray-600">
-              Bedankt {form.naam}. We nemen zo snel mogelijk contact met u op via {form.email}.
+              Bedankt {form.naam}. We nemen zo snel mogelijk contact met je op via {form.email}.
             </p>
             <div className="flex gap-3 justify-center flex-wrap pt-2">
               <Link href="/gevelcalc" className="rounded-xl bg-black text-white px-5 py-2.5 text-sm font-medium">
@@ -83,11 +83,11 @@ export default function OffertePage() {
           <div>
             <h1 className="text-2xl font-bold">Offerte aanvragen</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Vul het formulier in en wij nemen contact met u op met een vrijblijvende offerte
-              op basis van uw gevelberekening.
+              Vul het formulier in en wij nemen contact met je op met een vrijblijvende offerte
+              op basis van je gevelberekening.
             </p>
             <p className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-              Onze adviseur neemt contact op met een exacte prijsopgave op basis van uw berekening.
+              Onze adviseur neemt contact op met een exacte prijsopgave op basis van je berekening.
             </p>
           </div>
 
@@ -198,9 +198,9 @@ export default function OffertePage() {
             </button>
 
             <p className="text-xs text-gray-400 text-center">
-              Door het formulier in te sturen gaat u akkoord met ons{" "}
+              Door het formulier in te sturen ga je akkoord met ons{" "}
               <Link href="/privacy" className="underline">privacybeleid</Link>.
-              Uw gegevens worden niet gedeeld met derden zonder uw toestemming.
+              Je gegevens worden niet gedeeld met derden zonder je toestemming.
             </p>
           </form>
         </div>

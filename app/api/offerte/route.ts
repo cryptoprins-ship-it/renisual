@@ -131,11 +131,11 @@ export async function POST(req: NextRequest) {
     await transporter.sendMail({
       from: `"Renisual" <${process.env.SMTP_USER}>`,
       to: body.email,
-      subject: "Uw offerte aanvraag is ontvangen — Renisual",
+      subject: "Je offerte aanvraag is ontvangen — Renisual",
       html: `
-        <h2>Bedankt voor uw aanvraag, ${safe.naam}!</h2>
-        <p>We hebben uw offerte aanvraag ontvangen en nemen zo snel mogelijk contact met u op.</p>
-        <h3>Uw gegevens:</h3>
+        <h2>Bedankt voor je aanvraag, ${safe.naam}!</h2>
+        <p>We hebben je offerte aanvraag ontvangen en nemen zo snel mogelijk contact met je op.</p>
+        <h3>Je gegevens:</h3>
         <table cellpadding="8" style="border-collapse:collapse">
           <tr><td><strong>Naam</strong></td><td>${safe.naam}</td></tr>
           <tr><td><strong>Postcode</strong></td><td>${safe.postcode}</td></tr>
