@@ -5,6 +5,7 @@ import "./globals.css";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import HomeButton from "@/components/HomeButton";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import PwaInstallButton from "@/components/PwaInstallButton";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -95,6 +96,9 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <HomeButton />
         <LanguageSwitcher />
+        {/* Mobile-only top banner; auto-hides for 7 days after dismiss
+            and never shows once the app is already installed. */}
+        <PwaInstallButton variant="floating" />
         {children}
       </body>
     </html>
