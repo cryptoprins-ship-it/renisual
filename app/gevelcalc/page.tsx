@@ -1139,15 +1139,42 @@ export default function GevelCalcPage() {
     }
   }
 
-  function exportConfig() {
+  async function exportConfig() {
     const data = buildSaveData(true);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const filename = `renisual-${new Date().toISOString().slice(0, 10)}.json`;
+
+    // Web Share API path — iOS Safari needs this for files to land in
+    // the share sheet (Save to Files, AirDrop, etc.). Falls back to the
+    // anchor-download path if the browser can't share files.
+    const file = new File([blob], filename, { type: "application/json" });
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [file] })
+    ) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to anchor download
+      }
+    }
+
+    // Anchor-download path. Mobile-safe pattern:
+    //  - Anchor must live in the DOM before click() on some browsers
+    //  - revokeObjectURL must wait — iOS Safari starts the download
+    //    asynchronously and a synchronous revoke kills the blob URL
+    //    before the file lands.
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `renisual-${new Date().toISOString().slice(0, 10)}.config`;
+    link.download = filename;
+    link.rel = "noopener";
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
   async function importConfig(file: File | null) {
