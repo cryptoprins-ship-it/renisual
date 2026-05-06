@@ -60,6 +60,11 @@ const SPANL_FAMILY_ORDER: SpanlFinish[] = [
 
 type Mode = "quick" | "advanced";
 type Unit = "m2" | "ft2";
+type DisplayMode = "foto" | "tekst";
+
+function defaultDisplayModeFor(mode: Mode): DisplayMode {
+  return mode === "quick" ? "foto" : "tekst";
+}
 
 function sideKeyForIndex(i: number): string {
   return ["gc.side.front", "gc.side.back", "gc.side.left", "gc.side.right"][i] ?? "gc.side.numbered";
@@ -507,6 +512,18 @@ function RenderingPanel({
   );
 }
 
+// Brands whose catalogue ships a reference image. When `displayMode` is
+// "foto" but the product is from a brand without a thumbnail, the renderer
+// falls back to ProductRow (text) rather than showing a broken/empty image.
+function productHasReferenceImage(product: (typeof products)[number]): boolean {
+  return product.brand === "Spanl" || product.brand === "Keralit";
+}
+
+function productCode(product: (typeof products)[number]): string {
+  if (product.brand === "Spanl") return product.id.replace(/^spanl-/, "").toUpperCase();
+  return product.id;
+}
+
 function ProductCard({
   product,
   selected,
@@ -519,13 +536,15 @@ function ProductCard({
   const isSpanl = product.brand === "Spanl";
   const spanlSku = isSpanl ? product.id.replace(/^spanl-/, "") : "";
   const spanlSrc = useSpanlImage(spanlSku, product.name);
+  const code = productCode(product);
+  const altText = `${code} — ${product.name}`;
 
   let thumb: React.ReactNode;
   if (isSpanl && spanlSrc) {
     thumb = (
       <img
         src={spanlSrc}
-        alt={product.name}
+        alt={altText}
         loading="lazy"
         className="block aspect-[4/3] w-full object-cover"
       />
@@ -535,7 +554,7 @@ function ProductCard({
     thumb = ref ? (
       <img
         src={ref.thumbnailUrl}
-        alt={product.name}
+        alt={altText}
         loading="lazy"
         className="block aspect-[4/3] w-full object-cover"
       />
@@ -556,7 +575,8 @@ function ProductCard({
     <button
       type="button"
       onClick={onSelect}
-      title={`${product.brand} — ${product.name}`}
+      aria-pressed={selected}
+      title={`${code} — ${product.name}`}
       className={`group block overflow-hidden border text-left transition ${
         selected
           ? "border-ink ring-1 ring-ink"
@@ -566,10 +586,49 @@ function ProductCard({
       {thumb}
       <div className="border-t border-stone-200 p-2">
         <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-stone-500">
-          {product.brand}
+          {code}
         </p>
         <p className="mt-0.5 truncate text-xs font-medium text-ink">{product.name}</p>
       </div>
+    </button>
+  );
+}
+
+function ProductRow({
+  product,
+  selected,
+  onSelect,
+}: {
+  product: (typeof products)[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      title={`${product.brand} — ${product.name}`}
+      className={`block w-full border p-3 text-left transition ${
+        selected
+          ? "border-ink ring-1 ring-ink"
+          : "border-stone-200 hover:border-stone-400"
+      }`}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-stone-500">
+            {product.brand}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-medium text-ink">{product.name}</p>
+        </div>
+        <p className="whitespace-nowrap font-mono text-[11px] text-stone-600">
+          €{product.pricePerM2ExVat.toFixed(2)}/m²
+        </p>
+      </div>
+      {product.description && (
+        <p className="mt-1 text-xs leading-relaxed text-stone-500">{product.description}</p>
+      )}
     </button>
   );
 }
@@ -615,6 +674,14 @@ export default function GevelCalcPage() {
       /* ignore */
     }
   }, [mode, modeHydrated]);
+
+  // Display preference for the product picker: "foto" shows reference
+  // images, "tekst" shows a text-only list. Session-only — re-derived
+  // from `mode` whenever the mode changes (and on first hydration).
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => defaultDisplayModeFor("advanced"));
+  useEffect(() => {
+    setDisplayMode(defaultDisplayModeFor(mode));
+  }, [mode]);
   const [unit, setUnit] = useState<Unit>("m2");
   const [unitTouched, setUnitTouched] = useState(false);
 
@@ -1629,9 +1696,39 @@ export default function GevelCalcPage() {
               )}
             </div>
             <div className="mt-4 print-hidden">
-              <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600">
-                {t("product")}
-              </label>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label className="block font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600">
+                  {t("product")}
+                </label>
+                <div
+                  role="radiogroup"
+                  aria-label={t("gc.display")}
+                  className="inline-flex rounded-xl border border-black p-1"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={displayMode === "foto"}
+                    onClick={() => setDisplayMode("foto")}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                      displayMode === "foto" ? "bg-black text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    {t("gc.display.photo")}
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={displayMode === "tekst"}
+                    onClick={() => setDisplayMode("tekst")}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                      displayMode === "tekst" ? "bg-black text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    {t("gc.display.text")}
+                  </button>
+                </div>
+              </div>
               <div className="space-y-5">
                 {brandsForCategory.map((brand) => {
                   const items = productsByCategory.filter((p) => p.brand === brand);
@@ -1648,6 +1745,29 @@ export default function GevelCalcPage() {
                       image_url: null,
                     });
                   };
+                  // In foto mode, products without a reference image fall
+                  // back to the text row for that specific product so we
+                  // never render empty thumbnails.
+                  const renderEntry = (p: (typeof items)[number]) =>
+                    displayMode === "foto" && productHasReferenceImage(p) ? (
+                      <ProductCard
+                        key={p.id}
+                        product={p}
+                        selected={selectedProductId === p.id}
+                        onSelect={() => onSelect(p)}
+                      />
+                    ) : (
+                      <ProductRow
+                        key={p.id}
+                        product={p}
+                        selected={selectedProductId === p.id}
+                        onSelect={() => onSelect(p)}
+                      />
+                    );
+                  const listClass =
+                    displayMode === "tekst"
+                      ? "space-y-2"
+                      : "grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4";
                   if (brand === "Spanl") {
                     // Group by finish family, sort each group by panel width
                     // (widest first). Without this, the 24 Spanl SKUs render
@@ -1675,15 +1795,8 @@ export default function GevelCalcPage() {
                                   · {familyItems[0]?.spanlPanelWidthCm} cm
                                 </span>
                               </p>
-                              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
-                                {familyItems.map((p) => (
-                                  <ProductCard
-                                    key={p.id}
-                                    product={p}
-                                    selected={selectedProductId === p.id}
-                                    onSelect={() => onSelect(p)}
-                                  />
-                                ))}
+                              <div className={listClass}>
+                                {familyItems.map(renderEntry)}
                               </div>
                             </div>
                           ))}
@@ -1696,15 +1809,8 @@ export default function GevelCalcPage() {
                       <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
                         {brand}
                       </p>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
-                        {items.map((p) => (
-                          <ProductCard
-                            key={p.id}
-                            product={p}
-                            selected={selectedProductId === p.id}
-                            onSelect={() => onSelect(p)}
-                          />
-                        ))}
+                      <div className={listClass}>
+                        {items.map(renderEntry)}
                       </div>
                     </div>
                   );
