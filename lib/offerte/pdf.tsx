@@ -288,7 +288,12 @@ export type OfferteDocumentProps = {
     company?: string;
     projectAddress?: string;
   };
-  // Pricing inputs in EUR (ex-BTW). The PDF derives BTW + total.
+  // Pricing inputs. Prices passed in are EX-BTW; the PDF multiplies by
+  // 1.21 to display incl-BTW figures (per user request — prices shown
+  // are consumer-facing). Pricing is opt-in via includePrices; when off
+  // the PDF renders BOM only (description + quantity columns) with no
+  // unit prices, no totals, and no VAT disclaimer.
+  includePrices?: boolean;
   panelCount: number;
   pricePerPanel: number;
   profileEndCount: number;
@@ -327,40 +332,45 @@ const fmtDate = (d: Date) => {
 
 export function OfferteDocument(props: OfferteDocumentProps) {
   const offerteUrl = `https://renisual.com/offerte/${props.ref}`;
-  const btw = Math.round((props.totalInclBtw - props.subtotalExBtw) * 100) / 100;
+  const includePrices = !!props.includePrices;
+  const VAT = 1.21;
 
+  // When prices are shown, all unit/total values are presented INCLUSIEF
+  // BTW (input is ex-BTW from the calc engine, multiplied by 1.21 here).
+  // Single TOTAAL row, no separate BTW row.
   const lineRows: Array<{ desc: string; qty: number; unit: number; total: number }> = [
     {
       desc: "Gevelpaneel",
       qty: props.panelCount,
-      unit: props.pricePerPanel,
-      total: props.panelCount * props.pricePerPanel,
+      unit: props.pricePerPanel * VAT,
+      total: props.panelCount * props.pricePerPanel * VAT,
     },
     {
       desc: "Eindprofiel",
       qty: props.profileEndCount,
-      unit: props.pricePerEndProfile,
-      total: props.profileEndCount * props.pricePerEndProfile,
+      unit: props.pricePerEndProfile * VAT,
+      total: props.profileEndCount * props.pricePerEndProfile * VAT,
     },
     {
       desc: "Tussenprofiel",
       qty: props.profileMiddleCount,
-      unit: props.pricePerMiddleProfile,
-      total: props.profileMiddleCount * props.pricePerMiddleProfile,
+      unit: props.pricePerMiddleProfile * VAT,
+      total: props.profileMiddleCount * props.pricePerMiddleProfile * VAT,
     },
     {
       desc: "Hoekprofiel",
       qty: props.profileCornerCount,
-      unit: props.pricePerCornerProfile,
-      total: props.profileCornerCount * props.pricePerCornerProfile,
+      unit: props.pricePerCornerProfile * VAT,
+      total: props.profileCornerCount * props.pricePerCornerProfile * VAT,
     },
     {
       desc: "Bevestigingsmateriaal (schroeven, klips, butyl)",
       qty: 1,
-      unit: props.fastenerEstimateExBtw,
-      total: props.fastenerEstimateExBtw,
+      unit: props.fastenerEstimateExBtw * VAT,
+      total: props.fastenerEstimateExBtw * VAT,
     },
-  ].filter((row) => row.qty > 0 || row.total > 0);
+  ].filter((row) => row.qty > 0);
+  const totalInclBtw = lineRows.reduce((sum, row) => sum + row.total, 0);
 
   return (
     <Document>
@@ -419,44 +429,54 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, styles.cellDescription]}>OMSCHRIJVING</Text>
             <Text style={[styles.tableHeaderCell, styles.cellQty]}>AANTAL</Text>
-            <Text style={[styles.tableHeaderCell, styles.cellUnit]}>STUKPRIJS</Text>
-            <Text style={[styles.tableHeaderCell, styles.cellTotal]}>SUBTOTAAL</Text>
+            {includePrices ? (
+              <>
+                <Text style={[styles.tableHeaderCell, styles.cellUnit]}>STUKPRIJS</Text>
+                <Text style={[styles.tableHeaderCell, styles.cellTotal]}>SUBTOTAAL</Text>
+              </>
+            ) : null}
           </View>
           {lineRows.map((row) => (
             <View style={styles.tableRow} key={row.desc}>
               <Text style={[styles.bodyText, styles.cellDescription]}>{row.desc}</Text>
               <Text style={[styles.bodyText, styles.cellQty]}>{row.qty}</Text>
-              <Text style={[styles.bodyText, styles.cellUnit]}>{fmtMoney(row.unit)}</Text>
-              <Text style={[styles.bodyText, styles.cellTotal]}>{fmtMoney(row.total)}</Text>
+              {includePrices ? (
+                <>
+                  <Text style={[styles.bodyText, styles.cellUnit]}>{fmtMoney(row.unit)}</Text>
+                  <Text style={[styles.bodyText, styles.cellTotal]}>{fmtMoney(row.total)}</Text>
+                </>
+              ) : null}
             </View>
           ))}
         </View>
 
-        <View style={styles.totalsBlock}>
-          <View style={styles.totalsTable}>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>Subtotaal (excl. BTW)</Text>
-              <Text style={styles.totalsValue}>{fmtMoney(props.subtotalExBtw)}</Text>
-            </View>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>BTW (21%)</Text>
-              <Text style={styles.totalsValue}>{fmtMoney(btw)}</Text>
-            </View>
-            <View style={styles.totalsRowFinal}>
-              <Text style={styles.totalsLabelFinal}>TOTAAL</Text>
-              <Text style={styles.totalsValueFinal}>{fmtMoney(props.totalInclBtw)}</Text>
+        {includePrices ? (
+          <View style={styles.totalsBlock}>
+            <View style={styles.totalsTable}>
+              <View style={styles.totalsRowFinal}>
+                <Text style={styles.totalsLabelFinal}>TOTAAL (incl. BTW)</Text>
+                <Text style={styles.totalsValueFinal}>{fmtMoney(totalInclBtw)}</Text>
+              </View>
             </View>
           </View>
-        </View>
+        ) : null}
 
         <View style={styles.disclaimerBox}>
-          <Text style={styles.disclaimerText}>
-            Adviesprijzen — exclusief BTW. Vraag je leverancier voor de definitieve prijs.
-          </Text>
-          <Text style={[styles.disclaimerText, { marginTop: 4 }]}>
-            Leveranciers werken met staffelkortingen op basis van afnamevolume; vraag dus altijd
-            een leverancierofferte aan voordat je een definitieve keuze maakt.
-          </Text>
+          {includePrices ? (
+            <>
+              <Text style={styles.disclaimerText}>
+                Prijs gebaseerd op laatste adviesprijs. Prijzen zijn een indicatie.
+              </Text>
+              <Text style={[styles.disclaimerText, { marginTop: 4 }]}>
+                Leveranciers werken met staffelkortingen op basis van afnamevolume; vraag dus altijd
+                een leverancierofferte aan voordat je een definitieve keuze maakt.
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.disclaimerText}>
+              Materiaaladvies op basis van jouw gevelmaten. Vraag je leverancier voor de definitieve prijs en levertijd.
+            </Text>
+          )}
         </View>
 
         <View style={styles.qrBlock}>

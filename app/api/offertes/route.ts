@@ -56,6 +56,10 @@ const bodySchema = z.object({
   customer: customerSchema.optional(),
   photoPath: z.string().max(500).optional(),
   renderPath: z.string().max(500).optional(),
+  // Opt-in price indication on the PDF. Default OFF — the PDF renders
+  // a BOM-only document. When true, prices are shown INCL BTW with an
+  // "indicatie" disclaimer.
+  includePrices: z.boolean().default(false),
 });
 
 const MAX_REF_RETRIES = 5;
@@ -154,6 +158,7 @@ export async function POST(request: Request) {
       ref: inserted.ref,
       generatedAt: new Date(),
       customer: parsed.customer,
+      includePrices: parsed.includePrices,
       panelCount: parsed.calcOutput.panelCount,
       pricePerPanel: derivePricePerPanel(parsed),
       profileEndCount: parsed.calcOutput.profileEndCount,

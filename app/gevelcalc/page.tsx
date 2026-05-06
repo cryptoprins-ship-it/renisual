@@ -767,6 +767,10 @@ export default function GevelCalcPage() {
   // Offerte download flow (POST /api/offertes -> PDF + ref + public URL).
   const [offerteSubmitting, setOfferteSubmitting] = useState(false);
   const [offerteResult, setOfferteResult] = useState<{ ref: string; offerteUrl: string } | null>(null);
+  // Opt-in to include indicative prices on the PDF. Default off per
+  // user request — the offerte is a BOM document by default; prices
+  // are explicit consent.
+  const [includePrices, setIncludePrices] = useState(false);
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
@@ -1259,6 +1263,7 @@ export default function GevelCalcPage() {
       },
       customer: projectName ? { projectAddress: projectName } : undefined,
       photoPath: photoStoragePath ?? undefined,
+      includePrices,
     };
   }
 
@@ -1288,11 +1293,40 @@ export default function GevelCalcPage() {
       }
       const data = (await res.json()) as { ref: string; offerteUrl: string; pdfUrl: string | null };
       setOfferteResult({ ref: data.ref, offerteUrl: data.offerteUrl });
-      // Trigger download in a new tab so the user keeps their work
-      // intact in case the browser blocks an auto-download. If pdfUrl
-      // is null (PDF generation failed) we still have the page link.
+      // Save-As friendly download. Fetch the PDF bytes, wrap in a
+      // same-origin Blob URL, and trigger an anchor click so the
+      // browser respects the `download` attribute. With "ask where to
+      // save" enabled in browser settings the user gets a Save As
+      // dialog; otherwise the file lands in their Downloads folder
+      // with a friendly filename instead of a random hash.
       if (data.pdfUrl) {
-        window.open(data.pdfUrl, "_blank", "noopener,noreferrer");
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const filename = `gevelcalc-${data.ref}-${today}.pdf`;
+          const pdfRes = await fetch(data.pdfUrl);
+          const blob = await pdfRes.blob();
+          // Web Share API path — iOS Safari needs this so the file
+          // lands in the share sheet (Save to Files / AirDrop / mail).
+          const file = new File([blob], filename, { type: "application/pdf" });
+          if (
+            typeof navigator !== "undefined" &&
+            typeof navigator.canShare === "function" &&
+            navigator.canShare({ files: [file] })
+          ) {
+            try {
+              await navigator.share({ files: [file], title: filename });
+            } catch {
+              // user cancelled — fall through to anchor download
+              triggerBlobDownload(blob, filename);
+            }
+          } else {
+            triggerBlobDownload(blob, filename);
+          }
+        } catch (err) {
+          console.error("[offerte] download failed", err);
+          // Fall back to opening the signed URL in a new tab.
+          window.open(data.pdfUrl, "_blank", "noopener,noreferrer");
+        }
       }
       // Best-effort copy of the public offerte URL — most browsers
       // grant clipboard inside a click handler without prompting.
@@ -1312,6 +1346,20 @@ export default function GevelCalcPage() {
 
   function round2Money(v: number): number {
     return Math.round(v * 100) / 100;
+  }
+
+  // Anchor-based blob download. Anchor must live in the DOM and the
+  // revoke must be deferred so iOS Safari has time to commit the file.
+  function triggerBlobDownload(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
   function sendMail() {
@@ -2136,16 +2184,15 @@ export default function GevelCalcPage() {
         >
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-wrap items-center gap-2 pb-1">
-              {mode === "advanced" && (
-                <button
-                  type="button"
-                  onClick={addSide}
-                  disabled={sides.length >= MAX_SIDES}
-                  className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium disabled:opacity-40"
-                >
-                  {t("gc.btnAddSide")}
-                </button>
-              )}
+              <label className="flex flex-shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-black px-3 py-2 text-sm select-none">
+                <input
+                  type="checkbox"
+                  checked={includePrices}
+                  onChange={(e) => setIncludePrices(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                {t("gc.includePrices")}
+              </label>
               <Link
                 href={selectedProduct ? `/render?product=${encodeURIComponent(selectedProduct.id)}` : "/render"}
                 className={`flex-shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium ${
