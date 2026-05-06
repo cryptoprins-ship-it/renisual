@@ -2135,7 +2135,6 @@ export default function GevelCalcPage() {
           className="fixed inset-x-0 bottom-0 border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] print:hidden"
         >
           <div className="mx-auto max-w-6xl">
-            {/* "View render" CTA moved to right-column 04 — OVERZICHT. */}
             <div className="flex flex-wrap items-center gap-2 pb-1">
               {mode === "advanced" && (
                 <button
@@ -2147,6 +2146,20 @@ export default function GevelCalcPage() {
                   {t("gc.btnAddSide")}
                 </button>
               )}
+              <Link
+                href={selectedProduct ? `/render?product=${encodeURIComponent(selectedProduct.id)}` : "/render"}
+                className={`flex-shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium ${
+                  selectedProduct
+                    ? "bg-black text-white"
+                    : "border border-stone-300 text-stone-400 cursor-not-allowed"
+                }`}
+                aria-disabled={!selectedProduct}
+                onClick={(e) => {
+                  if (!selectedProduct) e.preventDefault();
+                }}
+              >
+                {t("gc.viewRender")}
+              </Link>
               <button
                 type="button"
                 onClick={downloadOfferte}
