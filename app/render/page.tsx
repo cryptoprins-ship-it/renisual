@@ -1453,9 +1453,21 @@ export default function RenderPage() {
                 type="button"
                 onClick={handleNewPanel}
                 disabled={isGenerating}
-                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+                className="border border-ink bg-paper px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
               >
                 Ander paneel
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={
+                  isGenerating ||
+                  !sourcePhoto ||
+                  (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
+                }
+                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+              >
+                Genereer opnieuw (1 credit)
               </button>
             </>
           ) : (
