@@ -361,10 +361,30 @@ export async function buildProtectedWallRender(args: {
     }
   }
 
+  // Mask sanity check: count active mask pixels after the guards. SAM
+  // has been observed to over-segment on dark targets, dragging non-wall
+  // content (water, trees, neighbouring buildings) into the wall mask.
+  // The sky+water guards already protect the top/bottom edges, but if
+  // the remaining mask still covers more than 40% of the frame, applying
+  // the ΔE shift would push the wrong pixels — leave the BFL output as-
+  // is for those, the sky+water/fascia guards still kick in at step 4.
+  let maskActiveCount = 0;
+  for (let i = 0; i < maskData.length; i++) {
+    if (maskData[i] > 128) maskActiveCount++;
+  }
+  const maskActiveRatio = maskActiveCount / (W * H);
+  const maskTooBig = maskActiveRatio > 0.40;
+  if (maskTooBig) {
+    logger.warn(
+      { ratio: Math.round(maskActiveRatio * 1000) / 1000 },
+      "wall_protect_mask_oversized_skipping_shift",
+    );
+  }
+
   // 3b. Standard ΔE correction inside wall (used for groove/structure and
   //     for any non-flat call). Pulls the wall mean toward target_hex via a
   //     per-channel linear offset.
-  if (!flatten && targetHex) {
+  if (!flatten && targetHex && !maskTooBig) {
     const { data: rgbData } = await sharp(aiRenderResized).removeAlpha().raw().toBuffer({ resolveWithObject: true });
     let sumR = 0, sumG = 0, sumB = 0, count = 0;
     for (let i = 0, j = 0; j < maskData.length; i += 3, j++) {
