@@ -305,6 +305,10 @@ export type OfferteDocumentProps = {
   // Optional facade images (data URLs or signed URLs).
   photoSrc?: string;
   renderSrc?: string;
+  // One-line note describing how the calc was made (Snel vs Per zijde),
+  // shown directly under the document label so a recipient can see at a
+  // glance whether this is a rough estimate or a per-side calculation.
+  modeLine?: string;
   // Pre-rendered QR code (data URL) pointing at the public offerte page.
   qrSrc: string;
 };
@@ -375,6 +379,12 @@ export function OfferteDocument(props: OfferteDocumentProps) {
             </Text>
           </View>
         </View>
+
+        {props.modeLine ? (
+          <View style={{ marginBottom: 14 }}>
+            <Text style={{ fontSize: 9, color: MUTED, fontStyle: "italic" }}>{props.modeLine}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.twoCol}>
           <View style={styles.col}>

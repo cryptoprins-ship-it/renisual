@@ -142,6 +142,14 @@ export async function POST(request: Request) {
       parsed.renderPath ? signedUrl(admin, RENDER_BUCKET, parsed.renderPath) : Promise.resolve(undefined),
     ]);
 
+    const calcMode = stringFromCalcInput(parsed.calcInput, "mode");
+    const calcProject = stringFromCalcInput(parsed.calcInput, "projectName");
+    const modeLine = calcMode === "quick"
+      ? "Schatting o.b.v. vierkante gevel — standaard kozijnen aangenomen."
+      : calcMode === "advanced"
+        ? "Berekening per zijde — exacte invoer."
+        : undefined;
+
     const pdfBuffer = await buildOffertePdf({
       ref: inserted.ref,
       generatedAt: new Date(),
@@ -159,6 +167,7 @@ export async function POST(request: Request) {
       totalInclBtw: parsed.calcOutput.totalInclBtw,
       photoSrc,
       renderSrc,
+      modeLine,
     });
 
     const pdfPath = `${inserted.ref}.pdf`;
@@ -174,7 +183,14 @@ export async function POST(request: Request) {
       .eq("id", inserted.id);
     if (updateErr) throw updateErr;
 
-    pdfUrl = (await signedUrl(admin, PDF_BUCKET, pdfPath)) ?? null;
+    // Friendly download filename: gevelcalc-{project}-{modus}-{yyyy-mm-dd}.pdf
+    // Falls back to the ref when project is empty so the file isn't named
+    // gevelcalc--snel-...
+    const today = new Date().toISOString().slice(0, 10);
+    const slugProject = slugify(calcProject) || inserted.ref.toLowerCase();
+    const slugMode = calcMode === "quick" ? "snel" : calcMode === "advanced" ? "per-zijde" : "berekening";
+    const downloadName = `gevelcalc-${slugProject}-${slugMode}-${today}.pdf`;
+    pdfUrl = (await signedUrl(admin, PDF_BUCKET, pdfPath, downloadName)) ?? null;
   } catch (err) {
     logger.error({ err, ref: inserted.ref }, "offerte_pdf_generation_failed");
     // pdfUrl stays null; client falls back to the public offerte page.
@@ -190,14 +206,34 @@ export async function POST(request: Request) {
 async function signedUrl(
   admin: ReturnType<typeof createAdminClient>,
   bucket: string,
-  path: string
+  path: string,
+  downloadName?: string
 ): Promise<string | undefined> {
-  const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
+  // Pass `download: filename` so Supabase serves the file with a
+  // Content-Disposition header that uses the friendly name (gevelcalc-…)
+  // instead of the random ref. Browsers honour it on direct downloads.
+  const opts = downloadName ? { download: downloadName } : undefined;
+  const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_URL_TTL_SECONDS, opts);
   if (error || !data) {
     logger.warn({ err: error, bucket, path }, "offerte_signed_url_failed");
     return undefined;
   }
   return data.signedUrl;
+}
+
+function stringFromCalcInput(input: Record<string, unknown>, key: string): string {
+  const v = input[key];
+  return typeof v === "string" ? v : "";
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
 }
 
 // Pricing knobs travel through calcInput so the PDF stays consistent

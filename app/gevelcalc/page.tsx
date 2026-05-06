@@ -217,10 +217,53 @@ function ToggleSwitch({
       className="flex w-full items-center justify-between rounded-xl border border-black bg-white px-4 py-3 text-left"
     >
       <span className="text-sm font-medium">{label}</span>
-      <span className={`relative h-6 w-11 rounded-full border border-black ${checked ? "bg-black" : "bg-white"}`}>
-        <span className={`absolute top-1 h-4 w-4 rounded-full transition ${checked ? "left-6 bg-white" : "left-1 bg-black"}`} />
+      <span className={`relative h-6 w-11 rounded-full border border-black transition-colors ${checked ? "bg-black" : "bg-white"}`}>
+        <span className={`absolute top-1 h-4 w-4 rounded-full transition-all ${checked ? "left-6 bg-white" : "left-1 bg-black"}`} />
       </span>
     </button>
+  );
+}
+
+function ModusToggle({
+  value,
+  onChange,
+  quickLabel,
+  advancedLabel,
+}: {
+  value: Mode;
+  onChange: (next: Mode) => void;
+  quickLabel: string;
+  advancedLabel: string;
+}) {
+  // Segmented pill: full width on mobile, max-w-md on desktop.
+  // Min 44px tap target. Active = ink fill, inactive = transparent w/ hairline.
+  return (
+    <div
+      role="tablist"
+      aria-label="Modus"
+      className="mt-5 flex w-full max-w-md items-stretch gap-0 overflow-hidden rounded-full border border-stone-300 bg-paper"
+    >
+      {([
+        { id: "quick" as Mode, label: quickLabel },
+        { id: "advanced" as Mode, label: advancedLabel },
+      ]).map((opt) => {
+        const active = value === opt.id;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(opt.id)}
+            className={`flex-1 min-h-[44px] px-4 font-mono text-[11px] uppercase tracking-[0.15em] transition-colors ${
+              active ? "bg-ink text-paper" : "bg-transparent text-ink hover:bg-stone-100"
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -588,7 +631,8 @@ function Toast({ message, type }: { message: string; type: "ok" | "error" }) {
 export default function GevelCalcPage() {
   const { t, locale } = useLocale();
 
-  const [mode, setMode] = useState<Mode>("advanced");
+  // Default to "snel" when query is absent (per modus-toggle spec).
+  const [mode, setMode] = useState<Mode>("quick");
   const [modeHydrated, setModeHydrated] = useState(false);
 
   useEffect(() => {
@@ -596,13 +640,15 @@ export default function GevelCalcPage() {
     let resolved: Mode | null = null;
     const params = new URLSearchParams(window.location.search);
     const modus = params.get("modus");
-    if (modus === "quick" || modus === "eenvoudig") resolved = "quick";
-    else if (modus === "pro" || modus === "professional" || modus === "advanced") resolved = "advanced";
+    // Accept new (snel / per-zijde) plus legacy (quick / pro / advanced /
+    // eenvoudig) so old links keep working.
+    if (modus === "snel" || modus === "quick" || modus === "eenvoudig") resolved = "quick";
+    else if (modus === "per-zijde" || modus === "pro" || modus === "professional" || modus === "advanced") resolved = "advanced";
     if (!resolved) {
       const stored = window.localStorage.getItem("renisual-mode");
       if (stored === "quick" || stored === "advanced") resolved = stored;
     }
-    if (resolved) setMode(resolved);
+    setMode(resolved ?? "quick");
     setModeHydrated(true);
   }, []);
 
@@ -612,6 +658,18 @@ export default function GevelCalcPage() {
       window.localStorage.setItem("renisual-mode", mode);
     } catch {
       /* ignore */
+    }
+    // Mirror current mode into ?modus= so the URL is shareable and
+    // mobile/desktop behave identically. Use replaceState — no reload,
+    // no new history entry.
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("modus", mode === "quick" ? "snel" : "per-zijde");
+        window.history.replaceState({}, "", url.toString());
+      } catch {
+        /* ignore */
+      }
     }
   }, [mode, modeHydrated]);
   const [unit, setUnit] = useState<Unit>("m2");
@@ -787,6 +845,46 @@ export default function GevelCalcPage() {
     if (mode === "advanced" && activeSides.length === 0) return t("gc.error.fillSide");
     if (!selectedProduct) return t("gc.error.chooseProduct");
     return null;
+  }
+
+  function switchMode(next: Mode) {
+    if (next === mode) return;
+
+    if (next === "advanced") {
+      // Snel → Per zijde: refinement, no confirm. Map quick area onto
+      // sides[0..3] as a square (sqrt(area)*100 cm). User can tweak
+      // afterwards. Sides beyond the first four are left untouched.
+      const m2 = quickAreaToM2(quickTotalArea, unit);
+      if (m2 > 0) {
+        const sideCm = String(Math.round(Math.sqrt(m2) * 100));
+        setSides((prev) =>
+          prev.map((s, i) => (i < 4 ? { ...s, width: sideCm, height: sideCm } : s))
+        );
+        setFrontBackSame(true);
+        setLeftRightSame(true);
+      }
+      setMode(next);
+      return;
+    }
+
+    // Per zijde → Snel: confirm before simplifying. Per-zijde data is
+    // preserved in state so the user can switch back without losing it.
+    if (typeof window !== "undefined" && !window.confirm(t("gc.confirmModeSwitchToQuick"))) {
+      return;
+    }
+    // Suggest the sum of the first four sides' gross-m² as the new
+    // quickTotalArea (only when the field is empty, so we don't
+    // overwrite a value the user explicitly typed).
+    if (!quickTotalArea) {
+      const totalM2 = resolvedSides
+        .slice(0, 4)
+        .reduce((acc, s) => acc + calculateSideGrossM2(s), 0);
+      if (totalM2 > 0) {
+        const display = unit === "ft2" ? totalM2 * M2_TO_FT2 : totalM2;
+        setQuickTotalArea(display.toFixed(2));
+      }
+    }
+    setMode(next);
   }
 
   function updateSide(sideId: string, updater: (side: CalcSide) => CalcSide) {
@@ -1129,8 +1227,10 @@ export default function GevelCalcPage() {
     }
     const vatLabel = showInclVat ? t("gc.inclVat") : "excl.";
     const subject = encodeURIComponent(`${t("gc.email.subject")}${projectName ? ` — ${projectName}` : ""}`);
+    const modeLine = mode === "quick" ? t("gc.pdfModeQuick") : t("gc.pdfModeAdvanced");
     const body = encodeURIComponent(
-      `${t("gc.email.subject")}${projectName ? `\n${projectName}` : ""}\n${t("gc.dateLabel", { date: formatDate(new Date().toISOString(), locale) })}\n\n` +
+      `${t("gc.email.subject")}${projectName ? `\n${projectName}` : ""}\n${t("gc.dateLabel", { date: formatDate(new Date().toISOString(), locale) })}\n` +
+        `${modeLine}\n\n` +
         `${t("gc.totalGross")}: ${totals.gross.toFixed(2)} m²\n` +
         `${t("gc.totalOpenings")}: ${totals.openings.toFixed(2)} m²\n` +
         `${t("gc.totalNet")}: ${totals.net.toFixed(2)} m²\n\n` +
@@ -1243,25 +1343,25 @@ export default function GevelCalcPage() {
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
               {t("home.nav.calculator")}
             </p>
-            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-              <h1 className="font-display text-4xl tracking-tight text-ink md:text-5xl">
-                {t("gc.title")}
-              </h1>
-              <button
-                type="button"
-                onClick={() => setMode(mode === "quick" ? "advanced" : "quick")}
-                className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600 underline-offset-4 transition-colors hover:text-ink hover:underline"
-              >
-                {mode === "quick" ? t("gc.mode.advanced") : t("gc.mode.quick")} →
-              </button>
-            </div>
+            <h1 className="mt-3 font-display text-4xl tracking-tight text-ink md:text-5xl">
+              {t("gc.title")}
+            </h1>
             <p className="mt-3 text-sm leading-relaxed text-stone-600">{t("gc.subtitle")}</p>
+            <ModusToggle
+              value={mode}
+              onChange={switchMode}
+              quickLabel={t("gc.mode.quick")}
+              advancedLabel={t("gc.mode.advanced")}
+            />
           </header>
 
           <div className="hidden print:block mb-4">
             <h1 className="text-2xl font-bold">{t("gc.title")}</h1>
             {projectName && <p className="text-base font-medium mt-1">{projectName}</p>}
             {calcDate && <p className="text-sm text-gray-500 mt-1">{t("gc.dateLabel", { date: formatDate(calcDate, locale) })}</p>}
+            <p className="text-sm italic text-gray-600 mt-1">
+              {mode === "quick" ? t("gc.pdfModeQuick") : t("gc.pdfModeAdvanced")}
+            </p>
           </div>
 
           <section className="print-hidden">
@@ -1289,6 +1389,17 @@ export default function GevelCalcPage() {
 
           {mode === "quick" && (
             <section className="rounded-2xl border border-black bg-white p-4 md:p-6">
+              <p className="mb-4 text-xs leading-relaxed text-stone-500 print-hidden">
+                {t("gc.modeAssumptionsBefore")}
+                <button
+                  type="button"
+                  onClick={() => switchMode("advanced")}
+                  className="font-medium text-stone-700 underline underline-offset-2 hover:text-ink"
+                >
+                  {t("gc.modeAssumptionsLink")}
+                </button>
+                {t("gc.modeAssumptionsAfter")}
+              </p>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl font-semibold">{t("gc.mode.quick")}</h2>
                 <div className="inline-flex rounded-xl border border-black p-1 print-hidden">
@@ -1463,8 +1574,11 @@ export default function GevelCalcPage() {
                     {sides.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeSide(side.id)}
-                        className="rounded-xl border border-black px-4 py-2 text-sm print-hidden"
+                        onClick={() => {
+                          if (typeof window !== "undefined" && !window.confirm(t("gc.confirmRemoveSide"))) return;
+                          removeSide(side.id);
+                        }}
+                        className="rounded-md border border-stone-300 px-2.5 py-1 text-xs text-stone-600 transition-colors hover:border-stone-500 hover:text-ink print-hidden"
                       >
                         {t("gc.remove")}
                       </button>
@@ -1922,10 +2036,12 @@ export default function GevelCalcPage() {
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 border-t border-black bg-white p-3 print:hidden">
+        <div
+          className="fixed inset-x-0 bottom-0 border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] print:hidden"
+        >
           <div className="mx-auto max-w-6xl">
             {/* "View render" CTA moved to right-column 04 — OVERZICHT. */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <div className="flex flex-wrap items-center gap-2 pb-1">
               {mode === "advanced" && (
                 <button
                   type="button"
