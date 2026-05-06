@@ -881,17 +881,6 @@ export default function RenderPage() {
                     ))}
                   </div>
                 )}
-                <p className="mt-2 text-[11px] text-gray-400">
-                  Sample images:{" "}
-                  <a
-                    href="https://unsplash.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-gray-600"
-                  >
-                    Unsplash
-                  </a>
-                </p>
               </div>
             )}
           </div>

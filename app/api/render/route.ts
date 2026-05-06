@@ -186,7 +186,7 @@ On top of every panel face, render a fine linen wood-grain texture — subtle 3D
 // quirks (panel rhythm enforcement, color compensation, etc) and
 // confuses klein-9b which is more prompt-faithful by default.
 function buildBflPromptText(opts: PromptOptions): string {
-  const { product, orientation, facadeWidthMeters, facadeHeightMeters, includeFascia } = opts;
+  const { product, orientation, facadeWidthMeters, facadeHeightMeters, includeFascia, windowFrame, door } = opts;
   const widthCm = facadeWidthMeters ? Math.round(facadeWidthMeters * 100) : null;
   const heightCm = facadeHeightMeters ? Math.round(facadeHeightMeters * 100) : null;
 
@@ -261,13 +261,24 @@ function buildBflPromptText(opts: PromptOptions): string {
     ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
     : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
 
+  // Window-frame and door recolor instructions — only fire when the user
+  // selected a material/colour in the /render UI. Otherwise the elements
+  // get the default "preserve from source" treatment in the main keep-line.
+  const windowFrameLine = windowFrame?.material
+    ? `Recolour the window frames as ${windowFrame.material}. Keep the windows themselves and the glass exactly as in the source photo.`
+    : "Keep the windows, glass and window frames exactly as in the source photo — same colour, same material.";
+  const doorLine = door?.material && door?.colour
+    ? `Recolour the doors as ${door.material} in ${door.colour}. Keep the door frames structurally as in the source.`
+    : "Keep the doors and door frames exactly as in the source photo — same colour, same material.";
+
   // Minimal prompt modelled on what works in BFL Flux playground:
   // a few clear sentences, no shouted caps, no exhaustive don'ts.
   // klein-9b is prompt-faithful — less micromanagement is more.
   return `Recolour the wall surfaces of this building in ${colorPhrase}. ${surface} ${orientLine}${structureLine}
 
-${dimsLine}Keep the roof, gutters, chimneys, windows, glass, window frames, doors, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape. Do not invent new windows or features. Match the source framing exactly.
-
+${dimsLine}Keep the roof, gutters, chimneys, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape. Do not invent new windows or features. Match the source framing exactly.
+${windowFrameLine}
+${doorLine}
 ${fasciaLine}${colorWarn ? `\n${colorWarn.trim()}` : ""}`;
 }
 
@@ -278,6 +289,12 @@ type PromptOptions = {
   facadeWidthMeters: number | undefined;
   facadeHeightMeters: number | undefined;
   includeFascia: boolean;
+  // User-driven recolor toggles. Default behaviour is preserve-as-source;
+  // when these are set, the prompt instructs the model to recolour that
+  // element instead. Wired from /render UI section 03 (frames). Only
+  // consumed by buildBflPromptText for now.
+  windowFrame?: { material: string };
+  door?: { material: string; colour: string };
 };
 
 // Top-level dispatcher. Mono Flat is the base; Mono Groove appends a
@@ -1230,6 +1247,10 @@ export async function POST(request: Request) {
         facadeWidthMeters,
         facadeHeightMeters,
         includeFascia: body.includeBoeideel,
+        windowFrame: body.windowFrame?.material ? { material: body.windowFrame.material } : undefined,
+        door: body.door?.material && body.door?.colour
+          ? { material: body.door.material, colour: body.door.colour }
+          : undefined,
       });
       const { bytes: outBytes, mime: outMime } = await renderViaBfl({
         apiKey: bflKey,
@@ -1273,6 +1294,7 @@ export async function POST(request: Request) {
           flatten: useFlatten,
           flatSeamOrientation: seamOrientation,
           flatSeamCount: seamCount,
+          includeFascia: body.includeBoeideel,
         });
         if (wp) {
           let finalBytes: Buffer = wp.bytes;

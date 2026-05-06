@@ -56,8 +56,14 @@ export async function buildProtectedWallRender(args: {
   // just need to be uniform (not BFL's irregular rhythm).
   flatSeamOrientation?: "horizontal" | "vertical";
   flatSeamCount?: number;
+  // When true (the user toggled "uitsluiten boeideel" in /render UI),
+  // erode the topmost ~5% of the boat-mask region after the sky guard so
+  // the fascia plank along the upper edge of the houseboat stays as
+  // source pixels. Default true keeps current behaviour (fascia included
+  // in the recolor area).
+  includeFascia?: boolean;
 }): Promise<ProtectedRender | null> {
-  const { sourceBytes, aiRenderBytes, targetHex, flatten, flatSeamOrientation, flatSeamCount } = args;
+  const { sourceBytes, aiRenderBytes, targetHex, flatten, flatSeamOrientation, flatSeamCount, includeFascia = true } = args;
 
   // 1. Sample BFL render's central band so seg matches the rendered hue
   let sampledSegHex: string | undefined = targetHex;
@@ -107,6 +113,51 @@ export async function buildProtectedWallRender(args: {
     .raw()
     .toBuffer({ resolveWithObject: true });
   const maskData = tightMaskRaw.data;
+
+  // Belt-and-suspenders sky+water guard: in typical houseboat photos the
+  // top strip is always sky and the bottom strip is always water. SAM has
+  // proven unreliable on dark targets — when BFL globally darkens the
+  // scene, segmentation drags sky/water into the wall mask because they
+  // become "wand-coloured" too. Forcing the topmost/bottommost 10% of
+  // rows to mask=0 guarantees those areas stay pure source pixels in the
+  // final composite no matter how SAM behaved.
+  const skyGuardH = Math.floor(H * 0.10);
+  const waterGuardH = Math.floor(H * 0.10);
+  for (let y = 0; y < skyGuardH; y++) {
+    const row = y * W;
+    for (let x = 0; x < W; x++) maskData[row + x] = 0;
+  }
+  for (let y = H - waterGuardH; y < H; y++) {
+    const row = y * W;
+    for (let x = 0; x < W; x++) maskData[row + x] = 0;
+  }
+
+  // Fascia exclusion: when the user picked "uitsluiten boeideel" we
+  // additionally erode a ~5% strip directly below the topmost row of the
+  // boat-mask. The boeideel is the trim plank along the upper edge of
+  // the houseboat — once SAM gives us the boat outline, the fascia is
+  // always the topmost slice of it. This belt-and-suspenders approach
+  // doesn't need a separate fascia segmentation.
+  if (!includeFascia) {
+    let topY = -1;
+    scan: for (let y = skyGuardH; y < H - waterGuardH; y++) {
+      const row = y * W;
+      for (let x = 0; x < W; x++) {
+        if (maskData[row + x] > 128) {
+          topY = y;
+          break scan;
+        }
+      }
+    }
+    if (topY >= 0) {
+      const fasciaH = Math.floor(H * 0.05);
+      const endY = Math.min(H - waterGuardH, topY + fasciaH);
+      for (let y = topY; y < endY; y++) {
+        const row = y * W;
+        for (let x = 0; x < W; x++) maskData[row + x] = 0;
+      }
+    }
+  }
 
   const aiRenderResized = await sharp(aiRenderBytes).resize(W, H, { fit: "fill" }).toBuffer();
   const sourceResized = await sharp(sourceBytes).resize(W, H, { fit: "fill" }).toBuffer();
