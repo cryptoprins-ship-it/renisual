@@ -142,8 +142,8 @@ export default function SubsidieClient() {
             <p className="text-sm text-gray-600 leading-relaxed mb-4">
               Naast de landelijke ISDE subsidie hebben veel gemeenten eigen
               subsidieregelingen voor isolatie en gevelrenovatie. Een
-              gemeentelijke toewijzing is een officiële goedkeuring waarbij uw
-              gemeente bevestigt dat uw woning in aanmerking komt voor extra
+              gemeentelijke toewijzing is een officiële goedkeuring waarbij je
+              gemeente bevestigt dat je woning in aanmerking komt voor extra
               subsidie.
             </p>
 
@@ -155,15 +155,15 @@ export default function SubsidieClient() {
                   <li>🏙️ Rotterdam — gratis energieadvies + subsidie</li>
                   <li>🏙️ Den Haag — buurtaanpak hele straten</li>
                   <li>🏙️ Utrecht — isolatielening 0% rente</li>
-                  <li>🏙️ Alle gemeenten — check uw postcode</li>
+                  <li>🏙️ Alle gemeenten — check je postcode</li>
                 </ul>
               </div>
               <div className="rounded-xl border border-black bg-[#f6f4ef] p-4">
                 <h3 className="font-semibold mb-2">Hoe werkt een toewijzing?</h3>
                 <ol className="text-sm space-y-1 text-gray-700 list-decimal list-inside">
-                  <li>Aanvraag indienen bij uw gemeente</li>
-                  <li>Gemeente keurt uw woning goed</li>
-                  <li>U ontvangt een toewijzingsbrief</li>
+                  <li>Aanvraag indienen bij je gemeente</li>
+                  <li>Gemeente keurt je woning goed</li>
+                  <li>Je ontvangt een toewijzingsbrief</li>
                   <li>Werkzaamheden uitvoeren</li>
                   <li>Factuur opsturen → subsidie ontvangen</li>
                 </ol>
@@ -172,9 +172,9 @@ export default function SubsidieClient() {
 
             <div className="rounded-xl border-2 border-black bg-black text-white p-5 flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="font-semibold">Controleer subsidies in uw gemeente</p>
+                <p className="font-semibold">Controleer subsidies in je gemeente</p>
                 <p className="text-sm text-gray-300 mt-1">
-                  Vul uw postcode in op verbeterjehuis.nl en zie direct welke
+                  Vul je postcode in op verbeterjehuis.nl en zie direct welke
                   regelingen beschikbaar zijn.
                 </p>
               </div>
@@ -184,14 +184,14 @@ export default function SubsidieClient() {
                 rel="noopener noreferrer"
                 className="rounded-xl bg-white text-black px-5 py-2.5 text-sm font-semibold hover:bg-gray-100 transition-colors flex-shrink-0"
               >
-                Check uw gemeente →
+                Check je gemeente →
               </a>
             </div>
 
             <p className="mt-4 text-xs text-gray-400">
-              Renisual helpt u bij het samenstellen van uw aanvraagdossier.
+              Renisual helpt je bij het samenstellen van je aanvraagdossier.
               Gemeentelijk beleid wijzigt regelmatig — controleer altijd de
-              actuele informatie via uw gemeente of verbeterjehuis.nl.
+              actuele informatie via je gemeente of verbeterjehuis.nl.
             </p>
           </section>
 
@@ -200,7 +200,7 @@ export default function SubsidieClient() {
 
       <section className="border-b border-black bg-white px-4 py-16">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold">Bereken uw subsidie</h2>
+          <h2 className="text-3xl font-bold">Bereken je subsidie</h2>
           <p className="mt-2 text-sm text-gray-600">
             Indicatieve berekening op basis van ISDE-tarieven 2026. Definitieve
             bedragen worden bepaald door RVO bij de aanvraag.
@@ -277,7 +277,7 @@ export default function SubsidieClient() {
                 Aanvraagservice
               </span>
               <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-                Wij bereiden uw subsidieaanvraag voor — u dient in
+                Wij bereiden je subsidieaanvraag voor — jij dient in
               </h2>
             </div>
 
@@ -292,9 +292,9 @@ export default function SubsidieClient() {
               </div>
               <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
                 <div className="text-2xl">⚡</div>
-                <h3 className="mt-2 font-bold">U dient zelf in</h3>
+                <h3 className="mt-2 font-bold">Je dient zelf in</h3>
                 <p className="mt-2 text-sm text-gray-700">
-                  Met uw DigiD via rvo.nl — duurt slechts 5 minuten.
+                  Met je DigiD via rvo.nl — duurt slechts 5 minuten.
                   Stap-voor-stap begeleiding inbegrepen.
                 </p>
               </div>
@@ -312,11 +312,11 @@ export default function SubsidieClient() {
               <h3 className="text-lg font-bold">Hoe het werkt</h3>
               <ol className="mt-4 space-y-3">
                 {[
-                  "U vraagt het aanvraagpakket aan (€25)",
+                  "Je vraagt het aanvraagpakket aan (€25)",
                   "Wij stellen alle documenten op binnen 2 werkdagen",
-                  "U dient in via DigiD op rvo.nl (5 minuten)",
-                  "RVO beoordeelt uw aanvraag (6–8 weken)",
-                  "Subsidie wordt uitbetaald op uw rekening",
+                  "Je dient in via DigiD op rvo.nl (5 minuten)",
+                  "RVO beoordeelt je aanvraag (6–8 weken)",
+                  "Subsidie wordt uitbetaald op je rekening",
                 ].map((step, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
@@ -340,8 +340,8 @@ export default function SubsidieClient() {
             </div>
 
             <p className="mt-6 text-xs text-gray-500">
-              Renisual stelt het aanvraagpakket op en begeleidt u bij de
-              indiening. De aanvraag wordt door u persoonlijk ingediend via
+              Renisual stelt het aanvraagpakket op en begeleidt je bij de
+              indiening. De aanvraag wordt door jou persoonlijk ingediend via
               DigiD op rvo.nl. Renisual is niet verantwoordelijk voor de
               uitkomst van de beoordeling door RVO.
             </p>

@@ -3,7 +3,7 @@ import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 
 export const metadata: Metadata = {
   title: "Renisual GevelCalc",
-  description: "Bereken gevelpanelen, profielen, openingen en prijs voor uw renovatieproject.",
+  description: "Bereken gevelpanelen, profielen, openingen en prijs voor je renovatieproject.",
 };
 
 export default function GevelCalcLayout({

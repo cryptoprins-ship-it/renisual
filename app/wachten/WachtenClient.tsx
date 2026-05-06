@@ -174,7 +174,7 @@ export default function WachtenClient() {
 
       <div className="border-b border-black bg-amber-50 px-4 py-2 text-center">
         <p className="text-sm font-medium text-amber-900">
-          Uw render wordt gegenereerd... <span className="text-amber-700">(±20 sec)</span>
+          Je render wordt gegenereerd... <span className="text-amber-700">(±20 sec)</span>
         </p>
         <div className="mx-auto mt-1 h-1 max-w-md overflow-hidden rounded-full bg-amber-200">
           <div className="h-full w-full origin-left animate-[wachten-progress_20s_linear_infinite] bg-amber-700" />

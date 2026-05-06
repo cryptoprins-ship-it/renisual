@@ -88,7 +88,7 @@ export default function LeaderboardClient() {
               href="/wachten"
               className="mt-4 inline-block rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white hover:opacity-80"
             >
-              Kunt u de #1 verslaan? →
+              Kun je de #1 verslaan? →
             </Link>
           </div>
         )}

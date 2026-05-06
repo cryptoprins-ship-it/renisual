@@ -44,7 +44,7 @@ export const seoMeta: Record<SeoPageKey, Record<Locale, SeoMeta>> = {
     nl: {
       title: "GevelCalc — Bereken gevelpanelen & prijs | Renisual",
       description:
-        "Bereken gevelpanelen, profielen, openingen en prijs voor uw renovatieproject. Inclusief Spanl- en Keralit-catalogus.",
+        "Bereken gevelpanelen, profielen, openingen en prijs voor je renovatieproject. Inclusief Spanl- en Keralit-catalogus.",
     },
     en: {
       title: "Facade Calculator — Panels & price | Renisual",
@@ -69,9 +69,9 @@ export const seoMeta: Record<SeoPageKey, Record<Locale, SeoMeta>> = {
   },
   render: {
     nl: {
-      title: "Render — AI-visualisatie van uw gevel | Renisual",
+      title: "Render — AI-visualisatie van je gevel | Renisual",
       description:
-        "Upload een foto van uw gevel en zie hoe nieuwe panelen, kleuren en materialen er in werkelijkheid uitzien. AI-aangedreven visualisatie.",
+        "Upload een foto van je gevel en zie hoe nieuwe panelen, kleuren en materialen er in werkelijkheid uitzien. AI-aangedreven visualisatie.",
     },
     en: {
       title: "Render — AI facade visualisation | Renisual",
@@ -174,7 +174,7 @@ export const seoMeta: Record<SeoPageKey, Record<Locale, SeoMeta>> = {
     nl: {
       title: "Offerte aanvragen — Renisual",
       description:
-        "Vraag een vrijblijvende offerte aan op basis van uw gevelberekening. Onze adviseur neemt contact op met een exacte prijsopgave.",
+        "Vraag een vrijblijvende offerte aan op basis van je gevelberekening. Onze adviseur neemt contact op met een exacte prijsopgave.",
     },
     en: {
       title: "Request a quote — Renisual",
