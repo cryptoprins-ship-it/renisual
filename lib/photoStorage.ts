@@ -165,10 +165,13 @@ export async function uploadRender(blob: Blob): Promise<{ path: string }> {
   return { path };
 }
 
-export async function getPhotoUrl(storagePath: string): Promise<string | null> {
+export async function getPhotoUrl(
+  storagePath: string,
+  bucket: string = BUCKET,
+): Promise<string | null> {
   const supabase = createClient();
   const { data, error } = await supabase.storage
-    .from(BUCKET)
+    .from(bucket)
     .createSignedUrl(storagePath, 3600);
 
   if (error || !data) {

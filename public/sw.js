@@ -1,5 +1,5 @@
 /* Renisual service worker */
-const CACHE_VERSION = "renisual-v4";
+const CACHE_VERSION = "renisual-v5";
 const APP_SHELL = [
   "/",
   "/gevelcalc",

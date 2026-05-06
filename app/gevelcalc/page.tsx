@@ -710,6 +710,24 @@ export default function GevelCalcPage() {
     }
   }, []);
 
+  // Resolve the render-storage path from the project store into a
+  // signed URL so the right-column overview can preview the AI-render
+  // the offerte PDF will embed. Best-effort — if the URL fetch fails
+  // the preview just doesn't appear; the calc + offerte still work.
+  useEffect(() => {
+    const path = useProjectStore.getState().renderStoragePath;
+    if (!path) return;
+    let cancelled = false;
+    import("@/lib/photoStorage").then(({ getPhotoUrl }) => {
+      getPhotoUrl(path, "offerte-renders").then((url) => {
+        if (!cancelled && url) setRenderPreviewUrl(url);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     let resolved: Mode | null = null;
@@ -786,6 +804,11 @@ export default function GevelCalcPage() {
   // user request — the offerte is a BOM document by default; prices
   // are explicit consent.
   const [includePrices, setIncludePrices] = useState(false);
+  // Signed URL for the render produced on /render, resolved at mount
+  // so the right-column overview can preview the visual the offerte
+  // PDF will embed. Null when the user arrived without going through
+  // /render (no renderStoragePath in the project store).
+  const [renderPreviewUrl, setRenderPreviewUrl] = useState<string | null>(null);
 
   const VAT = 1.21;
   const selectedProduct = products.find((p) => p.id === selectedProductId);
@@ -2282,6 +2305,31 @@ export default function GevelCalcPage() {
                 </div>
               </div>
             </div>
+
+            {/* AI render preview — visible when the user arrived here
+                via /render's "Bereken materiaal →" handoff. Confirms
+                visually which render lands in the offerte PDF. */}
+            {renderPreviewUrl && (
+              <div className="border border-stone-200 bg-paper p-4">
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                  {locale === "nl"
+                    ? "Render uit /render"
+                    : locale === "de"
+                      ? "Render aus /render"
+                      : locale === "fr"
+                        ? "Rendu depuis /render"
+                        : locale === "es"
+                          ? "Render desde /render"
+                          : "Render from /render"}
+                </p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={renderPreviewUrl}
+                  alt=""
+                  className="block w-full border border-stone-200 object-contain"
+                />
+              </div>
+            )}
 
             {/* Material summary — visible only when product selected */}
             {selectedProduct && materialResult && (() => {

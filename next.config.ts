@@ -32,7 +32,21 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Force the browser to revalidate sw.js on every visit. Without
+      // this, Hostinger's default Cache-Control on static files keeps
+      // the old service-worker bytes around — the browser never sees
+      // the new sw.js, updatefound never fires, and the PWA stays
+      // frozen on stale bundles after a deploy.
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+    ];
   },
 };
 
