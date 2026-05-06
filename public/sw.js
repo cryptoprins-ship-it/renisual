@@ -1,5 +1,5 @@
 /* Renisual service worker */
-const CACHE_VERSION = "renisual-v3";
+const CACHE_VERSION = "renisual-v4";
 const APP_SHELL = [
   "/",
   "/gevelcalc",
@@ -13,7 +13,16 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL).catch(() => {}))
   );
-  self.skipWaiting();
+  // We do NOT auto-skipWaiting on install. Instead the page detects an
+  // installed-but-waiting SW, prompts the user, and posts SKIP_WAITING
+  // when they tap "Update". This avoids ripping the rug out from under
+  // a user mid-action when a deploy lands.
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
