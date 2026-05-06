@@ -342,6 +342,18 @@ const TRANSLATIONS: Record<Locale, Strings> = {
 
     "home.footer.tagline": "Het complete renovatieplatform voor Nederland.",
 
+    "about.eyebrow": "Het verhaal",
+    "about.title": "Over Renisual",
+    "about.p1": "Renisual is een onafhankelijke renovatie-site, ontstaan uit een eigen probleem.",
+    "about.p2": "Mijn woonboot moest om de zes jaar geschilderd worden. Na de vierde keer was ik er klaar mee — dat is veel werk en het hout is na zoveel jaar aan vervanging toe. Tijd voor kunststof.",
+    "about.p3": "Keralit was een optie, maar duur, en je moet er hout voor slopen dat nog prima is. Toen kwam ik Spanl tegen: metalen gevelpanelen die over bestaand hout heen kunnen, slechts 16mm dun, met een isolatiewaarde van 0,74 m²K/W en brandklasse A2. Lichter, goedkoper dan Keralit, en het hout kan blijven zitten.",
+    "about.p4": "Tijdens het kiezen liep ik tegen iets aan: bestaande sites laten alleen voorbeelden zien op standaardhuizen. Ik kon nergens mijn eigen foto uploaden om te zien hoe Spanl-panelen er op mijn woonboot zouden uitzien. Dus heb ik die tool zelf gemaakt.",
+    "about.p5": "Inmiddels begrijp ik waarom andere sites het niet doen: rendering is niet eenvoudig. Je benadert de werkelijkheid, maar de kleur klopt nooit honderd procent. Toch krijg je een veel betere indicatie dan met materiaalmonsters alleen — die kun je in je hand houden, maar je kunt ze niet visualiseren over een hele gevel.",
+    "about.p6": "Binnenkort bestel ik panelen voor mijn boot. Daarna ga ik hetzelfde principe toepassen op keuken, badkamer en tuin — ook deze tool maak ik daar geschikt voor.",
+    "about.p7": "Mogelijk kom je in aanmerking voor subsidie. Ik onderzoek dit zelf op dit moment via SVN — kijk op de subsidiepagina voor de actuele stand.",
+    "about.p8": "Probeer de tool en stuur me feedback.",
+    "about.cta.button": "Test je eigen gevel",
+
     "render.frames.heading": "Kozijnen & Deuren",
     "render.frames.subtitle": "Optioneel — laat leeg om bestaande kozijnen/deuren onveranderd te laten.",
     "render.frames.windowMaterial": "Kozijnmateriaal",
@@ -712,6 +724,18 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.cta.note": "You'll find the quote form at the bottom of the calculator — your data is mailed straight to Renisual.",
 
     "home.footer.tagline": "The complete renovation platform for the Netherlands.",
+
+    "about.eyebrow": "The story",
+    "about.title": "About Renisual",
+    "about.p1": "Renisual is an independent renovation site, born from a problem of my own.",
+    "about.p2": "My houseboat had to be repainted every six years. After the fourth time I'd had enough — it's a lot of work, and after that many years the wood is overdue for replacement. Time for synthetic.",
+    "about.p3": "Keralit was an option, but expensive, and you have to strip out wood that is still perfectly fine. Then I came across Spanl: metal facade panels that can go over existing wood, just 16mm thin, with an insulation value of 0.74 m²K/W and fire class A2. Lighter, cheaper than Keralit, and the wood can stay.",
+    "about.p4": "While choosing, I ran into something: existing sites only show examples on standard houses. Nowhere could I upload my own photo to see how Spanl panels would look on my houseboat. So I built that tool myself.",
+    "about.p5": "I now understand why other sites don't do it: rendering isn't easy. You approach reality, but the colour is never one hundred percent right. Even so, you get a far better indication than with material samples alone — those you can hold in your hand, but you can't visualise them across an entire facade.",
+    "about.p6": "Soon I'll be ordering panels for my boat. After that I'll apply the same principle to kitchen, bathroom and garden — and adapt this tool for those too.",
+    "about.p7": "You may qualify for a subsidy. I'm currently researching this myself via SVN — check the subsidies page for the latest status.",
+    "about.p8": "Try the tool and send me your feedback.",
+    "about.cta.button": "Try it on your own facade",
 
     "render.frames.heading": "Frames & Doors",
     "render.frames.subtitle": "Optional — leave empty to keep existing frames/doors unchanged.",
@@ -1084,6 +1108,18 @@ const TRANSLATIONS: Record<Locale, Strings> = {
 
     "home.footer.tagline": "Die komplette Renovierungs-Plattform für die Niederlande.",
 
+    "about.eyebrow": "Die Geschichte",
+    "about.title": "Über Renisual",
+    "about.p1": "Renisual ist eine unabhängige Renovierungs-Seite, entstanden aus einem eigenen Problem.",
+    "about.p2": "Mein Hausboot musste alle sechs Jahre gestrichen werden. Nach dem vierten Mal hatte ich genug — das ist viel Arbeit und das Holz ist nach so vielen Jahren austauschreif. Zeit für Kunststoff.",
+    "about.p3": "Keralit war eine Option, aber teuer, und man muss dafür Holz herausreißen, das noch gut ist. Dann stieß ich auf Spanl: Metall-Fassadenpaneele, die über vorhandenes Holz montiert werden können, nur 16 mm dünn, mit einem Isolationswert von 0,74 m²K/W und Brandklasse A2. Leichter, günstiger als Keralit, und das Holz kann bleiben.",
+    "about.p4": "Bei der Auswahl bin ich auf etwas gestoßen: bestehende Seiten zeigen nur Beispiele an Standardhäusern. Nirgendwo konnte ich mein eigenes Foto hochladen, um zu sehen, wie Spanl-Paneele auf meinem Hausboot aussehen würden. Also habe ich dieses Tool selbst gebaut.",
+    "about.p5": "Inzwischen verstehe ich, warum andere Seiten es nicht tun: Rendering ist nicht einfach. Man kommt der Realität nahe, aber die Farbe stimmt nie zu hundert Prozent. Trotzdem bekommt man einen viel besseren Eindruck als nur mit Materialmustern — die kann man in der Hand halten, aber nicht über eine ganze Fassade visualisieren.",
+    "about.p6": "Demnächst bestelle ich Paneele für mein Boot. Danach wende ich dasselbe Prinzip auf Küche, Bad und Garten an — auch dieses Tool werde ich dafür anpassen.",
+    "about.p7": "Möglicherweise hast du Anspruch auf eine Förderung. Ich recherchiere das gerade selbst über SVN — auf der Förderungs-Seite findest du den aktuellen Stand.",
+    "about.p8": "Probier das Tool aus und schick mir Feedback.",
+    "about.cta.button": "Auf eigener Fassade testen",
+
     "render.frames.heading": "Fenster & Türen",
     "render.frames.subtitle": "Optional — leer lassen, um vorhandene Fenster/Türen unverändert zu lassen.",
     "render.frames.windowMaterial": "Fenstermaterial",
@@ -1455,6 +1491,18 @@ const TRANSLATIONS: Record<Locale, Strings> = {
 
     "home.footer.tagline": "La plateforme complète de rénovation pour les Pays-Bas.",
 
+    "about.eyebrow": "L'histoire",
+    "about.title": "À propos de Renisual",
+    "about.p1": "Renisual est un site de rénovation indépendant, né d'un problème personnel.",
+    "about.p2": "Ma péniche devait être repeinte tous les six ans. Après la quatrième fois, j'en avais assez — c'est beaucoup de travail et, après tant d'années, le bois est bon à remplacer. L'heure du synthétique.",
+    "about.p3": "Keralit était une option, mais coûteuse, et il faut arracher du bois encore en bon état. Puis je suis tombé sur Spanl : panneaux de façade métalliques qui se posent par-dessus le bois existant, seulement 16 mm d'épaisseur, valeur d'isolation 0,74 m²K/W et classe au feu A2. Plus léger, moins cher que Keralit, et le bois peut rester.",
+    "about.p4": "Pendant ma recherche, je me suis heurté à un détail : les sites existants ne montrent que des exemples sur des maisons standard. Je ne pouvais nulle part téléverser ma propre photo pour voir comment les panneaux Spanl rendraient sur ma péniche. J'ai donc créé cet outil moi-même.",
+    "about.p5": "Je comprends aujourd'hui pourquoi les autres sites ne le font pas : le rendu n'est pas simple. On approche la réalité, mais la couleur n'est jamais juste à cent pour cent. On obtient quand même une bien meilleure indication qu'avec des échantillons seuls — on peut les tenir en main, mais pas les visualiser sur toute une façade.",
+    "about.p6": "Bientôt je commanderai des panneaux pour mon bateau. Ensuite j'appliquerai le même principe à la cuisine, la salle de bain et le jardin — et j'adapterai cet outil pour ces usages aussi.",
+    "about.p7": "Vous êtes peut-être éligible à une aide. Je l'examine moi-même via SVN — consultez la page des aides pour la situation actuelle.",
+    "about.p8": "Essayez l'outil et envoyez-moi vos retours.",
+    "about.cta.button": "Tester sur votre façade",
+
     "render.frames.heading": "Menuiseries & Portes",
     "render.frames.subtitle": "Optionnel — laisser vide pour conserver les menuiseries/portes existantes.",
     "render.frames.windowMaterial": "Matériau menuiserie",
@@ -1825,6 +1873,18 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.cta.note": "Encontrarás el formulario de presupuesto al final de la calculadora — tus datos se envían directamente a Renisual.",
 
     "home.footer.tagline": "La plataforma completa de reforma para los Países Bajos.",
+
+    "about.eyebrow": "La historia",
+    "about.title": "Sobre Renisual",
+    "about.p1": "Renisual es un sitio de renovación independiente, nacido de un problema propio.",
+    "about.p2": "Mi casa flotante tenía que repintarse cada seis años. Tras la cuarta vez ya estaba harto — es mucho trabajo y, tras tantos años, la madera ya pide ser sustituida. Hora del sintético.",
+    "about.p3": "Keralit era una opción, pero cara, y obliga a arrancar madera que aún está bien. Entonces descubrí Spanl: paneles de fachada metálicos que se montan sobre la madera existente, solo 16 mm de grosor, con un valor de aislamiento de 0,74 m²K/W y clase de fuego A2. Más ligero, más barato que Keralit, y la madera se queda.",
+    "about.p4": "Mientras elegía me topé con algo: los sitios existentes solo muestran ejemplos sobre casas estándar. En ningún lado podía subir mi propia foto para ver cómo se verían los paneles Spanl en mi casa flotante. Así que construí esa herramienta yo mismo.",
+    "about.p5": "Ahora entiendo por qué otros sitios no lo hacen: renderizar no es fácil. Te aproximas a la realidad, pero el color nunca acierta al cien por cien. Aun así, obtienes una indicación mucho mejor que con muestras de material solas — las puedes tener en la mano, pero no visualizarlas sobre toda una fachada.",
+    "about.p6": "Pronto pediré paneles para mi barco. Después aplicaré el mismo principio a la cocina, el baño y el jardín — y también adaptaré esta herramienta para eso.",
+    "about.p7": "Puede que tengas derecho a una subvención. Lo estoy investigando yo mismo a través de SVN — consulta la página de subvenciones para el estado actual.",
+    "about.p8": "Prueba la herramienta y envíame tus comentarios.",
+    "about.cta.button": "Pruébalo en tu fachada",
 
     "render.frames.heading": "Ventanas y puertas",
     "render.frames.subtitle": "Opcional — déjalo vacío para mantener ventanas/puertas existentes.",

@@ -7,7 +7,8 @@ export type SeoPageKey =
   | "subsidie"
   | "leaderboard"
   | "wachten"
-  | "offerte";
+  | "offerte"
+  | "about";
 
 export type SeoMeta = { title: string; description: string };
 
@@ -194,6 +195,33 @@ export const seoMeta: Record<SeoPageKey, Record<Locale, SeoMeta>> = {
       title: "Solicitar presupuesto — Renisual",
       description:
         "Solicite un presupuesto sin compromiso basado en su cálculo de fachada. Nuestro asesor le contactará con un precio exacto.",
+    },
+  },
+  about: {
+    nl: {
+      title: "Over Renisual — onafhankelijke renovatie-site",
+      description:
+        "Het verhaal achter Renisual: ontstaan uit een eigen woonboot-renovatie. Onafhankelijk, eigen visualisatie-tool, plannen voor keuken, badkamer en tuin.",
+    },
+    en: {
+      title: "About Renisual — independent renovation site",
+      description:
+        "The story behind Renisual: born from a personal houseboat renovation. Independent, own visualisation tool, plans for kitchen, bathroom and garden.",
+    },
+    de: {
+      title: "Über Renisual — unabhängige Renovierungs-Seite",
+      description:
+        "Die Geschichte hinter Renisual: entstanden aus einer eigenen Hausboot-Renovierung. Unabhängig, eigenes Visualisierungs-Tool, Pläne für Küche, Bad und Garten.",
+    },
+    fr: {
+      title: "À propos de Renisual — site de rénovation indépendant",
+      description:
+        "L'histoire derrière Renisual : née d'une rénovation personnelle de péniche. Indépendant, outil de visualisation maison, projets pour cuisine, salle de bain et jardin.",
+    },
+    es: {
+      title: "Sobre Renisual — sitio de renovación independiente",
+      description:
+        "La historia detrás de Renisual: nacido de una renovación personal de casa flotante. Independiente, herramienta de visualización propia, planes para cocina, baño y jardín.",
     },
   },
 };
