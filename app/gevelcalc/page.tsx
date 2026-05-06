@@ -62,8 +62,10 @@ type Mode = "quick" | "advanced";
 type Unit = "m2" | "ft2";
 type DisplayMode = "foto" | "tekst";
 
-function defaultDisplayModeFor(mode: Mode): DisplayMode {
-  return mode === "quick" ? "foto" : "tekst";
+function defaultDisplayModeFor(_mode: Mode): DisplayMode {
+  // Foto is the default for both modes — renisual is visual-first and
+  // most users recognise panels by their finish image, not by SKU code.
+  return "foto";
 }
 
 function sideKeyForIndex(i: number): string {
@@ -1620,20 +1622,10 @@ export default function GevelCalcPage() {
                 </div>
               </div>
 
-              <div className="mt-5 print-hidden">
-                <PhotoUploader
-                  onFile={(file) => handleImageUpload(QUICK_SIDE_ID, file)}
-                  uploadLabel={photos[QUICK_SIDE_ID] ? t("gc.choosePhoto") : t("gc.quick.uploadPhoto")}
-                  hintLabel={t("gc.dragDrop")}
-                  inputKey={`q-${inputResetKey}`}
-                  pickInputRef={(el) => { fileInputRefs.current.set(QUICK_SIDE_ID, el); }}
-                  accept={PHOTO_ACCEPT}
-                />
-              </div>
-
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 print-hidden">
-                {t("upload_hint")}
-              </p>
+              {/* Photo upload moved to /render — the new flow is upload
+                  there, then "Bereken materiaal" → here. The handler
+                  + state stay so prior IndexedDB photos still display
+                  in the offerte PDF. */}
               {uploading && (
                 <p className="mt-2 text-sm text-stone-500 print-hidden">{t("uploading_photo")}</p>
               )}
@@ -1742,20 +1734,10 @@ export default function GevelCalcPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 print-hidden">
-                    <PhotoUploader
-                      onFile={(file) => handleImageUpload(side.id, file)}
-                      uploadLabel={photo ? t("gc.choosePhoto") : t("gc.uploadPhoto")}
-                      hintLabel={t("gc.dragDrop")}
-                      inputKey={`${side.id}-${inputResetKey}`}
-                      pickInputRef={(el) => { fileInputRefs.current.set(side.id, el); }}
-                      accept={PHOTO_ACCEPT}
-                    />
-                  </div>
-
-                  <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 print-hidden">
-                    {t("upload_hint")}
-                  </p>
+                  {/* Per-side photo upload removed in render-first flow.
+                      See note above the QUICK_SIDE_ID uploader for
+                      rationale; the handler + state remain for any
+                      photos already saved in IndexedDB. */}
 
                   {uploadError && uploadErrorSideId === side.id && (
                     <div className="mt-2 print-hidden">

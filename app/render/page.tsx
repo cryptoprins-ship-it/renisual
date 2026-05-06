@@ -444,17 +444,20 @@ export default function RenderPage() {
           const firstWithPhoto = ids.find((id) => merged[id]);
           if (firstWithPhoto) {
             setSelectedSideId(firstWithPhoto);
-          } else {
-            setErrorMsg(t("render.error.noPhoto"));
           }
+          // No-photo case is fine — the on-page PhotoUploader is the
+          // primary entry point in the render-first flow. Surfacing
+          // "upload opnieuw in de calculator" here would be misleading
+          // since calc no longer offers photo upload.
         })
         .catch(() => {
-          // IndexedDB blew up — try the inline fallback alone.
+          // IndexedDB blew up — try the inline fallback alone. Same
+          // reasoning as above: no error needed when nothing is found,
+          // the user can use the on-page PhotoUploader.
           const fallback = parsed.photos ?? {};
           setSavedPhotos(fallback);
           const firstWithPhoto = ids.find((id) => fallback[id]);
           if (firstWithPhoto) setSelectedSideId(firstWithPhoto);
-          else setErrorMsg(t("render.error.noPhoto"));
         });
     } catch {
       setErrorMsg(t("render.error.config"));
@@ -1511,8 +1514,8 @@ export default function RenderPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-paper/95 p-4 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-2 px-6 md:px-12 lg:px-20">
+      <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-paper/95 p-3 backdrop-blur-md md:p-4">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-end gap-2 px-2 md:px-12 lg:px-20">
           {variants.length > 0 ? (
             <>
               <button
