@@ -276,7 +276,7 @@ function buildBflPromptText(opts: PromptOptions): string {
   // klein-9b is prompt-faithful — less micromanagement is more.
   return `Recolour the wall surfaces of this building in ${colorPhrase}. ${surface} ${orientLine}${structureLine}
 
-${dimsLine}Keep the roof, gutters, chimneys, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape. Do not invent new windows or features. Match the source framing exactly.
+${dimsLine}Keep the roof, gutters, chimneys, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape, same brightness and same overall lighting. Do NOT shift the global exposure of the scene to match the wall colour: the sky stays exactly as bright as in the source photo, the water stays exactly as in the source photo, the trees stay exactly as in the source photo, regardless of the new wall colour. Do not invent new windows or features. Match the source framing exactly.
 ${windowFrameLine}
 ${doorLine}
 ${fasciaLine}${colorWarn ? `\n${colorWarn.trim()}` : ""}`;
