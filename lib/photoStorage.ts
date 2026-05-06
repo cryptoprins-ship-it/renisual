@@ -143,6 +143,28 @@ export async function uploadPhoto(
   return { path, fileName: file.name };
 }
 
+// Upload a render result (already a JPEG/PNG Blob, e.g. from a data
+// URL produced by /api/render) into the offerte-renders bucket. The
+// path is returned so the caller can stash it in projectStore and
+// hand it to /api/offertes for the PDF render.
+export async function uploadRender(blob: Blob): Promise<{ path: string }> {
+  const supabase = createClient();
+  const random = crypto.randomUUID();
+  const ext = blob.type === "image/png" ? "png" : "jpg";
+  const path = `anon-uploads/${Date.now()}-${random}.${ext}`;
+
+  const { error } = await supabase.storage.from("offerte-renders").upload(path, blob, {
+    contentType: blob.type || "image/jpeg",
+    upsert: false,
+  });
+
+  if (error) {
+    throw new UploadError("upload_failed", error.message);
+  }
+
+  return { path };
+}
+
 export async function getPhotoUrl(storagePath: string): Promise<string | null> {
   const supabase = createClient();
   const { data, error } = await supabase.storage

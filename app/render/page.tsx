@@ -541,6 +541,18 @@ export default function RenderPage() {
       setSelectedSideId("");
     } catch {
       setErrorMsg(t("render.error.upload"));
+      return;
+    }
+    // Best-effort upload to Supabase Storage so the offerte PDF and
+    // any cross-page consumer can fetch the original source. Failure
+    // here is non-fatal — the render still uses the in-memory data
+    // URL — but the offerte will fall back to no source-photo image.
+    try {
+      const { uploadPhoto } = await import("@/lib/photoStorage");
+      const { path, fileName } = await uploadPhoto(file);
+      useProjectStore.getState().setPhoto(path, fileName);
+    } catch (err) {
+      console.warn("[render] source photo cloud upload failed", err);
     }
   }
 
@@ -750,6 +762,43 @@ export default function RenderPage() {
   }
   function handleShowDarker() {
     return runRenderBatch([-1, -2], false);
+  }
+
+  const [isHandingOff, setIsHandingOff] = useState(false);
+
+  // "Bereken materiaal →" handler. Uploads the most relevant variant
+  // (baseline if present, otherwise the latest) into the
+  // offerte-renders bucket and stashes the path in projectStore so
+  // the offerte PDF can render it as the "voorgesteld eindresultaat".
+  // Failure is non-fatal — we still navigate; the PDF just won't have
+  // the render image.
+  async function handleProceedToCalc() {
+    if (variants.length === 0) {
+      window.location.href = "/gevelcalc?modus=per-zijde";
+      return;
+    }
+    setIsHandingOff(true);
+    const baseline = variants.find((v) => v.toneNudge === 0) ?? variants[variants.length - 1];
+    try {
+      const m = /^data:([^;,]+);base64,(.+)$/.exec(baseline.dataUrl);
+      let blob: Blob;
+      if (m) {
+        const bytes = atob(m[2]);
+        const buf = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i);
+        blob = new Blob([buf], { type: m[1] });
+      } else {
+        const res = await fetch(baseline.dataUrl);
+        blob = await res.blob();
+      }
+      const { uploadRender } = await import("@/lib/photoStorage");
+      const { path } = await uploadRender(blob);
+      useProjectStore.getState().setRender(path);
+    } catch (err) {
+      console.warn("[render] handoff render upload failed", err);
+    } finally {
+      window.location.href = "/gevelcalc?modus=per-zijde";
+    }
   }
 
   // Mobile-safe download for a render variant. data: URLs don't trigger
@@ -1546,12 +1595,14 @@ export default function RenderPage() {
               >
                 Genereer opnieuw
               </button>
-              <Link
-                href="/gevelcalc?modus=per-zijde"
-                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
+              <button
+                type="button"
+                onClick={handleProceedToCalc}
+                disabled={isHandingOff}
+                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
               >
-                Bereken materiaal →
-              </Link>
+                {isHandingOff ? "Bezig..." : "Bereken materiaal →"}
+              </button>
             </>
           ) : (
             <button

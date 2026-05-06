@@ -1249,6 +1249,7 @@ export default function GevelCalcPage() {
     const subtotal = round2Money(materialResult.totalExVat);
     const total = round2Money(subtotal * VAT);
     const photoStoragePath = useProjectStore.getState().photoStoragePath;
+    const renderStoragePath = useProjectStore.getState().renderStoragePath;
     return {
       calcInput: {
         mode,
@@ -1278,6 +1279,7 @@ export default function GevelCalcPage() {
       },
       customer: projectName ? { projectAddress: projectName } : undefined,
       photoPath: photoStoragePath ?? undefined,
+      renderPath: renderStoragePath ?? undefined,
       includePrices,
     };
   }

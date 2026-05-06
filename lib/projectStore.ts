@@ -15,6 +15,14 @@ type ProjectState = {
   setPhoto: (storagePath: string, fileName: string) => void;
   clearPhoto: () => void;
 
+  // Path of the chosen render in the offerte-renders bucket. Set when
+  // the user clicks "Bereken materiaal →" on /render — that snapshots
+  // the current baseline variant into Supabase Storage so the offerte
+  // PDF can render it as the "voorgesteld eindresultaat" image.
+  renderStoragePath: string | null;
+  setRender: (storagePath: string) => void;
+  clearRender: () => void;
+
   selectedProduct: StoredProduct | null;
   setProduct: (product: StoredProduct) => void;
   clearProduct: () => void;
@@ -36,6 +44,7 @@ export const useProjectStore = create<ProjectState>()(
     (set) => ({
       photoStoragePath: null,
       photoFileName: null,
+      renderStoragePath: null,
       selectedProduct: null,
       totalArea: null,
       openings: null,
@@ -44,6 +53,9 @@ export const useProjectStore = create<ProjectState>()(
       setPhoto: (storagePath, fileName) =>
         set({ photoStoragePath: storagePath, photoFileName: fileName }),
       clearPhoto: () => set({ photoStoragePath: null, photoFileName: null }),
+
+      setRender: (storagePath) => set({ renderStoragePath: storagePath }),
+      clearRender: () => set({ renderStoragePath: null }),
 
       setProduct: (product) => set({ selectedProduct: product }),
       clearProduct: () => set({ selectedProduct: null }),
@@ -56,6 +68,7 @@ export const useProjectStore = create<ProjectState>()(
         set({
           photoStoragePath: null,
           photoFileName: null,
+          renderStoragePath: null,
           selectedProduct: null,
           totalArea: null,
           openings: null,
