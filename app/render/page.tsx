@@ -724,11 +724,24 @@ export default function RenderPage() {
     return runRenderBatch([-1, -2], false);
   }
 
-  // Reset back to a clean state so the user can pick a different facade
-  // photo. Wipes the current photo, the gevelcalc-side selection, and
-  // any rendered variants. The product/orientation/frame settings stay
-  // because the user typically wants to try the same product on a new
-  // facade, not the other way around.
+  // Reset for a different panel choice on the same facade photo.
+  // Keeps the source photo and frame/door/fascia settings; clears
+  // the panel selection (so the user picks a different Spanl SKU
+  // or Keralit color) and the rendered variants.
+  function handleNewPanel() {
+    setSelectedSku("");
+    setSelectedKeralitColorNumber(null);
+    setVariants([]);
+    setErrorMsg("");
+    if (typeof window !== "undefined") {
+      const panelSection = document.querySelector("section:nth-of-type(2)");
+      panelSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // Reset for a different facade photo — wipe photo + side selection +
+  // variants. Product and frame/door/fascia settings stay so the user
+  // can compare the same product on a new facade.
   function handleNewFacade() {
     setPhotoOverride("");
     setSelectedSideId("");
@@ -1427,14 +1440,24 @@ export default function RenderPage() {
       <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-paper/95 p-4 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-2 px-6 md:px-12 lg:px-20">
           {variants.length > 0 ? (
-            <button
-              type="button"
-              onClick={handleNewFacade}
-              disabled={isGenerating}
-              className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
-            >
-              Andere gevel
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={handleNewFacade}
+                disabled={isGenerating}
+                className="border border-ink bg-paper px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
+              >
+                Andere gevel
+              </button>
+              <button
+                type="button"
+                onClick={handleNewPanel}
+                disabled={isGenerating}
+                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+              >
+                Ander paneel
+              </button>
+            </>
           ) : (
             <button
               type="button"
