@@ -19,9 +19,21 @@ import { checkRenderColor, deltaE76, hexToRgb, rgbToHex, verdictFromDeltaE, type
 import DynamicMetadata from "@/components/DynamicMetadata";
 import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
+import PhotoUploader from "@/components/PhotoUploader";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
-const MAX_VARIANTS = 3;
+// One render click now produces five tiles: the exact RAL baseline plus
+// four tone nudges. Cap matches that batch size.
+const MAX_VARIANTS = 5;
+type ToneNudge = -2 | -1 | 0 | 1 | 2;
+const TONE_BATCH: ToneNudge[] = [0, -1, 1, -2, 2];
+const TONE_LABEL_NL: Record<ToneNudge, string> = {
+  [-2]: "Veel donkerder",
+  [-1]: "Iets donkerder",
+  [0]: "Standaard (RAL)",
+  [1]: "Iets lichter",
+  [2]: "Veel lichter",
+};
 
 type SavedSide = {
   id: string;
@@ -60,6 +72,7 @@ type RenderVariant = {
   createdAt: number;
   colorCheck?: ColorCheck;
   engine?: string;
+  toneNudge?: ToneNudge;
 };
 
 type WindowMaterial = "hardwood" | "plastic-white" | "plastic-anthracite" | "aluminium";
@@ -503,17 +516,18 @@ export default function RenderPage() {
     }
   }
 
-  async function handleGenerate() {
+  // Single batch runner — fires one BFL call per tone-nudge in the input
+  // array, in parallel. Used both for the default baseline-only click
+  // (`[0]`, clearFirst=true) and the optional "show variations" button
+  // (`[-1, 1, -2, 2]`, clearFirst=false → appends to the baseline tile).
+  async function runRenderBatch(toneNudges: ToneNudge[], clearFirst: boolean) {
     if (!sourcePhoto) return;
     if (brand === "spanl" && !selectedPanel) return;
     if (brand === "keralit" && (!selectedKeralitProduct || !selectedKeralitColor)) return;
-    if (variants.length >= MAX_VARIANTS) {
-      setToast("Maximaal 3 varianten — verwijder er één om verder te gaan");
-      return;
-    }
     setIsGenerating(true);
     setErrorMsg("");
     setAttemptCount(0);
+    if (clearFirst) setVariants([]);
     try {
       const refUrls: string[] = [];
       if (brand === "spanl" && selectedPanel) {
@@ -529,8 +543,6 @@ export default function RenderPage() {
         const swatch = await urlToDataUrl(selectedKeralitColor.thumbnailUrl);
         if (swatch) refUrls.push(await compressDataUrl(swatch, 1024, 0.82));
       }
-      // Re-compress at submit time too in case sourcePhoto came from a
-      // saved gevelcalc photo that wasn't size-capped on its way in.
       const photoLarge = await compressUnderSize(sourcePhoto, 1600, 2_500_000);
 
       let productSku: string | undefined;
@@ -554,9 +566,10 @@ export default function RenderPage() {
         panelSkuForVariant = selectedPanel.sku;
         targetHex = selectedPanel.ral && RAL_HEX[selectedPanel.ral]?.hex;
       } else {
+        setIsGenerating(false);
         return;
       }
-      const payload = {
+      const basePayload = {
         photoDataUrl: photoLarge,
         referenceDataUrls: refUrls,
         productSku,
@@ -564,7 +577,6 @@ export default function RenderPage() {
         productDescription,
         orientation,
         panelWidthCm,
-        // Manual advanced inputs win over gevelcalc-imported dims when set.
         facadeWidthCm: Number(manualFacadeWidthCm) > 0 ? Number(manualFacadeWidthCm) : facadeDims?.widthCm,
         facadeHeightCm: Number(manualFacadeHeightCm) > 0 ? Number(manualFacadeHeightCm) : facadeDims?.heightCm,
         windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
@@ -575,138 +587,155 @@ export default function RenderPage() {
         locale,
       };
 
-      const MAX_ATTEMPTS = 3;
-      let renderDataUrl: string | null = null;
-      let lastErrorKey: string = "render.error.retry";
-      let lastStatus = 0;
-      let engineTag: string | undefined;
-      let wallMean: { r: number; g: number; b: number } | undefined;
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        setAttemptCount(attempt);
-        const res = await fetch("/api/render", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        lastStatus = res.status;
-
-        // Read body once as text. JSON-parse only after confirming success
-        // so a non-JSON error body (e.g. plain "Forbidden" from origin
-        // verification, "Internal Server Error" from a crash, or an HTML
-        // error page) doesn't crash with "Unexpected token".
-        const bodyText = await res.text();
-
-        if (res.ok) {
-          let data: {
-            renderDataUrl?: string;
-            error?: string;
-            engine?: string;
-            segMethod?: string;
-            bflFailReason?: string;
-            wallMean?: { r: number; g: number; b: number };
-          };
+      // Per-call render. Returns the friendly error key on failure so the
+      // batch caller can surface a single message for an all-fail outcome.
+      async function runOne(toneNudge: ToneNudge): Promise<{ ok: true } | { ok: false; errorKey: string }> {
+        const payload = { ...basePayload, toneNudge };
+        const MAX_ATTEMPTS = 3;
+        let renderDataUrl: string | null = null;
+        let lastErrorKey: string = "render.error.retry";
+        let engineTag: string | undefined;
+        let wallMean: { r: number; g: number; b: number } | undefined;
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          setAttemptCount(attempt);
+          const res = await fetch("/api/render", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const bodyText = await res.text();
+          if (res.ok) {
+            let data: { renderDataUrl?: string; engine?: string; wallMean?: { r: number; g: number; b: number } };
+            try {
+              data = JSON.parse(bodyText);
+            } catch (parseErr) {
+              console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
+              lastErrorKey = "render.error.server";
+              break;
+            }
+            if (data.renderDataUrl) {
+              renderDataUrl = data.renderDataUrl;
+              engineTag = data.engine;
+              wallMean = data.wallMean;
+              break;
+            }
+            lastErrorKey = "render.error.retry";
+            continue;
+          }
+          console.error("[render] HTTP error", { status: res.status, bodyText, toneNudge });
+          let upstreamErrorText = "";
           try {
-            data = JSON.parse(bodyText);
-          } catch (parseErr) {
-            console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
-            lastErrorKey = "render.error.server";
-            break;
+            const parsed = JSON.parse(bodyText) as { error?: string };
+            upstreamErrorText = String(parsed.error ?? "");
+          } catch {
+            upstreamErrorText = bodyText;
           }
-          if (data.renderDataUrl) {
-            renderDataUrl = data.renderDataUrl;
-            console.log("[render] engine:", data.engine, "segMethod:", data.segMethod, "bflFailReason:", data.bflFailReason, "wallMean:", data.wallMean);
-            engineTag = data.engine;
-            wallMean = data.wallMean;
-            break;
+          if (res.status === 401 || res.status === 403) { lastErrorKey = "render.error.auth"; break; }
+          if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
+            lastErrorKey = "render.error.rateLimit";
+            if (attempt >= MAX_ATTEMPTS) break;
+            const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
+            const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
+            await new Promise((r) => setTimeout(r, delaySec * 1000));
+            continue;
           }
-          // 200 + no renderDataUrl: treat as a soft retryable failure.
+          if (res.status >= 500) { lastErrorKey = "render.error.server"; break; }
           lastErrorKey = "render.error.retry";
-          continue;
-        }
-
-        // Non-OK: log full context and map status → friendly key.
-        console.error("[render] HTTP error", { status: res.status, bodyText });
-
-        // Try to pull a retryDelay out of an upstream Gemini quota body
-        // when present, but never throw if the body isn't JSON.
-        let upstreamErrorText = "";
-        try {
-          const parsed = JSON.parse(bodyText) as { error?: string };
-          upstreamErrorText = String(parsed.error ?? "");
-        } catch {
-          upstreamErrorText = bodyText;
-        }
-
-        if (res.status === 401 || res.status === 403) {
-          lastErrorKey = "render.error.auth";
           break;
         }
-        if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
-          lastErrorKey = "render.error.rateLimit";
-          if (attempt >= MAX_ATTEMPTS) break;
-          const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
-          const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
-          await new Promise((r) => setTimeout(r, delaySec * 1000));
-          continue;
+        if (!renderDataUrl) return { ok: false, errorKey: lastErrorKey };
+
+        const variant: RenderVariant = {
+          id: crypto.randomUUID(),
+          panelLabel: productLabel,
+          panelSku: panelSkuForVariant,
+          orientation,
+          prompt: "",
+          dataUrl: renderDataUrl,
+          createdAt: Date.now(),
+          engine: engineTag,
+          toneNudge,
+        };
+        // Append in tone-batch order regardless of completion order.
+        setVariants((prev) => {
+          const next = [...prev, variant];
+          next.sort((a, b) => TONE_BATCH.indexOf(a.toneNudge ?? 0) - TONE_BATCH.indexOf(b.toneNudge ?? 0));
+          return next;
+        });
+        sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${variant.id}`)
+          .then((key) => saveRender(key, renderDataUrl!))
+          .catch(() => {});
+        if (targetHex) {
+          (async () => {
+            try {
+              let check: ColorCheck | null = null;
+              if (wallMean) {
+                const sampledHex = rgbToHex([wallMean.r, wallMean.g, wallMean.b]);
+                const target = hexToRgb(targetHex!);
+                const deltaE = Math.round(deltaE76([wallMean.r, wallMean.g, wallMean.b], target) * 10) / 10;
+                check = { deltaE, verdict: verdictFromDeltaE(deltaE), sampledHex, targetHex: targetHex! };
+              } else {
+                check = await checkRenderColor(renderDataUrl!, targetHex!);
+              }
+              if (check) {
+                setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, colorCheck: check } : v)));
+              }
+            } catch {
+              /* best-effort */
+            }
+          })();
         }
-        if (res.status >= 500) {
-          lastErrorKey = "render.error.server";
-          break;
-        }
-        lastErrorKey = "render.error.retry";
-        break;
+        return { ok: true };
       }
-      if (!renderDataUrl) {
-        console.error("[render] all attempts exhausted", { lastStatus, lastErrorKey });
-        setErrorMsg(t(lastErrorKey));
-        return;
-      }
-      const variant: RenderVariant = {
-        id: crypto.randomUUID(),
-        panelLabel: productLabel,
-        panelSku: panelSkuForVariant,
-        orientation,
-        prompt: "",
-        dataUrl: renderDataUrl,
-        createdAt: Date.now(),
-        engine: engineTag,
-      };
-      setVariants((prev) => [variant, ...prev]);
-      const key = await sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${variant.id}`);
-      await saveRender(key, renderDataUrl).catch(() => {});
-      if (targetHex) {
-        try {
-          // Prefer server-side wallMean (sampled inside the SAM wall mask)
-          // over a client-side pixel sample — the client samples fixed
-          // percentage regions which often miss the houseboat entirely
-          // (e.g. when the boat is in the bottom third) and instead read
-          // sky/water, producing meaningless ΔE 20+ readings on otherwise
-          // correct renders. wallMean is the actual mean wall colour.
-          let check: ColorCheck | null = null;
-          if (wallMean) {
-            const sampledHex = rgbToHex([wallMean.r, wallMean.g, wallMean.b]);
-            const target = hexToRgb(targetHex);
-            const deltaE = Math.round(deltaE76([wallMean.r, wallMean.g, wallMean.b], target) * 10) / 10;
-            check = {
-              deltaE,
-              verdict: verdictFromDeltaE(deltaE),
-              sampledHex,
-              targetHex,
-            };
-          } else {
-            check = await checkRenderColor(renderDataUrl, targetHex);
-          }
-          if (check) {
-            setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, colorCheck: check } : v)));
-          }
-        } catch {
-          /* color check best-effort */
-        }
+
+      const results = await Promise.allSettled(toneNudges.map((tn) => runOne(tn)));
+      const successCount = results.filter((r) => r.status === "fulfilled" && r.value.ok).length;
+      if (successCount === 0) {
+        const firstFailure = results.find(
+          (r) => r.status === "fulfilled" && !r.value.ok,
+        );
+        const errorKey =
+          firstFailure && firstFailure.status === "fulfilled" && !firstFailure.value.ok
+            ? firstFailure.value.errorKey
+            : "render.error.generic";
+        setErrorMsg(t(errorKey));
+      } else if (successCount < toneNudges.length) {
+        setToast(`${successCount} van ${toneNudges.length} varianten gerenderd — sommige nudges zijn mislukt`);
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t("render.error.generic"));
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  // Default render: a single baseline tile at the exact RAL (1 BFL credit).
+  // Clears any previous batch first.
+  function handleGenerate() {
+    return runRenderBatch([0], true);
+  }
+
+  // Optional follow-ups: each nudges in one direction (lighter or darker)
+  // and appends to the existing baseline tile. 2 BFL credits per click.
+  function handleShowLighter() {
+    return runRenderBatch([1, 2], false);
+  }
+  function handleShowDarker() {
+    return runRenderBatch([-1, -2], false);
+  }
+
+  // Reset back to a clean state so the user can pick a different facade
+  // photo. Wipes the current photo, the gevelcalc-side selection, and
+  // any rendered variants. The product/orientation/frame settings stay
+  // because the user typically wants to try the same product on a new
+  // facade, not the other way around.
+  function handleNewFacade() {
+    setPhotoOverride("");
+    setSelectedSideId("");
+    setVariants([]);
+    setErrorMsg("");
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -768,46 +797,12 @@ export default function RenderPage() {
             </div>
           )}
 
-          <div
-            className="mt-3 border border-dashed border-stone-300 bg-stone-50 p-8 text-center"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              handleUpload(e.dataTransfer.files?.[0] ?? null);
-            }}
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex flex-wrap justify-center gap-2">
-                <label className="cursor-pointer">
-                  <span className="block bg-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800">
-                    {photoOverride ? t("render.changePhoto") : t("render.uploadOwn")}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-                {/* Mobile-only camera capture — uses the rear camera via
-                    the "environment" capture hint. Hidden on md+ where a
-                    physical camera button would only confuse desktop
-                    users. */}
-                <label className="cursor-pointer md:hidden">
-                  <span className="block border border-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-paper">
-                    {locale === "nl" ? "Maak foto" : locale === "de" ? "Foto aufnehmen" : locale === "fr" ? "Prendre une photo" : locale === "es" ? "Tomar foto" : "Take photo"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-              </div>
-              <span className="text-xs text-stone-500">{t("render.dropOrDrag")}</span>
-            </div>
+          <div className="mt-3">
+            <PhotoUploader
+              onFile={(file) => handleUpload(file)}
+              uploadLabel={photoOverride ? t("render.changePhoto") : t("render.uploadOwn")}
+              hintLabel={t("render.dropOrDrag")}
+            />
           </div>
 
           <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
@@ -1268,12 +1263,8 @@ export default function RenderPage() {
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
               {t("render.section.renders")}
             </p>
-            <span
-              className={`text-xs font-medium ${
-                variants.length >= MAX_VARIANTS ? "text-amber-700" : "text-gray-500"
-              }`}
-            >
-              {`${variants.length}/${MAX_VARIANTS}`}
+            <span className="text-xs font-medium text-gray-500">
+              {variants.length > 0 ? `${variants.length}/${MAX_VARIANTS}` : ""}
             </span>
           </div>
 
@@ -1281,13 +1272,6 @@ export default function RenderPage() {
             <span aria-hidden className="text-base leading-none">ⓘ</span>
             <p>{t("render.disclaimer")}</p>
           </div>
-
-          {variants.length >= MAX_VARIANTS && (
-            <div className="mt-3 flex items-start gap-2 rounded-xl border-2 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900">
-              <span aria-hidden className="text-base leading-none">⚠</span>
-              <span>{t("render.cap.banner")}</span>
-            </div>
-          )}
 
           {isGenerating && (
             <div className="mt-3 overflow-hidden rounded-xl border border-black">
@@ -1300,6 +1284,34 @@ export default function RenderPage() {
           )}
 
           <div className="mt-4 space-y-4">
+            {!isGenerating && variants.some((v) => v.toneNudge === 0) && (
+              <div className="grid grid-cols-2 gap-3">
+                {!variants.some((v) => v.toneNudge === 1 || v.toneNudge === 2) && (
+                  <button
+                    type="button"
+                    onClick={handleShowLighter}
+                    className="rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 px-4 py-3 text-center text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100"
+                  >
+                    Lichter
+                    <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-stone-500">
+                      +2 credits
+                    </span>
+                  </button>
+                )}
+                {!variants.some((v) => v.toneNudge === -1 || v.toneNudge === -2) && (
+                  <button
+                    type="button"
+                    onClick={handleShowDarker}
+                    className="rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 px-4 py-3 text-center text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100"
+                  >
+                    Donkerder
+                    <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-stone-500">
+                      +2 credits
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
             {variants.map((v) => (
               <article key={v.id} className="overflow-hidden rounded-xl border border-black">
                 <img
@@ -1310,6 +1322,17 @@ export default function RenderPage() {
 
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
+                    {v.toneNudge !== undefined && (
+                      <span
+                        className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono ${
+                          v.toneNudge === 0
+                            ? "bg-ink text-paper"
+                            : "bg-stone-200 text-stone-800"
+                        }`}
+                      >
+                        {TONE_LABEL_NL[v.toneNudge]}
+                      </span>
+                    )}
                     {v.colorCheck && (
                       <span
                         className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${
@@ -1403,23 +1426,29 @@ export default function RenderPage() {
 
       <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-paper/95 p-4 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-2 px-6 md:px-12 lg:px-20">
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={
-              isGenerating ||
-              !sourcePhoto ||
-              variants.length >= MAX_VARIANTS ||
-              (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
-            }
-            className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
-          >
-            {variants.length >= MAX_VARIANTS
-              ? t("render.cap.btnLabel")
-              : variants.length > 0
-              ? t("render.btnAddVariant")
-              : t("render.btnGenerate")}
-          </button>
+          {variants.length > 0 ? (
+            <button
+              type="button"
+              onClick={handleNewFacade}
+              disabled={isGenerating}
+              className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+            >
+              Andere gevel
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={
+                isGenerating ||
+                !sourcePhoto ||
+                (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
+              }
+              className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+            >
+              Genereer (1 credit)
+            </button>
+          )}
         </div>
       </div>
     </main>

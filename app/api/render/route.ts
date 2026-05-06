@@ -13,8 +13,7 @@ import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/rate
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/utils/supabase/server";
-import { buildProtectedWallRender } from "@/lib/wallProtect";
-import { generateGrooveSvg } from "@/lib/groovePattern";
+import { resolveBflPrompt, detectFamilyAndShape } from "@/lib/renderPrompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -126,160 +125,9 @@ function detectStructure(product: ProductForPrompt): boolean {
   return sku.startsWith("YMPB") || sku.startsWith("YPMB") || sku.startsWith("YMSG");
 }
 
-// Darken a #RRGGBB hex by `amount` (0..1). Used to pre-compensate the
-// BFL prompt for klein-9b's lightening bias on dark/mid colors. White
-// targets are skipped entirely — the model has no upper-lightening
-// headroom on white, and darkening white turns it into grey/cream.
-function darkenHex(hex: string, amount: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  const r0 = (n >> 16) & 0xff;
-  const g0 = (n >> 8) & 0xff;
-  const b0 = n & 0xff;
-  // Relative luminance (0..1). Skip compensation entirely on near-white
-  // (>0.82) — those don't suffer from the lightening bias and darkening
-  // makes them visibly off-white.
-  const lum = (0.2126 * r0 + 0.7152 * g0 + 0.0722 * b0) / 255;
-  if (lum > 0.82) return hex;
-  // Taper compensation on light colors so we don't over-darken pastels.
-  const effective = lum > 0.65 ? amount * 0.5 : amount;
-  const r = Math.max(0, Math.round(r0 * (1 - effective)));
-  const g = Math.max(0, Math.round(g0 * (1 - effective)));
-  const b = Math.max(0, Math.round(b0 * (1 - effective)));
-  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
-}
-
-// Compensation for BFL FLUX.2 klein-9b's midtone darkening bias.
-// Playground tests on 2026-05-05 (4-image batches per RAL):
-//   RAL 7038 #B5B8B1 → output ~#707378 (~25 RGB too dark, ΔE≈22)
-//   RAL 7038 #D0D3CC → output ~#A0A3A0 (close to target)
-//   RAL 7021 #2A2D2F → on target without compensation
-//   RAL 9005 #0E0E10 → on target without compensation
-// So bias is midtone-specific, not universal. Whites untested but
-// expected to have a yellow-shift bias (different axis), handled
-// separately if/when we add cool-shift. Skips both extremes here.
-function lightenHexForBfl(hex: string, amount: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  const r0 = (n >> 16) & 0xff;
-  const g0 = (n >> 8) & 0xff;
-  const b0 = n & 0xff;
-  const lum = (0.2126 * r0 + 0.7152 * g0 + 0.0722 * b0) / 255;
-  if (lum < 0.20 || lum > 0.85) return hex;
-  const effective = lum > 0.75 ? amount * 0.5 : amount;
-  const r = Math.min(255, Math.round(r0 + (255 - r0) * effective));
-  const g = Math.min(255, Math.round(g0 + (255 - g0) * effective));
-  const b = Math.min(255, Math.round(b0 + (255 - b0) * effective));
-  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
-}
-
 function structureBlock(): string {
   return `STRUCTURE / LINEN TEXTURE (ADDITIVE — overrides "no texture, no wood grain"):
 On top of every panel face, render a fine linen wood-grain texture — subtle 3D relief running parallel to the panel direction (top-to-bottom for vertical panels, left-to-right for horizontal). Like brushed wood-grain. The texture is surface detail only — panels remain flat overall, no deep grooves from the texture. The texture catches light differently across each panel, giving a tactile woven appearance. Texture follows each panel face individually — does NOT bleed across panel boundaries or coupling joints.`;
-}
-
-// Simpler prompt template for BFL FLUX.2 klein-9b — derived from
-// /lab/flux experimentation that produced clean, color-accurate
-// output. The elaborate buildMonoFlatPrompt was tuned for Gemini's
-// quirks (panel rhythm enforcement, color compensation, etc) and
-// confuses klein-9b which is more prompt-faithful by default.
-function buildBflPromptText(opts: PromptOptions): string {
-  const { product, orientation, facadeWidthMeters, facadeHeightMeters, includeFascia, windowFrame, door } = opts;
-  const widthCm = facadeWidthMeters ? Math.round(facadeWidthMeters * 100) : null;
-  const heightCm = facadeHeightMeters ? Math.round(facadeHeightMeters * 100) : null;
-
-  const ralPart = product.ral_code ? `RAL ${product.ral_code}` : "";
-  const colorName = product.color_name ?? "matt grey";
-  // BFL klein-9b has a midtone darkening bias (~15%, measured in /lab/flux
-  // playground on 2026-05-05). Pre-lighten the prompt-hex so klein-9b's
-  // own bias lands the output near the actual RAL target. Darks and whites
-  // pass through unchanged — see lightenHexForBfl for the band logic.
-  const baseHex = product.color_hex ?? "";
-  const promptHex = baseHex ? lightenHexForBfl(baseHex, 0.15) : "";
-  const colorPhrase = `matt ${colorName}${ralPart ? ` ${ralPart}` : ""}${promptHex ? ` (hex ${promptHex})` : ""}`;
-
-  const dimsLine = widthCm && heightCm
-    ? `The facade is ${widthCm}cm wide and ${heightCm}cm tall.\n\n`
-    : "";
-
-  const line = detectLine(product);
-  const hasStructure = detectStructure(product);
-
-  const isGroove = line === "mono_groove";
-  // Rhythm spacing per spec:
-  //   Mono Flat: hairline naad every 37cm
-  //   Mono Groove: visible groove every ~13cm (3× Mono Flat density)
-  // NOTE: avoid "rabat" (Dutch term that biases the model toward wood
-  // planking) and avoid "wood-grain" anywhere in the prompt — both
-  // pull klein-9b toward rendering pale wood instead of metal in the
-  // requested RAL color.
-  const orientWord = orientation === "vertical" ? "vertical" : "horizontal";
-  const isDark = product.ral_code === "9005" || product.ral_code === "7021" || product.ral_code === "7016" || product.ral_code === "7012";
-  const isWhite = product.ral_code === "9003" || product.ral_code === "9010";
-  // Seam contrast direction is luminance-aware: on dark RAL the seams must
-  // be slightly LIGHTER than the panel (otherwise they vanish into black);
-  // on light RAL they're slightly darker. Mid colours can go either way.
-  // Same logic for groove shadow lines — on darks the recess is shown via
-  // a highlight on one edge, on lights via a shadow line.
-  const seamContrast = isDark
-    ? `Seams are very subtly LIGHTER than the panel color — about 5% in luminance — so the panel orientation stays visible on dark colours. Never bright, never white, never contrasting.`
-    : isWhite
-    ? `Seams are very subtly DARKER than the panel color — about 5% in luminance — so the panel orientation stays visible on light colours. Never grey, never contrasting.`
-    : `Seams are same-tone hairlines, very subtly different in luminance from the panel color (never white, never black, never contrasting).`;
-  const grooveContrast = isDark
-    ? `Each groove is a 5mm recess shown as a thin highlight along one edge from indirect lighting — making the orientation clearly readable on dark colours. Never bright, never white, never contrasting.`
-    : `Each groove is a 5mm recess shown as a thin shadow line — clearly visible against light panels.`;
-  const surface = isGroove
-    ? `painted matt metal cladding with crisp ${orientWord} grooves every ~13cm across the facade. ${grooveContrast} The base material is a flat metal sheet painted in the color below; grooves are pressed into the metal, NOT carved wood.`
-    : `painted matt metal cladding with very faint hairline ${orientWord} seams every 37cm. ${seamContrast} Otherwise smooth and uniform metal sheet.`;
-
-  const orientLine = isGroove
-    ? orientation === "vertical"
-      ? `Grooves run top-to-bottom across the facade.`
-      : `Grooves run left-to-right across the facade.`
-    : orientation === "vertical"
-    ? `Hairline seams run top-to-bottom across the facade.`
-    : `Hairline seams run left-to-right across the facade.`;
-  const colorWarn = isWhite
-    ? "  IMPORTANT: render as PURE COOL WHITE. NOT cream, NOT beige, NOT off-white, NOT yellow-tinted, NOT warm-tinted."
-    : isDark
-    ? `  IMPORTANT: render as TRUE COOL ${product.ral_code === "9005" ? "BLACK" : "DARK GREY"}. NOT brown, NOT dark brown, NOT warm-tinted, NOT yellow-shifted.`
-    : "";
-  const colorTone = isDark
-    ? `Pure ${product.ral_code === "9005" ? "deep black" : "dark grey"} powder-coated matt finish.`
-    : isWhite
-    ? `Pure cool white powder-coated matt finish.`
-    : `Powder-coated matt metal finish. No weathering, no patina.`;
-
-  const structureLine = hasStructure
-    ? `\n\nSURFACE TEXTURE: subtle linen-weave embossing on the painted metal surface, running parallel to the panel direction. Fine fabric-like 3D relief — NOT wood, NOT wood grain, NOT planks. The base material is still a painted metal sheet; the texture is a faint pressed pattern on the metal. Color must remain the matt RAL color specified above, NOT a wood color.`
-    : "";
-
-  const fasciaLine = includeFascia
-    ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
-    : "PRESERVE the fascia board (boeideel) — keep its original color, do NOT recolor.";
-
-  // Window-frame and door recolor instructions — only fire when the user
-  // selected a material/colour in the /render UI. Otherwise the elements
-  // get the default "preserve from source" treatment in the main keep-line.
-  const windowFrameLine = windowFrame?.material
-    ? `Recolour the window frames as ${windowFrame.material}. Keep the windows themselves and the glass exactly as in the source photo.`
-    : "Keep the windows, glass and window frames exactly as in the source photo — same colour, same material.";
-  const doorLine = door?.material && door?.colour
-    ? `Recolour the doors as ${door.material} in ${door.colour}. Keep the door frames structurally as in the source.`
-    : "Keep the doors and door frames exactly as in the source photo — same colour, same material.";
-
-  // Minimal prompt modelled on what works in BFL Flux playground:
-  // a few clear sentences, no shouted caps, no exhaustive don'ts.
-  // klein-9b is prompt-faithful — less micromanagement is more.
-  return `Recolour the wall surfaces of this building in ${colorPhrase}. ${surface} ${orientLine}${structureLine}
-
-${dimsLine}Keep the roof, gutters, chimneys, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape, same brightness and same overall lighting. Do NOT shift the global exposure of the scene to match the wall colour: the sky stays exactly as bright as in the source photo, the water stays exactly as in the source photo, the trees stay exactly as in the source photo, regardless of the new wall colour. Do not invent new windows or features. Match the source framing exactly.
-${windowFrameLine}
-${doorLine}
-${fasciaLine}${colorWarn ? `\n${colorWarn.trim()}` : ""}`;
 }
 
 type PromptOptions = {
@@ -700,6 +548,10 @@ const renderSchema = z.object({
   // Whether the fascia board (boeideel) should be replaced with the new
   // cladding (true, default) or kept unchanged (false).
   includeBoeideel: z.boolean().default(true),
+  // Variant-picker tone nudge: -2 noticeably darker .. 0 exact RAL .. +2
+  // noticeably lighter. Drives a phrase appended to the BFL prompt; only
+  // honoured by the BFL path, ignored on the Gemini fallback.
+  toneNudge: z.union([z.literal(-2), z.literal(-1), z.literal(0), z.literal(1), z.literal(2)]).optional(),
   locale: z.string().max(10).optional(),
 });
 
@@ -1240,10 +1092,17 @@ export async function POST(request: Request) {
   if (bflKey) {
     try {
       logger.info({}, "render_bfl_attempt");
-      const bflPrompt = buildBflPromptText({
-        product,
-        brandPrefix,
-        orientation: body.orientation,
+      const { family, shape } = detectFamilyAndShape({
+        sku: product.sku,
+        ral_code: product.ral_code,
+      });
+      const bflPrompt = resolveBflPrompt({
+        family,
+        shape,
+        orientation: body.orientation ?? "horizontal",
+        ralCode: product.ral_code,
+        colorName: product.color_name,
+        colorHex: product.color_hex,
         facadeWidthMeters,
         facadeHeightMeters,
         includeFascia: body.includeBoeideel,
@@ -1251,6 +1110,7 @@ export async function POST(request: Request) {
         door: body.door?.material && body.door?.colour
           ? { material: body.door.material, colour: body.door.colour }
           : undefined,
+        toneNudge: body.toneNudge,
       });
       const { bytes: outBytes, mime: outMime } = await renderViaBfl({
         apiKey: bflKey,
@@ -1260,102 +1120,9 @@ export async function POST(request: Request) {
       });
       const matched = await matchSourceAspect(outBytes, outMime, sourceBytes);
       logger.info({ outBytes: matched.bytes.length }, "render_bfl_ok");
-
-      // SAM-mask post-pass: protect boeideel/kozijnen/sky/water from BFL
-      // recolor and pull wall pixels toward target_hex (closes ΔE on dark
-      // RAL where prompt-side darkenHex can't compensate). Best-effort —
-      // any failure here falls back to the raw BFL render rather than
-      // bubbling out to the Gemini fallback (BFL itself succeeded).
-      let engineTag = "bfl-raw";
-      try {
-        const productLine = detectLine(product);
-        const isMonoFlat = productLine === "mono_flat";
-        const isMonoGroove = productLine === "mono_groove";
-        const hasStructure = detectStructure(product);
-        // Don't solid-fill — SAM masks the whole boat outline including
-        // windows, so flatten over-paints kozijnen/ramen which BFL had
-        // rendered correctly. ΔE-shift on BFL keeps every detail BFL drew
-        // (windows, frames, boeideel) and only nudges the wall hue toward
-        // target. Mono Groove still gets the procedural groove overlay on
-        // top via the existing branch below.
-        const useFlatten = false;
-        const seamOrientation = body.orientation === "vertical" ? "vertical" : "horizontal";
-        const facadeAlongSeams = seamOrientation === "horizontal"
-          ? Number(facadeHeightMeters) * 100
-          : Number(facadeWidthMeters) * 100;
-        const panelPitchCm = 37;
-        const seamCount = isMonoFlat && facadeAlongSeams > 0
-          ? Math.max(2, Math.round(facadeAlongSeams / panelPitchCm))
-          : isMonoGroove ? 0 : undefined;
-        const wp = await buildProtectedWallRender({
-          sourceBytes,
-          aiRenderBytes: matched.bytes,
-          targetHex: product.color_hex ?? undefined,
-          flatten: useFlatten,
-          flatSeamOrientation: seamOrientation,
-          flatSeamCount: seamCount,
-          includeFascia: body.includeBoeideel,
-        });
-        if (wp) {
-          let finalBytes: Buffer = wp.bytes;
-          // Mono Groove: composite a uniform procedural overlay on top of the
-          // protected layer. The mask multiplies into the SVG's own alpha so
-          // grooves only appear on wall pixels.
-          if (isMonoGroove && facadeWidthMeters && facadeHeightMeters) {
-            const grooveSvg = generateGrooveSvg({
-              width: wp.width,
-              height: wp.height,
-              facadeWidthCm: facadeWidthMeters * 100,
-              facadeHeightCm: facadeHeightMeters * 100,
-              variant: hasStructure ? "groove-structure" : "groove",
-              orientation: body.orientation === "vertical" ? "vertical" : "horizontal",
-            });
-            const grooveRaw = await sharp(Buffer.from(grooveSvg))
-              .ensureAlpha()
-              .resize(wp.width, wp.height, { fit: "fill" })
-              .raw()
-              .toBuffer({ resolveWithObject: true });
-            const grooveData = Buffer.from(grooveRaw.data);
-            for (let i = 0; i < wp.maskRaw.length; i++) {
-              grooveData[i * 4 + 3] = Math.round((grooveData[i * 4 + 3] * wp.maskRaw[i]) / 255);
-            }
-            const maskedGroove = await sharp(grooveData, {
-              raw: { width: wp.width, height: wp.height, channels: 4 },
-            }).png().toBuffer();
-            finalBytes = await sharp(wp.bytes)
-              .composite([{ input: maskedGroove, blend: "over" }])
-              .toBuffer();
-          }
-          const finalJpeg = await sharp(finalBytes).jpeg({ quality: 92 }).toBuffer();
-          logger.info(
-            {
-              segMethod: wp.segMethod,
-              colorDelta: wp.colorDelta,
-              wallMean: wp.wallMean,
-              line: productLine,
-              structure: hasStructure,
-            },
-            "render_bfl_wall_protected",
-          );
-          engineTag = "bfl-protected";
-          return Response.json({
-            renderDataUrl: `data:image/jpeg;base64,${finalJpeg.toString("base64")}`,
-            engine: engineTag,
-            segMethod: wp.segMethod,
-            colorDelta: wp.colorDelta,
-            wallMean: wp.wallMean,
-            flattenFillRatio: wp.flattenFillRatio,
-            flattenSkipped: wp.flattenSkipped,
-            line: productLine,
-          });
-        }
-        logger.warn("render_bfl_wall_protect_unavailable");
-      } catch (wpErr) {
-        logger.warn({ err: wpErr }, "render_bfl_wall_protect_threw");
-      }
       return Response.json({
         renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
-        engine: engineTag,
+        engine: "bfl",
       });
     } catch (err) {
       bflFailReason = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200);

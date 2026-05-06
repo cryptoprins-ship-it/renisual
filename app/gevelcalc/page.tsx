@@ -30,6 +30,7 @@ import { useProjectStore } from "@/lib/projectStore";
 import { uploadPhoto, UploadError } from "@/lib/photoStorage";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import SiteNav from "@/components/SiteNav";
+import PhotoUploader from "@/components/PhotoUploader";
 
 // Permissive accept hint so Android/iOS pickers offer Camera + Gallery +
 // Files. Real type/size validation happens in lib/photoStorage.ts after
@@ -1353,37 +1354,15 @@ export default function GevelCalcPage() {
                 </div>
               </div>
 
-              <div
-                className="mt-5 rounded-2xl border-2 border-dashed border-black p-4 text-center print-hidden"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleImageUpload(QUICK_SIDE_ID, e.dataTransfer.files?.[0] ?? null);
-                }}
-              >
-                <label className="cursor-pointer inline-flex flex-col items-center gap-2">
-                  <span className="rounded-xl bg-black text-white px-4 py-2 text-sm font-medium">
-                    {photos[QUICK_SIDE_ID] ? t("gc.choosePhoto") : t("gc.quick.uploadPhoto")}
-                  </span>
-                  <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
-                  <input
-                    key={`q-${inputResetKey}`}
-                    ref={(el) => { fileInputRefs.current.set(QUICK_SIDE_ID, el); }}
-                    type="file"
-                    accept={PHOTO_ACCEPT}
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      // Belt-and-braces: still clear the DOM value here
-                      // even though the key-bump remounts the input on
-                      // settle. Covers the rare case where the user
-                      // picks two files in rapid succession before the
-                      // remount has applied.
-                      e.target.value = "";
-                      handleImageUpload(QUICK_SIDE_ID, file);
-                    }}
-                  />
-                </label>
+              <div className="mt-5 print-hidden">
+                <PhotoUploader
+                  onFile={(file) => handleImageUpload(QUICK_SIDE_ID, file)}
+                  uploadLabel={photos[QUICK_SIDE_ID] ? t("gc.choosePhoto") : t("gc.quick.uploadPhoto")}
+                  hintLabel={t("gc.dragDrop")}
+                  inputKey={`q-${inputResetKey}`}
+                  pickInputRef={(el) => { fileInputRefs.current.set(QUICK_SIDE_ID, el); }}
+                  accept={PHOTO_ACCEPT}
+                />
               </div>
 
               <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 print-hidden">
@@ -1494,32 +1473,15 @@ export default function GevelCalcPage() {
                     </div>
                   </div>
 
-                  <div
-                    className="mt-5 rounded-2xl border-2 border-dashed border-black p-4 text-center print-hidden"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      handleImageUpload(side.id, e.dataTransfer.files?.[0] ?? null);
-                    }}
-                  >
-                    <label className="cursor-pointer inline-flex flex-col items-center gap-2">
-                      <span className="rounded-xl bg-black text-white px-4 py-2 text-sm font-medium">
-                        {photo ? t("gc.choosePhoto") : t("gc.uploadPhoto")}
-                      </span>
-                      <span className="text-xs text-gray-400">{t("gc.dragDrop")}</span>
-                      <input
-                        key={`${side.id}-${inputResetKey}`}
-                        ref={(el) => { fileInputRefs.current.set(side.id, el); }}
-                        type="file"
-                        accept={PHOTO_ACCEPT}
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] ?? null;
-                          e.target.value = "";
-                          handleImageUpload(side.id, file);
-                        }}
-                      />
-                    </label>
+                  <div className="mt-5 print-hidden">
+                    <PhotoUploader
+                      onFile={(file) => handleImageUpload(side.id, file)}
+                      uploadLabel={photo ? t("gc.choosePhoto") : t("gc.uploadPhoto")}
+                      hintLabel={t("gc.dragDrop")}
+                      inputKey={`${side.id}-${inputResetKey}`}
+                      pickInputRef={(el) => { fileInputRefs.current.set(side.id, el); }}
+                      accept={PHOTO_ACCEPT}
+                    />
                   </div>
 
                   <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500 print-hidden">

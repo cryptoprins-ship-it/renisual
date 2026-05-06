@@ -14,6 +14,7 @@ import {
 } from "@/lib/calcEngine";
 import { usePhotoStore } from "@/lib/usePhotoStore";
 import { useLocale } from "@/lib/i18n";
+import PhotoUploader from "@/components/PhotoUploader";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 const MAX_SIDES = 10;
@@ -76,7 +77,6 @@ export default function MobileGevelcalcPage() {
   const [hydrated, setHydrated] = useState(false);
   const photoStore = usePhotoStore();
   const [photos, setPhotos] = useState<Record<string, string>>({});
-  const cameraRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -296,38 +296,17 @@ export default function MobileGevelcalcPage() {
 
             <div className="rounded-2xl border border-black bg-white p-4">
               <p className="mb-3 text-sm font-medium">Foto van deze gevel</p>
-              {photos[activeSide.id] ? (
-                <div className="space-y-3">
-                  <img
-                    src={photos[activeSide.id]}
-                    alt={activeSide.name}
-                    className="block aspect-[4/3] w-full rounded-xl border border-black object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => cameraRef.current?.click()}
-                    className="min-h-[48px] w-full rounded-xl border border-black bg-white text-base font-medium"
-                  >
-                    Foto wijzigen
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => cameraRef.current?.click()}
-                  className="flex min-h-[120px] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-black bg-neutral-50 text-base font-semibold"
-                >
-                  <span aria-hidden className="text-3xl">📷</span>
-                  <span>Foto kiezen</span>
-                  <span className="text-xs font-normal text-gray-600">{t("photo_upload_subtitle")}</span>
-                </button>
+              {photos[activeSide.id] && (
+                <img
+                  src={photos[activeSide.id]}
+                  alt={activeSide.name}
+                  className="mb-3 block aspect-[4/3] w-full rounded-xl border border-black object-cover"
+                />
               )}
-              <input
-                ref={cameraRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handlePhotoFile(e.target.files?.[0] ?? null)}
+              <PhotoUploader
+                onFile={handlePhotoFile}
+                uploadLabel={photos[activeSide.id] ? "Foto wijzigen" : "Foto kiezen"}
+                hintLabel={t("photo_upload_subtitle")}
               />
             </div>
 
