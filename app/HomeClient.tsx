@@ -125,11 +125,11 @@ export default function HomeClient() {
           </Link>
           <div className="flex items-center gap-6">
             <div className="hidden items-center gap-6 font-mono text-xs uppercase tracking-[0.15em] text-stone-600 md:flex">
-              <Link href={calcHref} className="hover:text-ink transition-colors">
-                {t("home.nav.calculator")}
-              </Link>
               <Link href="/render" className="hover:text-ink transition-colors">
                 {t("home.nav.render")}
+              </Link>
+              <Link href={calcHref} className="hover:text-ink transition-colors">
+                {t("home.nav.calculator")}
               </Link>
               <a href="#roi" className="hover:text-ink transition-colors">
                 {t("home.nav.roi")}
@@ -170,7 +170,7 @@ export default function HomeClient() {
           </p>
           <div className="mt-10 flex flex-col items-start gap-3">
             <Link
-              href={calcHref}
+              href="/render"
               className="bg-paper px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100"
             >
               {t("home.hero.cta")}

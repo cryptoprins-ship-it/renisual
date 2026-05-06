@@ -695,6 +695,19 @@ export default function GevelCalcPage() {
   const [mode, setMode] = useState<Mode>("quick");
   const [modeHydrated, setModeHydrated] = useState(false);
 
+  // Hydrate the product picker from the cross-page project store so a
+  // user landing here from /render's "Bereken materiaal" arrives with
+  // their chosen panel already selected. Runs once at mount; later
+  // selections on this page stomp the store via the existing
+  // setProduct call so the two stay consistent.
+  useEffect(() => {
+    const stored = useProjectStore.getState().selectedProduct;
+    if (!stored) return;
+    if (products.find((p) => p.id === stored.id)) {
+      setSelectedProductId(stored.id);
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     let resolved: Mode | null = null;

@@ -253,7 +253,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.subtitle": "Het complete platform voor huisrenovatie — exterieur én interieur. Upload een foto, kies een materiaal en zie direct hoe het eruitziet.",
     "home.hero.btnQuick": "Snelle berekening →",
     "home.hero.btnRender": "Bekijk AI rendering",
-    "home.hero.ctaHint": "Begin met een snelle schatting of vul direct per zijde in.",
+    "home.hero.ctaHint": "Upload je foto en zie direct hoe je nieuwe gevel eruitziet.",
 
     "pwa.banner.eyebrow": "Installeren",
     "pwa.banner.title": "Renisual als app op je telefoon",
@@ -664,7 +664,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.subtitle": "The complete home renovation platform — exterior and interior. Upload a photo, pick a material, and instantly see how it looks.",
     "home.hero.btnQuick": "Quick calculation →",
     "home.hero.btnRender": "View AI rendering",
-    "home.hero.ctaHint": "Start with a quick estimate or fill in per side directly.",
+    "home.hero.ctaHint": "Upload your photo and see your new facade right away.",
 
     "pwa.banner.eyebrow": "Install",
     "pwa.banner.title": "Renisual as an app on your phone",
@@ -1075,7 +1075,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.subtitle": "Die komplette Plattform für Hausrenovierung — außen und innen. Foto hochladen, Material wählen und sofort sehen, wie es aussieht.",
     "home.hero.btnQuick": "Schnell-Berechnung →",
     "home.hero.btnRender": "KI-Rendering ansehen",
-    "home.hero.ctaHint": "Beginnen Sie mit einer schnellen Schätzung oder füllen Sie direkt pro Seite aus.",
+    "home.hero.ctaHint": "Foto hochladen und Ihre neue Fassade sofort sehen.",
 
     "pwa.banner.eyebrow": "Installieren",
     "pwa.banner.title": "Renisual als App auf Ihrem Telefon",
@@ -1486,7 +1486,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.subtitle": "La plateforme complète de rénovation — extérieur et intérieur. Téléversez une photo, choisissez un matériau et voyez immédiatement le résultat.",
     "home.hero.btnQuick": "Calcul rapide →",
     "home.hero.btnRender": "Voir le rendu IA",
-    "home.hero.ctaHint": "Commencez par une estimation rapide ou saisissez directement par côté.",
+    "home.hero.ctaHint": "Téléchargez votre photo et voyez votre nouvelle façade tout de suite.",
 
     "pwa.banner.eyebrow": "Installer",
     "pwa.banner.title": "Renisual comme application sur votre téléphone",
@@ -1897,7 +1897,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.subtitle": "La plataforma completa de reforma de viviendas — exterior e interior. Sube una foto, elige un material y mira al instante cómo queda.",
     "home.hero.btnQuick": "Cálculo rápido →",
     "home.hero.btnRender": "Ver render IA",
-    "home.hero.ctaHint": "Empieza con una estimación rápida o introduce directamente por lado.",
+    "home.hero.ctaHint": "Sube tu foto y mira al instante cómo queda tu nueva fachada.",
 
     "pwa.banner.eyebrow": "Instalar",
     "pwa.banner.title": "Renisual como app en tu teléfono",

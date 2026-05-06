@@ -499,6 +499,31 @@ export default function RenderPage() {
     setErrorMsg("");
   }, [sourcePhoto]);
 
+  // Mirror /render's product selection into the cross-page project store
+  // so /gevelcalc can hydrate with the same product when the user clicks
+  // "Bereken materiaal" → from this page. Without this write, the store
+  // only ever reflects whatever was picked in /gevelcalc earlier — the
+  // render-first funnel would arrive at /gevelcalc with no product.
+  useEffect(() => {
+    if (brand === "spanl" && selectedPanel) {
+      useProjectStore.getState().setProduct({
+        id: `spanl-${selectedPanel.sku.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+        sku: selectedPanel.sku,
+        name: selectedPanel.sku,
+        supplier_slug: "spanl",
+        image_url: selectedPanel.imageUrl ?? null,
+      });
+    } else if (brand === "keralit" && selectedKeralitProduct) {
+      useProjectStore.getState().setProduct({
+        id: selectedKeralitProduct.id,
+        sku: selectedKeralitProduct.id,
+        name: selectedKeralitProduct.name,
+        supplier_slug: "keralit",
+        image_url: null,
+      });
+    }
+  }, [brand, selectedPanel, selectedKeralitProduct]);
+
 
   async function handleUpload(file: File | null) {
     if (!file || !file.type.startsWith("image/")) return;
@@ -1445,7 +1470,7 @@ export default function RenderPage() {
                 type="button"
                 onClick={handleNewFacade}
                 disabled={isGenerating}
-                className="border border-ink bg-paper px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
+                className="border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
               >
                 Andere gevel
               </button>
@@ -1453,7 +1478,7 @@ export default function RenderPage() {
                 type="button"
                 onClick={handleNewPanel}
                 disabled={isGenerating}
-                className="border border-ink bg-paper px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
+                className="border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
               >
                 Ander paneel
               </button>
@@ -1465,10 +1490,16 @@ export default function RenderPage() {
                   !sourcePhoto ||
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
                 }
-                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+                className="border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
               >
-                Genereer opnieuw (1 credit)
+                Genereer opnieuw
               </button>
+              <Link
+                href="/gevelcalc?modus=per-zijde"
+                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
+              >
+                Bereken materiaal →
+              </Link>
             </>
           ) : (
             <button
