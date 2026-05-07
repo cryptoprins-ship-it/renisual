@@ -2327,24 +2327,10 @@ export default function GevelCalcPage() {
               >
                 {t("gc.viewRender")}
               </Link>
-              <button
-                type="button"
-                onClick={downloadOfferte}
-                disabled={offerteSubmitting}
-                className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium disabled:opacity-40"
-              >
-                {offerteSubmitting ? t("gc.btnExportPdfBusy") : t("gc.btnExportPdf")}
-              </button>
-              {offerteResult && (
-                <a
-                  href={offerteResult.offerteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 rounded-xl border border-black px-3 py-2 text-sm hover:bg-stone-100"
-                >
-                  {t("gc.offerte.successOpenPage")} → {offerteResult.ref}
-                </a>
-              )}
+              {/* Offerte-aanvragen CTA moved to the right-column
+                  "Wilt u een offerte aanvragen?" card so there's a
+                  single canonical action point. The mail-fallback link
+                  stays here as a quick alternate. */}
               <button type="button" onClick={sendMail} className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium">
                 {t("gc.btnMail")}
               </button>
@@ -2431,12 +2417,14 @@ export default function GevelCalcPage() {
               </div>
             )}
 
-            {/* Material summary — primary BOM in chosen orientation. */}
-            {selectedProduct && materialResult &&
-              bomBlock(materialResult, showAlternateOrientation ? orientationLabel(orientation) : undefined)}
+            {/* Question-driven flow on the right column.
+                Order: alt-orientation question → primary BOM → alt BOM
+                (when toggled) → offerte question + CTA. Each Q-card
+                has the same shape so the eye reads them as a sequence
+                of choices rather than a wall of info. */}
 
-            {/* Alt-orientation nudge card — only when product supports both
-                orientations. Toggling expands a second BOM beneath. */}
+            {/* Verticale/horizontale optie? — only when product supports
+                both. Toggling expands a second BOM after the primary. */}
             {selectedProduct && materialResult && alternateMaterialResult && (
               <label className="flex cursor-pointer items-start gap-3 border border-stone-300 bg-stone-50 p-4">
                 <input
@@ -2447,17 +2435,62 @@ export default function GevelCalcPage() {
                 />
                 <div className="text-sm">
                   <span className="font-display text-ink">
-                    Al gedacht aan de {alternateOrientation === "vertical" ? "verticale" : "horizontale"} optie?
+                    Verticale optie ook bekijken?
                   </span>
                   <span className="mt-0.5 block text-[12px] text-stone-600">
-                    Hetzelfde paneel kan ook {alternateOrientation === "vertical" ? "verticaal" : "horizontaal"} — vergelijk aantallen en prijs.
+                    {alternateOrientation === "vertical"
+                      ? "Hetzelfde paneel kan ook verticaal — vergelijk aantallen en prijs."
+                      : "Hetzelfde paneel kan ook horizontaal — vergelijk aantallen en prijs."}
                   </span>
                 </div>
               </label>
             )}
 
+            {/* Material summary — primary BOM in chosen orientation. */}
+            {selectedProduct && materialResult &&
+              bomBlock(materialResult, showAlternateOrientation ? orientationLabel(orientation) : undefined)}
+
             {showAlternateOrientation && alternateMaterialResult &&
               bomBlock(alternateMaterialResult, orientationLabel(alternateOrientation))}
+
+            {/* Wilt u een offerte aanvragen? — primary CTA card with
+                the action button. Moved out of the fixed bottom bar so
+                the right-column flow is self-contained: see totals →
+                see BOM → ask for offerte. */}
+            {selectedProduct && materialResult && (
+              <div className="border border-ink bg-paper p-4">
+                <p className="font-display text-base text-ink">
+                  Wilt u een offerte aanvragen?
+                </p>
+                <p className="mt-1 text-[12px] leading-snug text-stone-600">
+                  We genereren een PDF met deze stuklijst (en de verticale
+                  variant als die meeloopt) en sturen 'm naar
+                  offerte@renisual.com. Vul je achternaam, e-mail en adres
+                  in zodat we contact op kunnen nemen.
+                </p>
+                <button
+                  type="button"
+                  onClick={downloadOfferte}
+                  disabled={offerteSubmitting}
+                  className="mt-3 flex w-full items-center justify-center gap-2 bg-ink px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-50"
+                >
+                  <span>
+                    {offerteSubmitting ? t("gc.btnExportPdfBusy") : "Vraag offerte aan"}
+                  </span>
+                  <span aria-hidden>→</span>
+                </button>
+                {offerteResult && (
+                  <a
+                    href={offerteResult.offerteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 block text-center text-[11px] text-stone-600 underline underline-offset-2 hover:text-ink"
+                  >
+                    {t("gc.offerte.successOpenPage")} → {offerteResult.ref}
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* Product preview + CTA when selected */}
             {selectedProduct ? (
