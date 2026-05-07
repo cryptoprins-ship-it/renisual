@@ -732,19 +732,25 @@ export default function GevelCalcPage() {
   // signed URL so the right-column overview can preview the AI-render
   // the offerte PDF will embed. Best-effort — if the URL fetch fails
   // the preview just doesn't appear; the calc + offerte still work.
+  //
+  // IMPORTANT: subscribe via the hook (not getState) so we re-run after
+  // zustand's persist middleware hydrates from localStorage. With a
+  // one-shot useEffect([]) the path is still null on first render and
+  // the preview never loads — the bug that caused the carry-over to
+  // appear "broken" even though /render did upload + setRender(path).
+  const renderStoragePathSubscribed = useProjectStore((s) => s.renderStoragePath);
   useEffect(() => {
-    const path = useProjectStore.getState().renderStoragePath;
-    if (!path) return;
+    if (!renderStoragePathSubscribed) return;
     let cancelled = false;
     import("@/lib/photoStorage").then(({ getPhotoUrl }) => {
-      getPhotoUrl(path, "offerte-renders").then((url) => {
+      getPhotoUrl(renderStoragePathSubscribed, "offerte-renders").then((url) => {
         if (!cancelled && url) setRenderPreviewUrl(url);
       });
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [renderStoragePathSubscribed]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

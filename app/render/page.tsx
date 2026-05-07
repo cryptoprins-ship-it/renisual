@@ -560,26 +560,73 @@ export default function RenderPage() {
   // array, in parallel. Used both for the default baseline-only click
   // (`[0]`, clearFirst=true) and the optional "show variations" button
   // (`[-1, 1, -2, 2]`, clearFirst=false → appends to the baseline tile).
-  async function runRenderBatch(toneNudges: ToneNudge[], clearFirst: boolean) {
+  //
+  // `override` lets per-tile nudge buttons target a specific variant's
+  // panel + orientation regardless of current selection state. When
+  // omitted (Genereer button path), state is the source of truth.
+  async function runRenderBatch(
+    toneNudges: ToneNudge[],
+    clearFirst: boolean,
+    override?: { panelSku: string; orientation: Orientation },
+  ) {
     if (!sourcePhoto) return;
-    if (brand === "spanl" && !selectedPanel) return;
-    if (brand === "keralit" && (!selectedKeralitProduct || !selectedKeralitColor)) return;
+
+    // Resolve effective panel context. Override path looks up the panel
+    // by SKU in the catalog (Spanl: raw SKU; Keralit: parses the
+    // synthesised "keralit-{productId}-{colorNumber}" sku).
+    let effBrand: "spanl" | "keralit";
+    let effSpanlPanel: RenderPanel | undefined;
+    let effKeralitProduct: typeof selectedKeralitProduct;
+    let effKeralitColor: typeof selectedKeralitColor;
+    let effOrientation: Orientation;
+    if (override) {
+      effOrientation = override.orientation;
+      if (override.panelSku.startsWith("keralit-")) {
+        const m = override.panelSku.match(/^keralit-(.+)-(\d+)$/);
+        const prod = m ? keralitProducts.find((p) => p.id === m[1]) : undefined;
+        const col = m ? KERALIT_COLORS.find((c) => c.number === Number(m[2])) : undefined;
+        if (!prod || !col) return;
+        effBrand = "keralit";
+        effKeralitProduct = prod;
+        effKeralitColor = col;
+        effSpanlPanel = undefined;
+      } else {
+        // Look up the enriched RenderPanel (with imageUrl/variantUrl)
+        // rather than the raw SpanlPanelEntry, so reference images load.
+        const panel = panels.find((p) => p.sku === override.panelSku);
+        if (!panel) return;
+        effBrand = "spanl";
+        effSpanlPanel = panel;
+        effKeralitProduct = undefined;
+        effKeralitColor = undefined;
+      }
+    } else {
+      effBrand = brand;
+      effSpanlPanel = selectedPanel;
+      effKeralitProduct = selectedKeralitProduct;
+      effKeralitColor = selectedKeralitColor;
+      effOrientation = orientation;
+    }
+
+    if (effBrand === "spanl" && !effSpanlPanel) return;
+    if (effBrand === "keralit" && (!effKeralitProduct || !effKeralitColor)) return;
+
     setIsGenerating(true);
     setErrorMsg("");
     setAttemptCount(0);
     try {
       const refUrls: string[] = [];
-      if (brand === "spanl" && selectedPanel) {
-        if (selectedPanel.imageUrl) {
-          const main = await urlToDataUrl(selectedPanel.imageUrl);
+      if (effBrand === "spanl" && effSpanlPanel) {
+        if (effSpanlPanel.imageUrl) {
+          const main = await urlToDataUrl(effSpanlPanel.imageUrl);
           if (main) refUrls.push(await compressDataUrl(main, 1024, 0.82));
         }
-        if (selectedPanel.variantUrl) {
-          const variant = await urlToDataUrl(selectedPanel.variantUrl);
+        if (effSpanlPanel.variantUrl) {
+          const variant = await urlToDataUrl(effSpanlPanel.variantUrl);
           if (variant) refUrls.push(await compressDataUrl(variant, 1024, 0.82));
         }
-      } else if (brand === "keralit" && selectedKeralitColor) {
-        const swatch = await urlToDataUrl(selectedKeralitColor.thumbnailUrl);
+      } else if (effBrand === "keralit" && effKeralitColor) {
+        const swatch = await urlToDataUrl(effKeralitColor.thumbnailUrl);
         if (swatch) refUrls.push(await compressDataUrl(swatch, 1024, 0.82));
       }
       const photoLarge = await compressUnderSize(sourcePhoto, 1600, 2_500_000);
@@ -590,20 +637,20 @@ export default function RenderPage() {
       let panelWidthCm: number;
       let panelSkuForVariant: string;
       let targetHex: string | undefined;
-      if (brand === "keralit" && selectedKeralitProduct && selectedKeralitColor) {
-        productLabel = `Keralit ${selectedKeralitProduct.name} — ${selectedKeralitColor.name} (${selectedKeralitColor.number}), ${KERALIT_FINISH_LABEL_NL[selectedKeralitColor.finish]}`;
-        productDescription = `Keralit PVC cladding, ${KERALIT_FINISH_LABEL_EN[selectedKeralitColor.finish]}, color ${selectedKeralitColor.name} (Keralit color number ${selectedKeralitColor.number}).`;
-        panelWidthCm = selectedKeralitProduct.panelWorkSize / 10;
-        panelSkuForVariant = `keralit-${selectedKeralitProduct.id}-${selectedKeralitColor.number}`;
+      if (effBrand === "keralit" && effKeralitProduct && effKeralitColor) {
+        productLabel = `Keralit ${effKeralitProduct.name} — ${effKeralitColor.name} (${effKeralitColor.number}), ${KERALIT_FINISH_LABEL_NL[effKeralitColor.finish]}`;
+        productDescription = `Keralit PVC cladding, ${KERALIT_FINISH_LABEL_EN[effKeralitColor.finish]}, color ${effKeralitColor.name} (Keralit color number ${effKeralitColor.number}).`;
+        panelWidthCm = effKeralitProduct.panelWorkSize / 10;
+        panelSkuForVariant = `keralit-${effKeralitProduct.id}-${effKeralitColor.number}`;
         targetHex = undefined;
-      } else if (selectedPanel) {
-        const ralPart = selectedPanel.ral ? ` (RAL ${selectedPanel.ral})` : "";
-        productSku = selectedPanel.sku;
-        productLabel = `Spanl ${selectedPanel.sku} — ${selectedPanel.colorEn}${ralPart}, ${finishEn(selectedPanel.finish)}`;
-        productDescription = `Color: ${selectedPanel.colorEn}${ralPart}. Finish: ${finishEn(selectedPanel.finish)}. Visible panel width: ${selectedPanel.panelWidthCm} cm.`;
-        panelWidthCm = selectedPanel.panelWidthCm;
-        panelSkuForVariant = selectedPanel.sku;
-        targetHex = selectedPanel.ral && RAL_HEX[selectedPanel.ral]?.hex;
+      } else if (effSpanlPanel) {
+        const ralPart = effSpanlPanel.ral ? ` (RAL ${effSpanlPanel.ral})` : "";
+        productSku = effSpanlPanel.sku;
+        productLabel = `Spanl ${effSpanlPanel.sku} — ${effSpanlPanel.colorEn}${ralPart}, ${finishEn(effSpanlPanel.finish)}`;
+        productDescription = `Color: ${effSpanlPanel.colorEn}${ralPart}. Finish: ${finishEn(effSpanlPanel.finish)}. Visible panel width: ${effSpanlPanel.panelWidthCm} cm.`;
+        panelWidthCm = effSpanlPanel.panelWidthCm;
+        panelSkuForVariant = effSpanlPanel.sku;
+        targetHex = effSpanlPanel.ral && RAL_HEX[effSpanlPanel.ral]?.hex;
       } else {
         setIsGenerating(false);
         return;
