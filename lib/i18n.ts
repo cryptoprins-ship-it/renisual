@@ -384,7 +384,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "about.p4": "Tijdens het kiezen liep ik tegen iets aan: bestaande sites laten alleen voorbeelden zien op standaardhuizen. Ik kon nergens mijn eigen foto uploaden om te zien hoe Spanl-panelen er op mijn woonboot zouden uitzien. Dus heb ik deze tool zelf gemaakt.",
     "about.p5": "Inmiddels begrijp ik waarom andere sites het niet doen: rendering is niet eenvoudig. Je benadert de werkelijkheid, maar de kleur klopt nooit honderd procent. Toch krijg je een veel betere indicatie dan met materiaalmonsters alleen — die kun je in je hand houden, maar je kunt ze niet visualiseren over een hele gevel.",
     "about.p6": "Komende maanden bestel ik panelen voor mijn boot. Daarna ga ik hetzelfde principe toepassen op keuken, badkamer en tuin. De tool groeit mee.",
-    "about.p7": "Mogelijk kom je in aanmerking voor subsidie. Ik onderzoek dit zelf op dit moment via SVN — kijk op de subsidiepagina voor de actuele stand.",
+    "about.p7": "Met een isolatiewaarde van 0,74 m²K/W vallen Spanl-panelen op zichzelf niet onder de standaard gevelisolatie-subsidies (de eis is meestal R ≥ 3,5). Combineer je ze met aanvullende isolatie achter de panelen, dan kan dat anders liggen — op de subsidiepagina staat de actuele stand.",
     "about.p8": "Probeer de tool en stuur me feedback.",
     "about.signature": "— Marcel",
     "about.cta.button": "Test je eigen gevel",
