@@ -2614,10 +2614,9 @@ export default function GevelCalcPage() {
                   Wilt u een offerte aanvragen?
                 </p>
                 <p className="mt-1 text-[12px] leading-snug text-stone-600">
-                  We genereren een PDF met deze stuklijst (en de verticale
-                  variant als die meeloopt) en sturen 'm naar
-                  offerte@renisual.com. Vul je achternaam, e-mail en adres
-                  in zodat we contact op kunnen nemen.
+                  Je offerte gaat naar Renisual. Wij sturen hem naar de juiste
+                  leverancier(s). Vul je achternaam, e-mail en adres in zodat
+                  we — en de leverancier — contact op kunnen nemen.
                 </p>
                 <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-md border border-stone-300 bg-stone-50 p-2.5 text-[12px] text-stone-700 select-none">
                   <input
