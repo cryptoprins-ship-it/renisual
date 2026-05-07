@@ -697,6 +697,25 @@ export default function GevelCalcPage() {
   const [mode, setMode] = useState<Mode>("quick");
   const [modeHydrated, setModeHydrated] = useState(false);
 
+  // Auto-generate a project number on first mount when the field is
+  // empty — gives the user a sensible default they can edit, and
+  // doubles as the slug feeding the offerte PDF filename. Format:
+  // P-YYYY-MM-DD-AB12 (4 random hex chars suffix to keep it unique
+  // across same-day offertes from one client).
+  useEffect(() => {
+    if (projectName) return;
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const suffix = Math.floor(Math.random() * 0xffff)
+      .toString(16)
+      .toUpperCase()
+      .padStart(4, "0");
+    setProjectName(`P-${yyyy}-${mm}-${dd}-${suffix}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Hydrate the product picker from the cross-page project store so a
   // user landing here from /render's "Bereken materiaal" arrives with
   // their chosen panel already selected. Runs once at mount; later
@@ -789,7 +808,13 @@ export default function GevelCalcPage() {
   const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [showInclVat, setShowInclVat] = useState(false);
+  // projectName is now the auto-generated project number (e.g.
+  // P-2026-05-06-A3B4). Kept under the old key for storage compat.
   const [projectName, setProjectName] = useState("");
+  // Customer fields — destination for the offerte.
+  const [customerLastName, setCustomerLastName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
   const [calcDate, setCalcDate] = useState<string>("");
   const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -1300,7 +1325,14 @@ export default function GevelCalcPage() {
         subtotalExclBtw: subtotal,
         totalInclBtw: total,
       },
-      customer: projectName ? { projectAddress: projectName } : undefined,
+      customer:
+        customerLastName || customerEmail || customerAddress
+          ? {
+              name: customerLastName || undefined,
+              email: customerEmail || undefined,
+              projectAddress: customerAddress || undefined,
+            }
+          : undefined,
       photoPath: photoStoragePath ?? undefined,
       renderPath: renderStoragePath ?? undefined,
       includePrices,
@@ -1409,7 +1441,7 @@ export default function GevelCalcPage() {
       return;
     }
     const vatLabel = showInclVat ? t("gc.inclVat") : "excl.";
-    const subject = encodeURIComponent(`${t("gc.email.subject")}${projectName ? ` — ${projectName}` : ""}`);
+    const subject = encodeURIComponent(`${t("gc.email.subject")}${projectName ? ` — ${projectName}` : ""}${customerLastName ? ` (${customerLastName})` : ""}`);
     const modeLine = mode === "quick" ? t("gc.pdfModeQuick") : t("gc.pdfModeAdvanced");
     const body = encodeURIComponent(
       `${t("gc.email.subject")}${projectName ? `\n${projectName}` : ""}\n${t("gc.dateLabel", { date: formatDate(new Date().toISOString(), locale) })}\n` +
@@ -1427,7 +1459,8 @@ export default function GevelCalcPage() {
         `${t("gc.totalLabel")} ${vatLabel}: ${fmtMoney(materialResult?.totalExVat ?? 0)}\n\n` +
         `${t("gc.priceDisclaimer")}\n`
     );
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    const to = customerEmail ? encodeURIComponent(customerEmail) : "";
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
   }
 
   async function goToRender() {
@@ -1553,12 +1586,46 @@ export default function GevelCalcPage() {
             </p>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.projectName")}</label>
+                <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.projectNumber")}</label>
                 <input
                   className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  placeholder={t("gc.projectNamePlaceholder")}
+                  placeholder="P-2026-05-06-A3B4"
+                />
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.customerLastName")}</label>
+                  <input
+                    className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
+                    value={customerLastName}
+                    onChange={(e) => setCustomerLastName(e.target.value)}
+                    placeholder={t("gc.customerLastNamePlaceholder")}
+                    autoComplete="family-name"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.customerEmail")}</label>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="naam@voorbeeld.nl"
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.customerAddress")}</label>
+                <input
+                  className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  placeholder={t("gc.customerAddressPlaceholder")}
+                  autoComplete="street-address"
                 />
               </div>
               {mode === "advanced" && (

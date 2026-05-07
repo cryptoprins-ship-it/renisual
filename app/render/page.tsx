@@ -657,6 +657,21 @@ export default function RenderPage() {
               renderDataUrl = data.renderDataUrl;
               engineTag = data.engine;
               wallMean = data.wallMean;
+              // Fire a Plausible custom event so the team can see how
+              // many renders the platform served. Engine + brand are
+              // attached as props for filterable views in the dashboard.
+              if (typeof window !== "undefined") {
+                const win = window as unknown as {
+                  plausible?: (event: string, opts?: { props?: Record<string, string | number> }) => void;
+                };
+                win.plausible?.("render", {
+                  props: {
+                    engine: engineTag ?? "unknown",
+                    brand,
+                    toneNudge,
+                  },
+                });
+              }
               break;
             }
             lastErrorKey = "render.error.retry";
