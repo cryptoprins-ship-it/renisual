@@ -567,7 +567,6 @@ export default function RenderPage() {
     setIsGenerating(true);
     setErrorMsg("");
     setAttemptCount(0);
-    if (clearFirst) setVariants([]);
     try {
       const refUrls: string[] = [];
       if (brand === "spanl" && selectedPanel) {
@@ -609,6 +608,16 @@ export default function RenderPage() {
         setIsGenerating(false);
         return;
       }
+
+      // Multi-product compare: when clearFirst is true (Genereer /
+      // Genereer opnieuw), wipe ONLY the variants that match the
+      // panel about to be rendered. Variants of other panels stay so
+      // the user can keep comparing them. clearFirst=false (Lichter /
+      // Donkerder follow-ups) leaves everything untouched.
+      if (clearFirst) {
+        setVariants((prev) => prev.filter((v) => v.panelSku !== panelSkuForVariant));
+      }
+
       const basePayload = {
         photoDataUrl: photoLarge,
         referenceDataUrls: refUrls,
@@ -866,13 +875,13 @@ export default function RenderPage() {
   }
 
   // Reset for a different panel choice on the same facade photo.
-  // Keeps the source photo and frame/door/fascia settings; clears
-  // the panel selection (so the user picks a different Spanl SKU
-  // or Keralit color) and the rendered variants.
+  // Keeps the source photo, frame/door/fascia settings, AND the
+  // existing render variants (so the user can compare panels
+  // side-by-side). User removes individual variants via the
+  // cross-icon overlay on each tile.
   function handleNewPanel() {
     setSelectedSku("");
     setSelectedKeralitColorNumber(null);
-    setVariants([]);
     setErrorMsg("");
     if (typeof window !== "undefined") {
       const panelSection = document.querySelector("section:nth-of-type(2)");
