@@ -503,22 +503,19 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           ) : null}
         </View>
 
-        {(props.photoSrc || props.renderSrc) && (
+        {/* Only the proposed render is shown — original photo was
+            removed from the PDF on user request. The bestaande-situatie
+            shot lives on the public /offerte/[ref] page if a viewer
+            wants the side-by-side comparison. The render gets a single
+            full-width cell instead of the previous half-width split. */}
+        {props.renderSrc ? (
           <View style={styles.imageRow}>
-            {props.photoSrc ? (
-              <View style={styles.imageCell}>
-                <Image src={props.photoSrc} style={styles.facadeImage} />
-                <Text style={styles.imageCaption}>BESTAANDE SITUATIE</Text>
-              </View>
-            ) : null}
-            {props.renderSrc ? (
-              <View style={styles.imageCell}>
-                <Image src={props.renderSrc} style={styles.facadeImage} />
-                <Text style={styles.imageCaption}>VOORGESTELD EINDRESULTAAT</Text>
-              </View>
-            ) : null}
+            <View style={styles.imageCell}>
+              <Image src={props.renderSrc} style={styles.facadeImage} />
+              <Text style={styles.imageCaption}>VOORGESTELD EINDRESULTAAT</Text>
+            </View>
           </View>
-        )}
+        ) : null}
 
         {props.alternate && props.primaryOrientation ? (
           <View style={{ marginBottom: 6 }}>
