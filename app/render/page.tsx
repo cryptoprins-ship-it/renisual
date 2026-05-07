@@ -1684,7 +1684,13 @@ export default function RenderPage() {
                 }
                 className="border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
               >
-                Genereer opnieuw
+                {(() => {
+                  const productLabel =
+                    brand === "spanl"
+                      ? selectedPanel?.sku
+                      : selectedKeralitProduct?.name;
+                  return productLabel ? `Genereer (${productLabel})` : "Genereer";
+                })()}
               </button>
               <button
                 type="button"
