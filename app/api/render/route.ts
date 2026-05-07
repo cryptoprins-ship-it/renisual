@@ -546,8 +546,10 @@ const renderSchema = z.object({
     })
     .optional(),
   // Whether the fascia board (boeideel) should be replaced with the new
-  // cladding (true, default) or kept unchanged (false).
-  includeBoeideel: z.boolean().default(true),
+  // cladding. Default false now that the v1 client no longer surfaces
+  // the toggle — without an explicit field the prompt builders take the
+  // "preserve fascia" branch.
+  includeBoeideel: z.boolean().default(false),
   // Variant-picker tone nudge: -2 noticeably darker .. 0 exact RAL .. +2
   // noticeably lighter. Drives a phrase appended to the BFL prompt; only
   // honoured by the BFL path, ignored on the Gemini fallback.

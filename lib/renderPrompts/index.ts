@@ -32,13 +32,27 @@ export type ResolvePromptOpts = {
   // Geometry
   facadeWidthMeters?: number;
   facadeHeightMeters?: number;
-  // Recolor toggles (UI section 03)
-  includeFascia: boolean;
+  // Window-frame / door / fascia recolour toggles were removed for v1.
+  // Fields kept on the type as optional so any leftover server callers
+  // do not break compilation; the prompt body always emits "preserve"
+  // language regardless of what is passed in.
+  includeFascia?: boolean;
   windowFrame?: { material: string };
   door?: { material: string; colour: string };
   // User-driven nudge from variant picker. 0 = exact RAL.
   toneNudge?: ToneNudge;
 };
+
+// Fixed preserve-language for windows / doors / fascia. v1 strips the
+// recolour controls (kozijnen + boeideel) so klein-9b gets a single,
+// consistent instruction every render. Restoring the conditional
+// recolour lines is a separate "advanced render" mode follow-up.
+const PRESERVE_WINDOWS_LINE =
+  "Keep the windows, glass and window frames exactly as in the source photo — same colour, same material.";
+const PRESERVE_DOORS_LINE =
+  "Keep the doors and door frames exactly as in the source photo — same colour, same material.";
+const PRESERVE_FASCIA_LINE =
+  "PRESERVE the fascia board (boeideel) — keep its original colour, do NOT recolour.";
 
 // Tone-nudge phrasing. Verbal anchors widely spaced because klein-9b
 // flattens narrow percentage hints — +1 and +2 collapse onto the same
@@ -62,24 +76,6 @@ function colorPhraseFor(opts: ResolvePromptOpts): string {
   const hexPart = opts.colorHex ? ` (hex ${opts.colorHex})` : "";
   if (ralPart) return `${ralPart} ${name}${hexPart}`;
   return `${name}${hexPart}`;
-}
-
-function windowFrameLineFor(opts: ResolvePromptOpts): string {
-  return opts.windowFrame?.material
-    ? `Recolour the window frames as ${opts.windowFrame.material}. Keep the windows themselves and the glass exactly as in the source photo.`
-    : "Keep the windows, glass and window frames exactly as in the source photo — same colour, same material.";
-}
-
-function doorLineFor(opts: ResolvePromptOpts): string {
-  return opts.door?.material && opts.door?.colour
-    ? `Recolour the doors as ${opts.door.material} in ${opts.door.colour}. Keep the door frames structurally as in the source.`
-    : "Keep the doors and door frames exactly as in the source photo — same colour, same material.";
-}
-
-function fasciaLineFor(opts: ResolvePromptOpts): string {
-  return opts.includeFascia
-    ? "Apply cladding to ALL wall surfaces INCLUDING the fascia board (boeideel)."
-    : "PRESERVE the fascia board (boeideel) — keep its original colour, do NOT recolour.";
 }
 
 // Hybrid prompt: WALL DESCRIPTION from the BFL playground naked-prompt
@@ -112,9 +108,9 @@ function buildRalPrompt(opts: ResolvePromptOpts): string {
   return `Recolour the wall surfaces of this building as ${wallDesc}
 
 Keep the roof, gutters, chimneys, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape, same brightness and same overall lighting. Do NOT shift the global exposure of the scene to match the wall colour: the sky stays exactly as bright as in the source photo, the water stays exactly as in the source photo, the trees stay exactly as in the source photo, regardless of the new wall colour. Do not invent new windows or features. Match the source framing exactly.
-${windowFrameLineFor(opts)}
-${doorLineFor(opts)}
-${fasciaLineFor(opts)}${tone}`;
+${PRESERVE_WINDOWS_LINE}
+${PRESERVE_DOORS_LINE}
+${PRESERVE_FASCIA_LINE}${tone}`;
 }
 
 // Style prompt mirrors the same hybrid: surface descriptor from the
@@ -132,9 +128,9 @@ function buildStylePrompt(opts: ResolvePromptOpts): string {
   return `Reclad the wall surfaces of this building with ${surfaceDescriptor}
 
 Keep the roof, gutters, chimneys, sky, water, vegetation, neighbouring buildings, fences and any foreground objects exactly as in the source photo — same colour, same materials, same shape, same brightness and same overall lighting. Do NOT shift the global exposure of the scene to match the wall colour: the sky stays exactly as bright as in the source photo, the water stays exactly as in the source photo, the trees stay exactly as in the source photo, regardless of the new wall colour. Do not invent new windows or features. Match the source framing exactly.
-${windowFrameLineFor(opts)}
-${doorLineFor(opts)}
-${fasciaLineFor(opts)}`;
+${PRESERVE_WINDOWS_LINE}
+${PRESERVE_DOORS_LINE}
+${PRESERVE_FASCIA_LINE}`;
 }
 
 export function resolveBflPrompt(opts: ResolvePromptOpts): string {

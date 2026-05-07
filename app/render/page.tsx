@@ -75,71 +75,13 @@ type RenderVariant = {
   toneNudge?: ToneNudge;
 };
 
-type WindowMaterial = "hardwood" | "plastic-white" | "plastic-anthracite" | "aluminium";
-type DoorMaterial = "hardwood" | "plastic-white" | "plastic-anthracite" | "steel";
-type DoorColour = "white" | "anthracite" | "black" | "wood-colour";
-
-const WINDOW_MATERIAL_LABEL_NL: Record<WindowMaterial, string> = {
-  hardwood: "Hardhout",
-  "plastic-white": "Kunststof wit",
-  "plastic-anthracite": "Kunststof antraciet",
-  aluminium: "Aluminium",
-};
-
-const DOOR_MATERIAL_LABEL_NL: Record<DoorMaterial, string> = {
-  hardwood: "Hardhout",
-  "plastic-white": "Kunststof wit",
-  "plastic-anthracite": "Kunststof antraciet",
-  steel: "Staal",
-};
-
-const DOOR_COLOUR_LABEL_NL: Record<DoorColour, string> = {
-  white: "Wit",
-  anthracite: "Antraciet",
-  black: "Zwart",
-  "wood-colour": "Houtkleur",
-};
-
-// i18n key fragments — link option values to render.frames.*Mat.* / *Col.* keys.
-const WINDOW_MATERIAL_KEY: Record<WindowMaterial, string> = {
-  hardwood: "hardwood",
-  "plastic-white": "plasticWhite",
-  "plastic-anthracite": "plasticAnthracite",
-  aluminium: "aluminium",
-};
-const DOOR_MATERIAL_KEY: Record<DoorMaterial, string> = {
-  hardwood: "hardwood",
-  "plastic-white": "plasticWhite",
-  "plastic-anthracite": "plasticAnthracite",
-  steel: "steel",
-};
-const DOOR_COLOUR_KEY: Record<DoorColour, string> = {
-  white: "white",
-  anthracite: "anthracite",
-  black: "black",
-  "wood-colour": "wood",
-};
-
-const WINDOW_MATERIAL_EN: Record<WindowMaterial, string> = {
-  hardwood: "natural-finish hardwood timber",
-  "plastic-white": "white PVC plastic",
-  "plastic-anthracite": "anthracite-grey PVC plastic",
-  aluminium: "powder-coated aluminium",
-};
-
-const DOOR_MATERIAL_EN: Record<DoorMaterial, string> = {
-  hardwood: "hardwood timber",
-  "plastic-white": "PVC plastic",
-  "plastic-anthracite": "PVC plastic",
-  steel: "steel",
-};
-
-const DOOR_COLOUR_EN: Record<DoorColour, string> = {
-  white: "white (RAL 9010 / 9016)",
-  anthracite: "anthracite grey (RAL 7016)",
-  black: "matt black (RAL 9005)",
-  "wood-colour": "natural wood colour",
-};
+// Kozijnen / deuren / boeideel customisations were removed for v1 —
+// they introduced too much klein-9b prompt drift and added flow
+// complexity for a feature few users asked for. Default behaviour now:
+// preserve windows + glass + door + fascia exactly as in the source.
+// To re-introduce as a separate "advanced render" mode later, restore
+// the WindowMaterial / DoorMaterial / DoorColour types + selectors
+// from git history (see commit before this change).
 
 function cleanSku(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -357,18 +299,12 @@ export default function RenderPage() {
     return () => window.clearTimeout(id);
   }, [toast]);
   const [attemptCount, setAttemptCount] = useState(0);
-  const [windowMaterial, setWindowMaterial] = useState<WindowMaterial | "">("");
-  const [doorMaterial, setDoorMaterial] = useState<DoorMaterial | "">("");
-  const [doorColour, setDoorColour] = useState<DoorColour | "">("");
   const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
   const [sampleTab, setSampleTab] = useState<"houses" | "woonboten" | null>(null);
   const [houseSamples, setHouseSamples] = useState<Array<{ file: string; label: string }>>([]);
   const [woonbootSamples, setWoonbootSamples] = useState<Array<{ file: string; label: string }>>([]);
-
-  const includeBoeideel = useProjectStore((s) => s.includeBoeideel);
-  const setIncludeBoeideel = useProjectStore((s) => s.setIncludeBoeideel);
 
   useEffect(() => {
     fetch("/samples/houses/index.json")
@@ -451,15 +387,6 @@ export default function RenderPage() {
     if (widthCm <= 0 && heightCm <= 0) return undefined;
     return { widthCm, heightCm };
   }, [selectedSideId, savedConfig]);
-
-  const openingsForPrompt = useMemo(
-    () => ({
-      windowFrame: windowMaterial ? WINDOW_MATERIAL_EN[windowMaterial] : undefined,
-      doorMaterial: doorMaterial ? DOOR_MATERIAL_EN[doorMaterial] : undefined,
-      doorColour: doorColour ? DOOR_COLOUR_EN[doorColour] : undefined,
-    }),
-    [windowMaterial, doorMaterial, doorColour]
-  );
 
   useEffect(() => {
     loadSpanlImageIndex()
@@ -727,11 +654,10 @@ export default function RenderPage() {
         panelWidthCm,
         facadeWidthCm: Number(manualFacadeWidthCm) > 0 ? Number(manualFacadeWidthCm) : facadeDims?.widthCm,
         facadeHeightCm: Number(manualFacadeHeightCm) > 0 ? Number(manualFacadeHeightCm) : facadeDims?.heightCm,
-        windowFrame: openingsForPrompt.windowFrame ? { material: openingsForPrompt.windowFrame } : undefined,
-        door: openingsForPrompt.doorMaterial && openingsForPrompt.doorColour
-          ? { material: openingsForPrompt.doorMaterial, colour: openingsForPrompt.doorColour }
-          : undefined,
-        includeBoeideel,
+        // windowFrame / door / includeBoeideel deliberately omitted —
+        // server defaults: preserve windows + glass + door + fascia.
+        // See note at top of file (kozijnen + boeideel customisation
+        // removed for v1).
         locale,
       };
 
@@ -1344,71 +1270,12 @@ export default function RenderPage() {
         </section>
 
         <section>
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-            03 — {t("render.frames.heading")}
-          </p>
-          <p className="mb-4 text-xs text-stone-500">{t("render.frames.subtitle")}</p>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium">{t("render.frames.windowMaterial")}</label>
-              <select
-                className="w-full rounded-xl border border-black p-3"
-                value={windowMaterial}
-                onChange={(e) => setWindowMaterial(e.target.value as WindowMaterial | "")}
-              >
-                <option value="">{t("render.frames.unchanged")}</option>
-                {(Object.keys(WINDOW_MATERIAL_LABEL_NL) as WindowMaterial[]).map((k) => (
-                  <option key={k} value={k}>
-                    {t(`render.frames.windowMat.${WINDOW_MATERIAL_KEY[k]}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">{t("render.frames.doorMaterial")}</label>
-              <select
-                className="w-full rounded-xl border border-black p-3"
-                value={doorMaterial}
-                onChange={(e) => setDoorMaterial(e.target.value as DoorMaterial | "")}
-              >
-                <option value="">{t("render.frames.unchanged")}</option>
-                {(Object.keys(DOOR_MATERIAL_LABEL_NL) as DoorMaterial[]).map((k) => (
-                  <option key={k} value={k}>
-                    {t(`render.frames.doorMat.${DOOR_MATERIAL_KEY[k]}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">{t("render.frames.doorColour")}</label>
-              <select
-                className="w-full rounded-xl border border-black p-3"
-                value={doorColour}
-                onChange={(e) => setDoorColour(e.target.value as DoorColour | "")}
-              >
-                <option value="">{t("render.frames.unchanged")}</option>
-                {(Object.keys(DOOR_COLOUR_LABEL_NL) as DoorColour[]).map((k) => (
-                  <option key={k} value={k}>
-                    {t(`render.frames.doorCol.${DOOR_COLOUR_KEY[k]}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {doorMaterial && !doorColour && (
-            <p className="mt-2 text-xs text-amber-700">{t("render.frames.doorWarn")}</p>
-          )}
-        </section>
-
-        <section>
           <button
             type="button"
             onClick={() => setAdvancedOpen((v) => !v)}
             className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600 hover:text-ink"
           >
-            <span>04 — {locale === "nl" ? "Geavanceerd (optioneel)" : "Advanced (optional)"}</span>
+            <span>03 — {locale === "nl" ? "Geavanceerd (optioneel)" : "Advanced (optional)"}</span>
             <span aria-hidden className="text-base leading-none">{advancedOpen ? "−" : "+"}</span>
           </button>
           {advancedOpen && (
@@ -1461,55 +1328,12 @@ export default function RenderPage() {
           )}
         </section>
 
-        <section>
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-            05 — {t("boeideel_section_title")}
-          </p>
-          <p className="mb-4 text-xs text-stone-500">{t("boeideel_explanation")}</p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => setIncludeBoeideel(true)}
-              aria-pressed={includeBoeideel}
-              className={`flex-1 bg-paper px-4 py-3 text-left text-ink transition-colors ${
-                includeBoeideel
-                  ? "border-2 border-ink"
-                  : "border border-stone-300 hover:border-stone-500"
-              }`}
-            >
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
-                {t("boeideel_include")}
-              </p>
-              <p className="text-[11px] leading-tight text-stone-500">
-                {t("boeideel_include_hint")}
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIncludeBoeideel(false)}
-              aria-pressed={!includeBoeideel}
-              className={`flex-1 bg-paper px-4 py-3 text-left text-ink transition-colors ${
-                !includeBoeideel
-                  ? "border-2 border-ink"
-                  : "border border-stone-300 hover:border-stone-500"
-              }`}
-            >
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.15em]">
-                {t("boeideel_exclude")}
-              </p>
-              <p className="text-[11px] leading-tight text-stone-500">
-                {t("boeideel_exclude_hint")}
-              </p>
-            </button>
-          </div>
-        </section>
-
         </div>
 
         <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <header>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
-              05 — {t("render.section.renders")}
+              04 — {t("render.section.renders")}
             </p>
           </header>
 

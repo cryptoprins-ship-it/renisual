@@ -2136,28 +2136,11 @@ export default function GevelCalcPage() {
               >
                 {t("gevelbekleding")}
               </button>
-              {adviesPrijs > 0 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setProductCategory("kozijnen")}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                      productCategory === "kozijnen" ? "bg-black text-white" : "bg-white text-black"
-                    }`}
-                  >
-                    {t("kozijnen")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setProductCategory("isolatie")}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                      productCategory === "isolatie" ? "bg-black text-white" : "bg-white text-black"
-                    }`}
-                  >
-                    {t("isolatie")}
-                  </button>
-                </>
-              )}
+              {/* Kozijnen + Isolatie tabs hidden for v1 — separate
+                  product flows that introduced too much complexity for
+                  the primary gevelbekleding journey. The state +
+                  category enum stay on the file so re-enabling later
+                  is just flipping this gate. */}
             </div>
             <div className="mt-4 print-hidden">
               <div className="mb-2 flex items-center justify-between gap-3">
