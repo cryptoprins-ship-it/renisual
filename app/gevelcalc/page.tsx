@@ -1366,6 +1366,15 @@ export default function GevelCalcPage() {
       const data = (await res.json()) as { ref: string; offerteUrl: string; pdfUrl: string | null };
       setOfferteResult({ ref: data.ref, offerteUrl: data.offerteUrl });
 
+      // Wipe the cross-page project store so a return visit to /render
+      // starts blank instead of showing the previous project's photo +
+      // render + panel. Local form fields stay untouched (the user is
+      // still on /gevelcalc looking at the result) — only the persisted
+      // session that bleeds into /render is cleared.
+      useProjectStore.getState().clearPhoto();
+      useProjectStore.getState().clearRender();
+      useProjectStore.getState().clearProduct();
+
       // Email the request to offerte@renisual.com so the team picks it
       // up internally. Best-effort — the public /offerte/{ref} URL is
       // already saved, so a send failure isn't fatal for the customer.
