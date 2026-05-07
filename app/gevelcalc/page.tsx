@@ -1555,17 +1555,39 @@ export default function GevelCalcPage() {
 
       // Email the request to info@renisual.com so the team picks it
       // up internally. Best-effort — the public /offerte/{ref} URL is
-      // already saved, so a send failure isn't fatal for the customer.
+      // already saved, so a send failure isn't fatal for the customer,
+      // but we DO surface the failure as a toast so the user knows to
+      // forward the share-link manually instead of assuming we got it.
       fetch("/api/offertes/send", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ref: data.ref }),
-      }).then((sendRes) => {
-        if (!sendRes.ok) {
-          console.warn("[offerte] send to info@renisual.com failed", sendRes.status);
+      }).then(async (sendRes) => {
+        if (sendRes.ok) {
+          showToast("Offerte verstuurd naar Renisual ✓");
+          return;
         }
+        // Surface the server-side failure code so we can diagnose
+        // without server logs (smtp_not_configured = env vars missing,
+        // send_failed = SMTP credentials wrong / blocked).
+        let detail = `HTTP ${sendRes.status}`;
+        try {
+          const body = (await sendRes.json()) as { error?: string };
+          if (body.error) detail = body.error;
+        } catch {
+          /* non-JSON */
+        }
+        console.warn("[offerte] send to info@renisual.com failed", detail);
+        showToast(
+          `Verzending naar Renisual mislukt (${detail}) — uw PDF is wel opgeslagen, deel zelf de link of mail naar info@renisual.com.`,
+          "error",
+        );
       }).catch((err) => {
         console.warn("[offerte] send fetch threw", err);
+        showToast(
+          "Verzending naar Renisual mislukt (netwerk) — uw PDF is wel opgeslagen, deel zelf de link of mail naar info@renisual.com.",
+          "error",
+        );
       });
 
       // Save-As friendly download. Fetch the PDF bytes, wrap in a
