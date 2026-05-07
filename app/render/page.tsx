@@ -354,22 +354,31 @@ export default function RenderPage() {
   const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
-  const [sampleTab, setSampleTab] = useState<"houses" | "woonboten" | null>(null);
-  const [houseSamples, setHouseSamples] = useState<Array<{ file: string; label: string }>>([]);
-  const [woonbootSamples, setWoonbootSamples] = useState<Array<{ file: string; label: string }>>([]);
+  // Sample categories: each has its own folder under /public/samples/<key>/
+  // with an index.json describing the available photos. Tabs only render
+  // for categories that actually have entries — empty/missing index.json
+  // means the tab is hidden.
+  const SAMPLE_CATEGORIES = ["houses", "woonboten", "schuren", "caravans"] as const;
+  type SampleKey = (typeof SAMPLE_CATEGORIES)[number];
+  const [sampleTab, setSampleTab] = useState<SampleKey | null>(null);
+  const [samplesByKey, setSamplesByKey] = useState<Record<SampleKey, Array<{ file: string; label: string }>>>({
+    houses: [],
+    woonboten: [],
+    schuren: [],
+    caravans: [],
+  });
 
   useEffect(() => {
-    fetch("/samples/houses/index.json")
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setHouseSamples)
-      .catch(() => setHouseSamples([]));
-    fetch("/samples/woonboten/index.json")
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setWoonbootSamples)
-      .catch(() => setWoonbootSamples([]));
+    SAMPLE_CATEGORIES.forEach((key) => {
+      fetch(`/samples/${key}/index.json`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((list) => setSamplesByKey((prev) => ({ ...prev, [key]: list })))
+        .catch(() => {});
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- SAMPLE_CATEGORIES is a stable literal
   }, []);
 
-  async function loadSamplePhoto(folder: "houses" | "woonboten", file: string) {
+  async function loadSamplePhoto(folder: SampleKey, file: string) {
     try {
       const res = await fetch(`/samples/${folder}/${file}`);
       const blob = await res.blob();
@@ -1080,58 +1089,46 @@ export default function RenderPage() {
             <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
               {locale === "nl" ? "Of kies een voorbeeldfoto" : "Or pick a sample photo"}
             </p>
-            <div className="flex gap-2">
-              {houseSamples.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSampleTab(sampleTab === "houses" ? null : "houses")}
-                  className={`border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] ${
-                    sampleTab === "houses" ? "border-ink bg-ink text-paper" : "border-stone-200 bg-paper text-ink hover:bg-stone-50"
-                  }`}
-                >
-                  {t("woningen")} ({houseSamples.length})
-                </button>
-              )}
-              {woonbootSamples.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSampleTab(sampleTab === "woonboten" ? null : "woonboten")}
-                  className={`border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] ${
-                    sampleTab === "woonboten" ? "border-ink bg-ink text-paper" : "border-stone-200 bg-paper text-ink hover:bg-stone-50"
-                  }`}
-                >
-                  {t("woonboten")} ({woonbootSamples.length})
-                </button>
-              )}
+            <div className="flex flex-wrap gap-2">
+              {SAMPLE_CATEGORIES.map((key) => {
+                const list = samplesByKey[key];
+                if (list.length === 0) return null;
+                // i18n label key — "houses" maps to the existing "woningen" key
+                const labelKey = key === "houses" ? "woningen" : key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSampleTab(sampleTab === key ? null : key)}
+                    className={`border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] ${
+                      sampleTab === key ? "border-ink bg-ink text-paper" : "border-stone-200 bg-paper text-ink hover:bg-stone-50"
+                    }`}
+                  >
+                    {t(labelKey)} ({list.length})
+                  </button>
+                );
+              })}
             </div>
             {sampleTab && (
               <div className="mt-3">
-                {(sampleTab === "houses" ? houseSamples : woonbootSamples).length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-black/40 p-4 text-center text-xs text-gray-500">
-                    {locale === "nl"
-                      ? `Nog geen voorbeeldfoto's. Plaats afbeeldingen in /public/samples/${sampleTab}/ en update index.json.`
-                      : `No samples yet. Drop images in /public/samples/${sampleTab}/ and update index.json.`}
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {(sampleTab === "houses" ? houseSamples : woonbootSamples).map((s) => (
-                      <button
-                        key={s.file}
-                        type="button"
-                        onClick={() => loadSamplePhoto(sampleTab, s.file)}
-                        className="overflow-hidden rounded-xl border border-black bg-white text-left hover:bg-neutral-50"
-                      >
-                        <img
-                          src={`/samples/${sampleTab}/${s.file}`}
-                          alt={s.label}
-                          loading="lazy"
-                          className="block aspect-[4/3] w-full object-cover"
-                        />
-                        <p className="px-2 py-1 text-xs">{s.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {samplesByKey[sampleTab].map((s) => (
+                    <button
+                      key={s.file}
+                      type="button"
+                      onClick={() => loadSamplePhoto(sampleTab, s.file)}
+                      className="overflow-hidden rounded-xl border border-black bg-white text-left hover:bg-neutral-50"
+                    >
+                      <img
+                        src={`/samples/${sampleTab}/${s.file}`}
+                        alt={s.label}
+                        loading="lazy"
+                        className="block aspect-[4/3] w-full object-cover"
+                      />
+                      <p className="px-2 py-1 text-xs">{s.label}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

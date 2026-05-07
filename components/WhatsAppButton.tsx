@@ -12,7 +12,7 @@
 
 import { usePathname } from "next/navigation";
 
-const WA_NUMBER = "316402414646"; // +31 6 40241 4646
+const WA_NUMBER = "31640241646"; // +31 6 4024 1646
 const WA_MESSAGE = "Hoi, ik heb een vraag over Renisual.";
 const WA_URL = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)}`;
 
