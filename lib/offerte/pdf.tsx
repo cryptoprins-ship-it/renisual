@@ -623,15 +623,9 @@ export function OfferteDocument(props: OfferteDocumentProps) {
 
         <View style={styles.disclaimerBox}>
           {includePrices ? (
-            <>
-              <Text style={styles.disclaimerText}>
-                Prijs gebaseerd op laatste adviesprijs. Prijzen zijn een indicatie.
-              </Text>
-              <Text style={[styles.disclaimerText, { marginTop: 4 }]}>
-                Leveranciers werken met staffelkortingen op basis van afnamevolume; vraag dus altijd
-                een leverancierofferte aan voordat je een definitieve keuze maakt.
-              </Text>
-            </>
+            <Text style={styles.disclaimerText}>
+              Prijs gebaseerd op laatste adviesprijs. Prijzen zijn indicatief.
+            </Text>
           ) : (
             <Text style={styles.disclaimerText}>
               Materiaaladvies op basis van jouw gevelmaten. Vraag je leverancier voor de definitieve prijs en levertijd.
@@ -644,7 +638,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           <View style={styles.qrCopy}>
             <Text style={styles.qrTitle}>SCAN VOOR LIVE OFFERTE</Text>
             <Text style={styles.qrSubtitle}>
-              Open de digitale versie met foto, AI-render en altijd-actuele prijzen.
+              Open de digitale versie met foto en gevelrender. Prijzen zijn indicatief.
             </Text>
             <Text style={styles.qrUrl}>{offerteUrl}</Text>
           </View>
