@@ -1453,6 +1453,21 @@ export default function GevelCalcPage() {
       showToast(validationErr, "error");
       return;
     }
+    // Klantgegevens — minimaal e-mailadres vereist, anders kunnen wij
+    // de offerte niet in behandeling nemen en de leverancier ook niet.
+    // Naam en adres zijn óók nodig voor een nuttig dossier; we vragen
+    // alle drie tegelijk uit zodat de gebruiker er één keer naar kijkt.
+    const missing: string[] = [];
+    if (!customerEmail.trim()) missing.push("e-mail");
+    if (!customerLastName.trim()) missing.push("achternaam");
+    if (!customerAddress.trim()) missing.push("adres");
+    if (missing.length > 0) {
+      showToast(
+        `Vul ${missing.join(", ")} in — zonder die gegevens kunnen we de offerte niet versturen.`,
+        "error",
+      );
+      return;
+    }
     const payload = buildOffertePayload();
     if (!payload) {
       showToast(t("gc.error.chooseProduct"), "error");
@@ -1844,8 +1859,11 @@ export default function GevelCalcPage() {
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.customerLastName")}</label>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                    {t("gc.customerLastName")} <span className="text-red-600">*</span>
+                  </label>
                   <input
+                    required
                     className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
                     value={customerLastName}
                     onChange={(e) => setCustomerLastName(e.target.value)}
@@ -1854,10 +1872,13 @@ export default function GevelCalcPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.customerEmail")}</label>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                    {t("gc.customerEmail")} <span className="text-red-600">*</span>
+                  </label>
                   <input
                     type="email"
                     inputMode="email"
+                    required
                     className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
@@ -1867,8 +1888,11 @@ export default function GevelCalcPage() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">{t("gc.customerAddress")}</label>
+                <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                  {t("gc.customerAddress")} <span className="text-red-600">*</span>
+                </label>
                 <input
+                  required
                   className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
@@ -1876,6 +1900,10 @@ export default function GevelCalcPage() {
                   autoComplete="street-address"
                 />
               </div>
+              <p className="text-[11px] leading-snug text-stone-500">
+                Achternaam, e-mail en adres zijn verplicht voor de offerte.
+                Zonder die gegevens kunnen wij — en de leverancier — geen contact opnemen.
+              </p>
               {mode === "advanced" && (
                 <div className="grid gap-4 md:grid-cols-2">
                   <ToggleSwitch checked={frontBackSame} onChange={setFrontBackSame} label={t("gc.frontBackSame")} />
