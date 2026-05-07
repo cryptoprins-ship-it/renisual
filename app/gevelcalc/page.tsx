@@ -1338,6 +1338,22 @@ export default function GevelCalcPage() {
     if (!confirm(t("gc.confirmReset"))) return;
     localStorage.removeItem(STORAGE_KEY);
     await clearAllPhotos().catch(() => {});
+    // Also wipe the cross-page projectStore (photo + product handed off
+    // from /render). Without this, hitting Reset cleared the gevelcalc
+    // form but /render still showed the old photo + selected panel,
+    // confusing users into thinking Reset didn't work. Best-effort
+    // delete the orphaned signed-URL photo from Supabase Storage too.
+    const storedPhotoPath = useProjectStore.getState().photoStoragePath;
+    if (storedPhotoPath) {
+      fetch("/api/photo/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: storedPhotoPath }),
+      }).catch(() => {
+        /* swept by background job if it fails */
+      });
+    }
+    useProjectStore.getState().reset();
     setSides(createDefaultSides(t));
     setPhotos({});
     setProjectName("");
@@ -1623,35 +1639,6 @@ export default function GevelCalcPage() {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  }
-
-  function sendMail() {
-    const err = validateForExport();
-    if (err) {
-      showToast(err, "error");
-      return;
-    }
-    const vatLabel = showInclVat ? t("gc.inclVat") : "excl.";
-    const subject = encodeURIComponent(`${t("gc.email.subject")}${projectName ? ` — ${projectName}` : ""}${customerLastName ? ` (${customerLastName})` : ""}`);
-    const modeLine = mode === "quick" ? t("gc.pdfModeQuick") : t("gc.pdfModeAdvanced");
-    const body = encodeURIComponent(
-      `${t("gc.email.subject")}${projectName ? `\n${projectName}` : ""}\n${t("gc.dateLabel", { date: formatDate(new Date().toISOString(), locale) })}\n` +
-        `${modeLine}\n\n` +
-        `${t("gc.totalGross")}: ${totals.gross.toFixed(2)} m²\n` +
-        `${t("gc.totalOpenings")}: ${totals.openings.toFixed(2)} m²\n` +
-        `${t("gc.totalNet")}: ${totals.net.toFixed(2)} m²\n\n` +
-        `${t("gc.product")}: ${selectedProduct ? `${selectedProduct.brand} - ${selectedProduct.name}` : t("gc.notChosen")}\n` +
-        `${t("gc.orientation" as never)}: ${orientation === "horizontal" ? t("render.horizontal") : t("render.vertical")}\n\n` +
-        `${t("gc.netWithWaste")}: ${materialResult?.netWithWaste.toFixed(2) ?? "0.00"} m²\n` +
-        `${t("gc.panelsNeeded")}: ${materialResult?.panelCount ?? 0}\n` +
-        `${t("gc.materialPrice")} ${vatLabel}: ${fmtMoney(materialResult?.materialPriceExVat ?? 0)}\n` +
-        `${t("gc.profilesPrice")} ${vatLabel}: ${fmtMoney(materialResult?.profilePriceExVat ?? 0)}\n` +
-        `${t("gc.subtotal")} ${vatLabel}: ${fmtMoney(materialResult?.subtotalExVat ?? 0)}\n` +
-        `${t("gc.totalLabel")} ${vatLabel}: ${fmtMoney(materialResult?.totalExVat ?? 0)}\n\n` +
-        `${t("gc.priceDisclaimer")}\n`
-    );
-    const to = customerEmail ? encodeURIComponent(customerEmail) : "";
-    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
   }
 
   async function goToRender() {
@@ -2498,7 +2485,7 @@ export default function GevelCalcPage() {
                 href={selectedProduct ? `/render?product=${encodeURIComponent(selectedProduct.id)}` : "/render"}
                 className={`rounded-xl px-4 py-2.5 text-center text-sm font-medium ${
                   selectedProduct
-                    ? "bg-black text-white"
+                    ? "border border-ink text-ink"
                     : "border border-stone-300 text-stone-400 cursor-not-allowed"
                 }`}
                 aria-disabled={!selectedProduct}
@@ -2508,8 +2495,21 @@ export default function GevelCalcPage() {
               >
                 {t("gc.viewRender")}
               </Link>
-              <button type="button" onClick={sendMail} className="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white">
-                {t("gc.btnMail")}
+              {/* Primary action — same handler as the right-column
+                  "Vraag offerte aan" card. Putting it in the always-
+                  visible bottom bar means mobile users don't need to
+                  scroll past the entire form to find it.
+                  The mailto: button that sat here previously opened
+                  the OS mail-app picker with no PDF attached, which
+                  confused users into thinking that was the offerte
+                  flow. Removed. */}
+              <button
+                type="button"
+                onClick={downloadOfferte}
+                disabled={offerteSubmitting || !selectedProduct || !materialResult}
+                className="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white disabled:opacity-40"
+              >
+                {offerteSubmitting ? t("gc.btnExportPdfBusy") : "Vraag offerte aan"}
               </button>
               {mode === "advanced" && (
                 <>

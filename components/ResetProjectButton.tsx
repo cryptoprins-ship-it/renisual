@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useProjectStore } from "@/lib/projectStore";
 import { useLocale } from "@/lib/i18n";
 
@@ -9,14 +10,19 @@ import { useLocale } from "@/lib/i18n";
  * in Supabase Storage is also removed via the server-side delete route
  * since the anon key has no DELETE permission.
  *
- * Hidden when there's nothing to reset, so the bar stays clean for
- * first-time visitors.
+ * Hidden when:
+ *   - there's nothing to reset (clean bar for first-time visitors)
+ *   - we're on /gevelcalc, where the bottom action bar already has a
+ *     "Reset" that clears both local form state AND the cross-page
+ *     projectStore — two reset affordances confused users.
  */
 export default function ResetProjectButton() {
   const { t } = useLocale();
+  const pathname = usePathname() ?? "/";
   const photoStoragePath = useProjectStore((s) => s.photoStoragePath);
   const selectedProduct = useProjectStore((s) => s.selectedProduct);
 
+  if (pathname.startsWith("/gevelcalc")) return null;
   if (!photoStoragePath && !selectedProduct) return null;
 
   const handleReset = async () => {
