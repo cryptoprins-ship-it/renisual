@@ -6,6 +6,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import HomeButton from "@/components/HomeButton";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import PwaInstallButton from "@/components/PwaInstallButton";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -99,6 +100,7 @@ export default function RootLayout({
         {/* Mobile-only top banner; auto-hides for 7 days after dismiss
             and never shows once the app is already installed. */}
         <PwaInstallButton variant="floating" />
+        <WhatsAppButton />
         {children}
       </body>
     </html>
