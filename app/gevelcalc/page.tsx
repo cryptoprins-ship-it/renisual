@@ -677,14 +677,33 @@ function ProductRow({
   );
 }
 
-function Toast({ message, type }: { message: string; type: "ok" | "error" }) {
+function Toast({
+  message,
+  type,
+  onDismiss,
+}: {
+  message: string;
+  type: "ok" | "error";
+  onDismiss?: () => void;
+}) {
   return (
     <div
-      className={`fixed top-4 right-4 z-50 rounded-xl border px-5 py-3 text-sm font-medium shadow-md print:hidden ${
+      role={type === "error" ? "alert" : "status"}
+      className={`fixed top-4 right-4 z-50 flex max-w-md items-start gap-2 rounded-xl border px-4 py-3 text-sm font-medium shadow-md print:hidden ${
         type === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800"
       }`}
     >
-      {message}
+      <span className="flex-1 whitespace-pre-line break-words">{message}</span>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Sluiten"
+          className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-base leading-none opacity-70 hover:opacity-100"
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 }
@@ -923,7 +942,12 @@ export default function GevelCalcPage() {
   function showToast(message: string, type: "ok" | "error" = "ok") {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ message, type });
-    toastTimer.current = setTimeout(() => setToast(null), 2500);
+    // OK toasts auto-dismiss; error toasts stay until the user clicks
+    // them away so diagnostic text (e.g. Zod field errors from the
+    // offerte route) doesn't blink away before it can be read.
+    if (type === "ok") {
+      toastTimer.current = setTimeout(() => setToast(null), 2500);
+    }
   }
 
   useEffect(() => {
@@ -1344,6 +1368,20 @@ export default function GevelCalcPage() {
         }
       : undefined;
 
+    // Strip side photos before serialising — `photoDataUrl` is a base64
+    // string that can be megabytes per side. With 4 sides we'd push the
+    // request body past Hostinger's 10 MB JSON limit and the server's
+    // request.json() would fail with a SyntaxError before it could even
+    // run the schema check. The actual photo lives in Supabase Storage
+    // (photoStoragePath); these inline previews are only for the UI.
+    const stripPhoto = (s: CalcSide): Omit<CalcSide, "photoDataUrl"> => ({
+      id: s.id,
+      name: s.name,
+      width: s.width,
+      height: s.height,
+      openings: s.openings,
+    });
+
     return {
       calcInput: {
         mode,
@@ -1352,7 +1390,7 @@ export default function GevelCalcPage() {
         projectName,
         selectedProductId,
         keralitColorNumber,
-        sides: mode === "quick" ? [quickSide] : sides,
+        sides: (mode === "quick" ? [quickSide] : sides).map(stripPhoto),
         // Pricing knobs the PDF needs but that the calc engine
         // doesn't currently surface as named fields.
         pricePerPanel:
@@ -1731,7 +1769,13 @@ export default function GevelCalcPage() {
         }
       `}</style>
 
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
+        />
+      )}
 
       <main className="min-h-[100dvh] bg-paper text-ink print:!h-auto print:!min-h-0 print:!overflow-visible">
         <SiteNav />
