@@ -1409,16 +1409,34 @@ export default function GevelCalcPage() {
       if (!res.ok) {
         const body = await res.text();
         console.error("[offerte] HTTP", res.status, body);
-        // Surface the server-side error code/message in the toast so a
-        // user can tell support exactly what failed (RLS denial code,
-        // column mismatch, etc.) instead of a generic "probeer opnieuw".
+        console.error("[offerte] payload that was rejected:", payload);
         let suffix = "";
         try {
           const parsed = JSON.parse(body) as {
             error?: string;
             detail?: { code?: string; message?: string } | string;
+            // invalid_body path uses "details" (plural) and embeds the
+            // Zod flatten — fieldErrors / formErrors objects.
+            details?:
+              | string
+              | {
+                  fieldErrors?: Record<string, string[] | undefined>;
+                  formErrors?: string[];
+                };
           };
-          if (typeof parsed.detail === "object" && parsed.detail) {
+          // Prefer the Zod flatten when available so the user sees WHICH
+          // field tripped (e.g. "calcOutput.panelCount: required").
+          if (parsed.details && typeof parsed.details === "object") {
+            const flat = parsed.details;
+            const fieldEntries = Object.entries(flat.fieldErrors ?? {})
+              .filter(([, errs]) => errs && errs.length > 0)
+              .map(([k, errs]) => `${k}: ${(errs ?? []).join(", ")}`);
+            const formMsgs = (flat.formErrors ?? []).join(", ");
+            const combined = [...fieldEntries, formMsgs].filter(Boolean).join(" | ");
+            if (combined) suffix = `: ${combined.slice(0, 140)}`;
+          } else if (typeof parsed.details === "string") {
+            suffix = `: ${parsed.details.slice(0, 140)}`;
+          } else if (typeof parsed.detail === "object" && parsed.detail) {
             if (parsed.detail.code) suffix = ` [${parsed.detail.code}]`;
             else if (parsed.detail.message) suffix = `: ${parsed.detail.message.slice(0, 80)}`;
           } else if (typeof parsed.detail === "string") {
@@ -2375,15 +2393,11 @@ export default function GevelCalcPage() {
         >
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-wrap items-center gap-2 pb-1">
-              <label className="flex flex-shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-black px-3 py-2 text-sm select-none">
-                <input
-                  type="checkbox"
-                  checked={includePrices}
-                  onChange={(e) => setIncludePrices(e.target.checked)}
-                  className="h-4 w-4"
-                />
-                {t("gc.includePrices")}
-              </label>
+              {/* Prijzen-meenemen toggle is verplaatst naar de
+                  "Wilt u een offerte aanvragen?" kaart in de
+                  rechterkolom. Standaard is de offerte zonder prijzen;
+                  de gebruiker selecteert het daar expliciet als ze
+                  wel een richtprijs in de PDF willen. */}
               <Link
                 href={selectedProduct ? `/render?product=${encodeURIComponent(selectedProduct.id)}` : "/render"}
                 className={`flex-shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium ${
@@ -2539,6 +2553,23 @@ export default function GevelCalcPage() {
                   offerte@renisual.com. Vul je achternaam, e-mail en adres
                   in zodat we contact op kunnen nemen.
                 </p>
+                <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-md border border-stone-300 bg-stone-50 p-2.5 text-[12px] text-stone-700 select-none">
+                  <input
+                    type="checkbox"
+                    checked={includePrices}
+                    onChange={(e) => setIncludePrices(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 flex-shrink-0"
+                  />
+                  <span>
+                    <span className="block font-medium text-ink">
+                      Richtprijzen meenemen in PDF
+                    </span>
+                    <span className="block text-[11px] text-stone-600">
+                      Standaard zonder prijzen — vink aan voor een PDF met indicatieve
+                      paneel- en profielprijzen incl. BTW.
+                    </span>
+                  </span>
+                </label>
                 <button
                   type="button"
                   onClick={downloadOfferte}
