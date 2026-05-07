@@ -287,6 +287,9 @@ export default function RenderPage() {
 
 
   const [variants, setVariants] = useState<RenderVariant[]>([]);
+  // The variant the user explicitly picked for the offerte handoff.
+  // Null = no choice yet → handleProceedToCalc falls back to baseline.
+  const [selectedForOfferteId, setSelectedForOfferteId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [toast, setToast] = useState<string | null>(null);
@@ -840,7 +843,13 @@ export default function RenderPage() {
       return;
     }
     setIsHandingOff(true);
-    const baseline = variants.find((v) => v.toneNudge === 0) ?? variants[variants.length - 1];
+    // Prefer the user's explicit selection. Fallback chain when nothing
+    // is picked: a tone-nudge=0 baseline, otherwise the most recently
+    // generated variant.
+    const baseline =
+      (selectedForOfferteId && variants.find((v) => v.id === selectedForOfferteId)) ||
+      variants.find((v) => v.toneNudge === 0) ||
+      variants[variants.length - 1];
     try {
       const m = /^data:([^;,]+);base64,(.+)$/.exec(baseline.dataUrl);
       let blob: Blob;
@@ -1493,9 +1502,38 @@ export default function RenderPage() {
             <p className="mt-3 text-sm text-gray-500">{t("rendering_empty_state")}</p>
           )}
 
+          {/* Selectie-banner — verschijnt zodra er meerdere varianten
+              zijn. Geen banner bij maar één render (dan is de keuze
+              impliciet). */}
+          {!isGenerating && variants.length > 1 && (
+            <div className="mt-4 rounded-md border border-ink bg-stone-50 p-3 text-sm text-ink">
+              <p className="font-display">Bent u klaar?</p>
+              <p className="mt-0.5 text-[12px] text-stone-700">
+                Selecteer hieronder de foto die u in de offerte wilt en klik op{" "}
+                <span className="font-medium">Bereken materiaal →</span>.
+              </p>
+            </div>
+          )}
+
           <div className="mt-4 space-y-4">
             {variants.map((v) => (
-              <article key={v.id} className="relative overflow-hidden rounded-xl border border-black">
+              <article
+                key={v.id}
+                className={`relative overflow-hidden rounded-xl border-2 transition-colors ${
+                  selectedForOfferteId === v.id
+                    ? "border-ink ring-2 ring-ink/30"
+                    : "border-black"
+                }`}
+              >
+                {selectedForOfferteId === v.id && (
+                  <span
+                    className="absolute left-2 top-2 z-10 flex h-7 items-center gap-1 rounded-full border border-ink bg-ink px-2 text-[10px] font-mono uppercase tracking-[0.15em] text-paper shadow-sm"
+                    aria-label="Geselecteerd voor offerte"
+                  >
+                    <span aria-hidden>✓</span>
+                    <span>Voor offerte</span>
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setVariants((prev) => prev.filter((x) => x.id !== v.id))}
@@ -1626,6 +1664,20 @@ export default function RenderPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400">{new Date(v.createdAt).toLocaleString(localeForDate)}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedForOfferteId((prev) => (prev === v.id ? null : v.id))
+                      }
+                      className={`rounded-lg border px-2 py-1 transition-colors ${
+                        selectedForOfferteId === v.id
+                          ? "border-ink bg-ink text-paper"
+                          : "border-black bg-white text-ink hover:bg-stone-100"
+                      }`}
+                      aria-pressed={selectedForOfferteId === v.id}
+                    >
+                      {selectedForOfferteId === v.id ? "✓ Voor offerte" : "Voor offerte"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => downloadVariant(v)}
