@@ -379,13 +379,14 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "about.eyebrow": "Het verhaal",
     "about.title": "Over Renisual",
     "about.p1": "Renisual is een onafhankelijke renovatie-site, ontstaan uit een eigen probleem.",
-    "about.p2": "Mijn woonboot moest om de zes jaar geschilderd worden. Na de vierde keer was ik er klaar mee — dat is veel werk en het hout is na zoveel jaar aan vervanging toe. Tijd voor kunststof.",
-    "about.p3": "Keralit was een optie, maar duur, en je moet er hout voor slopen dat nog prima is. Toen kwam ik Spanl tegen: metalen gevelpanelen die over bestaand hout heen kunnen, slechts 16mm dun, met een isolatiewaarde van 0,74 m²K/W en brandklasse A2. Lichter, goedkoper dan Keralit, en het hout kan blijven zitten.",
-    "about.p4": "Tijdens het kiezen liep ik tegen iets aan: bestaande sites laten alleen voorbeelden zien op standaardhuizen. Ik kon nergens mijn eigen foto uploaden om te zien hoe Spanl-panelen er op mijn woonboot zouden uitzien. Dus heb ik die tool zelf gemaakt.",
+    "about.p2": "Mijn woonboot moest elke zes jaar geschilderd worden. Na de vierde keer was ik er klaar mee — dat is veel werk en het hout is na zoveel jaar aan vervanging toe. Tijd voor iets duurzamers — eerst keek ik naar kunststof.",
+    "about.p3": "Keralit was een optie, maar duur, en je moet er hout voor slopen dat nog prima is. Toen kwam ik Spanl tegen: metalen gevelpanelen die over bestaand hout heen kunnen, slechts 16mm dun, met een isolatiewaarde van 0,74 m²K/W (vergelijkbaar met een dunne isolatieplaat) en brandklasse A2. Lichter, goedkoper dan Keralit, en het hout kan blijven zitten.",
+    "about.p4": "Tijdens het kiezen liep ik tegen iets aan: bestaande sites laten alleen voorbeelden zien op standaardhuizen. Ik kon nergens mijn eigen foto uploaden om te zien hoe Spanl-panelen er op mijn woonboot zouden uitzien. Dus heb ik deze tool zelf gemaakt.",
     "about.p5": "Inmiddels begrijp ik waarom andere sites het niet doen: rendering is niet eenvoudig. Je benadert de werkelijkheid, maar de kleur klopt nooit honderd procent. Toch krijg je een veel betere indicatie dan met materiaalmonsters alleen — die kun je in je hand houden, maar je kunt ze niet visualiseren over een hele gevel.",
-    "about.p6": "Binnenkort bestel ik panelen voor mijn boot. Daarna ga ik hetzelfde principe toepassen op keuken, badkamer en tuin — ook deze tool maak ik daar geschikt voor.",
+    "about.p6": "Komende maanden bestel ik panelen voor mijn boot. Daarna ga ik hetzelfde principe toepassen op keuken, badkamer en tuin. De tool groeit mee.",
     "about.p7": "Mogelijk kom je in aanmerking voor subsidie. Ik onderzoek dit zelf op dit moment via SVN — kijk op de subsidiepagina voor de actuele stand.",
     "about.p8": "Probeer de tool en stuur me feedback.",
+    "about.signature": "— Marcel",
     "about.cta.button": "Test je eigen gevel",
 
     "render.frames.heading": "Kozijnen & Deuren",
@@ -803,6 +804,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "about.p6": "Soon I'll be ordering panels for my boat. After that I'll apply the same principle to kitchen, bathroom and garden — and adapt this tool for those too.",
     "about.p7": "You may qualify for a subsidy. I'm currently researching this myself via SVN — check the subsidies page for the latest status.",
     "about.p8": "Try the tool and send me your feedback.",
+    "about.signature": "— Marcel",
     "about.cta.button": "Try it on your own facade",
 
     "render.frames.heading": "Frames & Doors",
@@ -1220,6 +1222,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "about.p6": "Demnächst bestelle ich Paneele für mein Boot. Danach wende ich dasselbe Prinzip auf Küche, Bad und Garten an — auch dieses Tool werde ich dafür anpassen.",
     "about.p7": "Möglicherweise hast du Anspruch auf eine Förderung. Ich recherchiere das gerade selbst über SVN — auf der Förderungs-Seite findest du den aktuellen Stand.",
     "about.p8": "Probier das Tool aus und schick mir Feedback.",
+    "about.signature": "— Marcel",
     "about.cta.button": "Auf eigener Fassade testen",
 
     "render.frames.heading": "Fenster & Türen",
@@ -1637,6 +1640,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "about.p6": "Bientôt je commanderai des panneaux pour mon bateau. Ensuite j'appliquerai le même principe à la cuisine, la salle de bain et le jardin — et j'adapterai cet outil pour ces usages aussi.",
     "about.p7": "Vous êtes peut-être éligible à une aide. Je l'examine moi-même via SVN — consultez la page des aides pour la situation actuelle.",
     "about.p8": "Essayez l'outil et envoyez-moi vos retours.",
+    "about.signature": "— Marcel",
     "about.cta.button": "Tester sur votre façade",
 
     "render.frames.heading": "Menuiseries & Portes",
@@ -2054,6 +2058,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "about.p6": "Pronto pediré paneles para mi barco. Después aplicaré el mismo principio a la cocina, el baño y el jardín — y también adaptaré esta herramienta para eso.",
     "about.p7": "Puede que tengas derecho a una subvención. Lo estoy investigando yo mismo a través de SVN — consulta la página de subvenciones para el estado actual.",
     "about.p8": "Prueba la herramienta y envíame tus comentarios.",
+    "about.signature": "— Marcel",
     "about.cta.button": "Pruébalo en tu fachada",
 
     "render.frames.heading": "Ventanas y puertas",

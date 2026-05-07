@@ -79,6 +79,9 @@ export default function AboutClient() {
           {PARAGRAPH_KEYS.map((key) => (
             <p key={key}>{t(key)}</p>
           ))}
+          <p className="pt-4 font-display italic text-stone-700">
+            {t("about.signature")}
+          </p>
         </div>
       </section>
 
