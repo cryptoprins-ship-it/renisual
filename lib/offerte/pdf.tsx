@@ -477,9 +477,14 @@ export function OfferteDocument(props: OfferteDocumentProps) {
         </View>
 
         <View style={styles.header}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <RenisualMarkPdf size={26} />
-            <Text style={styles.brandWordmark}>Renisual</Text>
+          <View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <RenisualMarkPdf size={26} />
+              <Text style={styles.brandWordmark}>Renisual</Text>
+            </View>
+            <Text style={{ marginTop: 4, marginLeft: 36, fontSize: 8, color: MUTED, fontStyle: "italic" }}>
+              Zien is weten.
+            </Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.documentLabel}>OFFERTE</Text>
@@ -655,8 +660,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
             <Text style={styles.footerWordmark}>Renisual</Text>
           </View>
           <Text style={styles.footerText}>
-            Deze offerte is opgesteld via Renisual.com — het platform voor
-            gevelvisualisatie en m{"²"}-berekening.
+            Render, reken, renoveer. — opgesteld via Renisual.com
           </Text>
           <Text
             style={styles.pageNumber}
