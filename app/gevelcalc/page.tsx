@@ -1365,6 +1365,22 @@ export default function GevelCalcPage() {
       }
       const data = (await res.json()) as { ref: string; offerteUrl: string; pdfUrl: string | null };
       setOfferteResult({ ref: data.ref, offerteUrl: data.offerteUrl });
+
+      // Email the request to offerte@renisual.com so the team picks it
+      // up internally. Best-effort — the public /offerte/{ref} URL is
+      // already saved, so a send failure isn't fatal for the customer.
+      fetch("/api/offertes/send", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ref: data.ref }),
+      }).then((sendRes) => {
+        if (!sendRes.ok) {
+          console.warn("[offerte] send to offerte@renisual.com failed", sendRes.status);
+        }
+      }).catch((err) => {
+        console.warn("[offerte] send fetch threw", err);
+      });
+
       // Save-As friendly download. Fetch the PDF bytes, wrap in a
       // same-origin Blob URL, and trigger an anchor click so the
       // browser respects the `download` attribute. With "ask where to
