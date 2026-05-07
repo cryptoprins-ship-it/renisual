@@ -1247,13 +1247,21 @@ export default function GevelCalcPage() {
     setQuickWindowCount(data.quickWindowCount ?? "0");
     setQuickDoorCount(data.quickDoorCount ?? "0");
     if (data.mode !== "quick") setSides(data.sides ?? createDefaultSides(t));
-    setProjectName(data.projectName ?? "");
     setFrontBackSame(data.frontBackSame ?? false);
     setLeftRightSame(data.leftRightSame ?? false);
-    setSelectedProductId(data.selectedProductId ?? "");
-    setKeralitColorNumber(typeof data.keralitColorNumber === "number" ? data.keralitColorNumber : null);
-    setOrientation(data.orientation ?? "horizontal");
-    setCalcDate(data.savedAt ?? "");
+    // Conditional overwrites for fields the user typically wants to
+    // preserve when re-loading a config on top of the current session.
+    // Without this, loading a saved JSON to skip re-entering dimensions
+    // also wipes the panel + project number that came from /render or
+    // the just-mounted page. Pattern: only adopt the JSON value if the
+    // JSON has one; otherwise keep whatever is in state already.
+    if (data.projectName) setProjectName(data.projectName);
+    if (data.selectedProductId) setSelectedProductId(data.selectedProductId);
+    if (typeof data.keralitColorNumber === "number") setKeralitColorNumber(data.keralitColorNumber);
+    if (data.orientation === "horizontal" || data.orientation === "vertical") {
+      setOrientation(data.orientation);
+    }
+    if (data.savedAt) setCalcDate(data.savedAt);
     if (data.photos) {
       setPhotos(data.photos);
       Object.entries(data.photos).forEach(([id, url]) => savePhoto(id, url).catch(() => {}));
