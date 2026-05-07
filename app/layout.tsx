@@ -28,9 +28,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Renisual",
-  description: "Renovation, facade calculation, and material visualisation tools.",
+  title: "Renisual — Zien is weten.",
+  description: "Render je gevel, bereken je materiaal, vraag je offerte aan. Render, reken, renoveer.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "Renisual — Zien is weten.",
+    description: "Render, reken, renoveer. Upload een foto, kies een paneel, en zie je nieuwe gevel.",
+    url: "https://renisual.com",
+    siteName: "Renisual",
+    locale: "nl_NL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Renisual — Zien is weten.",
+    description: "Render, reken, renoveer.",
+  },
   appleWebApp: {
     capable: true,
     title: "Renisual",

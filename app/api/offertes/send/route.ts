@@ -1,7 +1,7 @@
 // POST /api/offertes/send
 //
 // Email an existing offerte (created via POST /api/offertes) to the
-// internal offerte@renisual.com inbox so the team can pick it up and
+// internal info@renisual.com inbox so the team can pick it up and
 // follow up with the customer. Body is just the offerte ref; the
 // route looks the row up, fetches the PDF + render attachments from
 // Supabase Storage, and sends via Hostinger SMTP.
@@ -21,7 +21,7 @@ import { logger } from "@/lib/logger";
 const PDF_BUCKET = "offerte-pdfs";
 const RENDER_BUCKET = "offerte-renders";
 const PHOTO_BUCKET = "project-photos";
-const TO_ADDRESS = "offerte@renisual.com";
+const TO_ADDRESS = "info@renisual.com";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;

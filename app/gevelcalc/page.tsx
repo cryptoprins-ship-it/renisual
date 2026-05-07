@@ -1537,7 +1537,7 @@ export default function GevelCalcPage() {
       useProjectStore.getState().clearRender();
       useProjectStore.getState().clearProduct();
 
-      // Email the request to offerte@renisual.com so the team picks it
+      // Email the request to info@renisual.com so the team picks it
       // up internally. Best-effort — the public /offerte/{ref} URL is
       // already saved, so a send failure isn't fatal for the customer.
       fetch("/api/offertes/send", {
@@ -1546,7 +1546,7 @@ export default function GevelCalcPage() {
         body: JSON.stringify({ ref: data.ref }),
       }).then((sendRes) => {
         if (!sendRes.ok) {
-          console.warn("[offerte] send to offerte@renisual.com failed", sendRes.status);
+          console.warn("[offerte] send to info@renisual.com failed", sendRes.status);
         }
       }).catch((err) => {
         console.warn("[offerte] send fetch threw", err);
