@@ -5,6 +5,7 @@ import { useState } from "react";
 import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import PwaInstallButton from "@/components/PwaInstallButton";
+import { Logo } from "@/components/Logo";
 import { useLocale } from "@/lib/i18n";
 
 const SPONSOR_MAILTO =
@@ -119,8 +120,8 @@ export default function HomeClient() {
       {/* Slim architectural header */}
       <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
-          <Link href="/" className="font-display text-xl tracking-tight">
-            Renisual
+          <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
+            <Logo variant="horizontal" />
           </Link>
           <div className="flex items-center gap-6">
             <div className="hidden items-center gap-6 font-mono text-xs uppercase tracking-[0.15em] text-stone-600 md:flex">
@@ -450,7 +451,7 @@ export default function HomeClient() {
       <footer className="border-t border-black bg-white px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="font-bold">Renisual</span>
+            <Logo variant="horizontal" markSize={28} />
             <p className="mt-1 text-xs text-gray-400">{t("home.footer.tagline")}</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">

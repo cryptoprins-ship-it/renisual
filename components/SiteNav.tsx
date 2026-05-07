@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import NavLocaleSwitcher from "./NavLocaleSwitcher";
 import ResetProjectButton from "./ResetProjectButton";
+import { Logo } from "./Logo";
 import { useLocale } from "@/lib/i18n";
 
 /**
@@ -42,8 +43,8 @@ export default function SiteNav() {
               <span>Home</span>
             </Link>
           )}
-          <Link href="/" className="font-display text-xl tracking-tight text-ink">
-            Renisual
+          <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
+            <Logo variant="horizontal" />
           </Link>
         </div>
         <div className="flex items-center gap-6">

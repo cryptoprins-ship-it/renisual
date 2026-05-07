@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import DynamicMetadata from "@/components/DynamicMetadata";
+import { Logo } from "@/components/Logo";
 
 type IsdeIsolationKind = {
   id: string;
@@ -81,8 +82,8 @@ export default function SubsidieClient() {
       <DynamicMetadata page="subsidie" />
       <nav className="border-b border-black bg-white px-4 py-3">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <Link href="/" className="text-xl font-bold tracking-tight">
-            Renisual
+          <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
+            <Logo variant="horizontal" />
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <Link href="/gevelcalc" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
@@ -349,7 +350,7 @@ export default function SubsidieClient() {
       <footer className="border-t border-black bg-white px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="font-bold">Renisual</span>
+            <Logo variant="horizontal" markSize={28} />
             <p className="mt-1 text-xs text-gray-400">Het complete renovatieplatform voor Nederland.</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">

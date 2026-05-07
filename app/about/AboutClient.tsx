@@ -3,6 +3,7 @@
 import Link from "next/link";
 import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 import DynamicMetadata from "@/components/DynamicMetadata";
+import { Logo } from "@/components/Logo";
 import { useLocale } from "@/lib/i18n";
 
 const PARAGRAPH_KEYS = [
@@ -93,7 +94,7 @@ export default function AboutClient() {
       <footer className="border-t border-stone-200 bg-paper px-6 py-10 md:px-12 lg:px-20">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="font-display text-lg">Renisual</span>
+            <Logo variant="horizontal" markSize={28} />
             <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
               {t("home.footer.tagline")}
             </p>
