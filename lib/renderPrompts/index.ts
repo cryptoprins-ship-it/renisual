@@ -18,7 +18,7 @@
 export type Orientation = "horizontal" | "vertical";
 export type ProductFamily = "ral" | "style";
 export type RalShape = "mono_flat" | "mono_groove" | "mono_textured" | "strip";
-export type StyleShape = "brick" | "wood";
+export type StyleShape = "brick" | "wood" | "spanish_tile";
 export type ToneNudge = -2 | -1 | 0 | 1 | 2;
 
 export type ResolvePromptOpts = {
@@ -120,9 +120,14 @@ ${fasciaLineFor(opts)}${tone}`;
 // Style prompt mirrors the same hybrid: surface descriptor from the
 // playground brick/wood naked prompts + the 2x2 preserve block.
 function buildStylePrompt(opts: ResolvePromptOpts): string {
-  const surfaceDescriptor = opts.shape === "brick"
-    ? "the printed brick-look panels shown in the reference image — soft weathered brick pattern in light cream-tan, beige and grey-brown tones with subtle cream mortar lines, on flat panels (very slight relief from the print, not truly protruding bricks). Match the reference image's exact tones and pattern."
-    : "the printed wood-look panels shown in the reference image — wood-plank appearance with the exact tones, grain pattern and surface texture from the reference. Flat panels with very slight relief from the print, NOT truly grooved planks. Match the reference image's exact tones and pattern.";
+  let surfaceDescriptor: string;
+  if (opts.shape === "brick") {
+    surfaceDescriptor = "the printed brick-look panels shown in the reference image — soft weathered brick pattern in light cream-tan, beige and grey-brown tones with subtle cream mortar lines, on flat panels (very slight relief from the print, not truly protruding bricks). Match the reference image's exact tones and pattern.";
+  } else if (opts.shape === "spanish_tile") {
+    surfaceDescriptor = "the printed Spanish roof-tile-look panels shown in the reference image — overlapping curved terracotta-style tiles in warm orange-red, ochre or weathered grey tones with shadowed grooves between rows. Match the reference image's exact colour palette and tile shape. NOT brick, NOT flat masonry — these are curved roof-tile shapes printed on flat wall panels.";
+  } else {
+    surfaceDescriptor = "the printed wood-look panels shown in the reference image — wood-plank appearance with the exact tones, grain pattern and surface texture from the reference. Flat panels with very slight relief from the print, NOT truly grooved planks. Match the reference image's exact tones and pattern.";
+  }
 
   return `Reclad the wall surfaces of this building with ${surfaceDescriptor}
 
@@ -153,7 +158,10 @@ export function detectFamilyAndShape(product: {
   ral_code?: string | null;
 }): { family: ProductFamily; shape: RalShape | StyleShape } {
   const sku = (product.sku ?? "").toUpperCase();
-  if (sku.startsWith("B10") || sku.startsWith("CZS70")) {
+  if (sku.startsWith("CZS70")) {
+    return { family: "style", shape: "spanish_tile" };
+  }
+  if (sku.startsWith("B10")) {
     return { family: "style", shape: "brick" };
   }
   if (sku.startsWith("PBW")) {
