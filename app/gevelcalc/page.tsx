@@ -806,6 +806,7 @@ export default function GevelCalcPage() {
   const [keralitColorNumber, setKeralitColorNumber] = useState<number | null>(null);
   const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
+  const [showAlternateOrientation, setShowAlternateOrientation] = useState(false);
   const [showInclVat, setShowInclVat] = useState(false);
   // projectName is now the auto-generated project number (e.g.
   // P-2026-05-06-A3B4). Kept under the old key for storage compat.
@@ -956,6 +957,21 @@ export default function GevelCalcPage() {
       profiles: DEFAULT_SPANL_PROFILES,
     });
   }, [selectedProduct, orientation, activeSides]);
+
+  // The opposite orientation for the comparison card. Only computed when
+  // the selected product physically supports both (Spanl Mono Flat/Groove
+  // and Strip do; printed-look panels typically don't).
+  const alternateOrientation: Orientation = orientation === "horizontal" ? "vertical" : "horizontal";
+  const alternateMaterialResult = useMemo(() => {
+    if (!selectedProduct) return null;
+    if (!selectedProduct.orientations.includes(alternateOrientation)) return null;
+    return calculateMaterialResult({
+      sides: activeSides,
+      product: selectedProduct,
+      orientation: alternateOrientation,
+      profiles: DEFAULT_SPANL_PROFILES,
+    });
+  }, [selectedProduct, alternateOrientation, activeSides]);
 
   const totals = materialResult?.totals ?? { gross: 0, openings: 0, net: 0 };
   const adviesPrijs = materialResult?.totalExVat ?? 0;
@@ -1540,6 +1556,72 @@ export default function GevelCalcPage() {
   useEffect(() => {
     useProjectStore.getState().setCalculation(quickTotalAreaM2, quickOpeningsM2);
   }, [quickTotalAreaM2, quickOpeningsM2]);
+
+  // Renders one BOM summary block. Reused for the primary calc (chosen
+  // orientation) and the optional alternate-orientation comparison block
+  // surfaced by the "Al gedacht aan de X optie?" card.
+  const orientationLabel = (o: Orientation) =>
+    o === "horizontal" ? t("render.horizontal") : t("render.vertical");
+  const bomBlock = (result: NonNullable<typeof materialResult>, label?: string) => {
+    if (!selectedProduct) return null;
+    const endProfile = result.profileItems.find((p) => p.label === "Eindprofiel");
+    const connProfile = result.profileItems.find((p) => p.label === "Verbindingsprofiel");
+    const cornerProfile = result.profileItems.find((p) => p.label === "Hoekprofiel");
+    return (
+      <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
+        {label && (
+          <div className="-mt-1 mb-1 border-b border-stone-100 pb-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+            {label}
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-stone-600">{t("gc.netWithWaste")}</span>
+          <span className="font-semibold text-ink">{result.netWithWaste.toFixed(2)} m²</span>
+        </div>
+        {selectedProduct.type === "panel" && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
+            <span className="font-semibold text-ink">{result.panelCount}</span>
+          </div>
+        )}
+        {endProfile && endProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.endProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{endProfile.count}</span>
+          </div>
+        )}
+        {connProfile && connProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.middleProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{connProfile.count}</span>
+          </div>
+        )}
+        {cornerProfile && cornerProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.cornerProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{cornerProfile.count}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-stone-600">{t("gc.materialPrice")}</span>
+          <span className="font-semibold text-ink">{fmtMoney(result.materialPriceExVat)}</span>
+        </div>
+        {result.profileItems.length > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.profilesPrice")}</span>
+            <span className="font-semibold text-ink">{fmtMoney(result.profilePriceExVat)}</span>
+          </div>
+        )}
+        <div className="flex justify-between border-t border-stone-200 pt-2">
+          <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600">{t("gc.totalLabel")}</span>
+          <span className="font-display text-base text-ink">{fmtMoney(result.totalExVat)}</span>
+        </div>
+        <p className="pt-1 text-[11px] leading-snug text-stone-500">
+          {t("gc.totalsDisclaimer")}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -2324,65 +2406,33 @@ export default function GevelCalcPage() {
               </div>
             )}
 
-            {/* Material summary — visible only when product selected */}
-            {selectedProduct && materialResult && (() => {
-              // Surface end / connection (tussen) / corner profile counts to
-              // the overview. Source values come straight from the calc
-              // engine — no formula change. Labels are matched by item.label
-              // which is the Dutch profile-type name set in calcEngine.ts.
-              const endProfile = materialResult.profileItems.find((p) => p.label === "Eindprofiel");
-              const connProfile = materialResult.profileItems.find((p) => p.label === "Verbindingsprofiel");
-              const cornerProfile = materialResult.profileItems.find((p) => p.label === "Hoekprofiel");
-              return (
-                <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">{t("gc.netWithWaste")}</span>
-                    <span className="font-semibold text-ink">{materialResult.netWithWaste.toFixed(2)} m²</span>
-                  </div>
-                  {selectedProduct.type === "panel" && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
-                      <span className="font-semibold text-ink">{materialResult.panelCount}</span>
-                    </div>
-                  )}
-                  {endProfile && endProfile.count > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-600">{t("gc.endProfilesNeeded")}</span>
-                      <span className="font-semibold text-ink">{endProfile.count}</span>
-                    </div>
-                  )}
-                  {connProfile && connProfile.count > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-600">{t("gc.middleProfilesNeeded")}</span>
-                      <span className="font-semibold text-ink">{connProfile.count}</span>
-                    </div>
-                  )}
-                  {cornerProfile && cornerProfile.count > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-600">{t("gc.cornerProfilesNeeded")}</span>
-                      <span className="font-semibold text-ink">{cornerProfile.count}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-stone-600">{t("gc.materialPrice")}</span>
-                    <span className="font-semibold text-ink">{fmtMoney(materialResult.materialPriceExVat)}</span>
-                  </div>
-                  {materialResult.profileItems.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-600">{t("gc.profilesPrice")}</span>
-                      <span className="font-semibold text-ink">{fmtMoney(materialResult.profilePriceExVat)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between border-t border-stone-200 pt-2">
-                    <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-stone-600">{t("gc.totalLabel")}</span>
-                    <span className="font-display text-base text-ink">{fmtMoney(materialResult.totalExVat)}</span>
-                  </div>
-                  <p className="pt-1 text-[11px] leading-snug text-stone-500">
-                    {t("gc.totalsDisclaimer")}
-                  </p>
+            {/* Material summary — primary BOM in chosen orientation. */}
+            {selectedProduct && materialResult &&
+              bomBlock(materialResult, showAlternateOrientation ? orientationLabel(orientation) : undefined)}
+
+            {/* Alt-orientation nudge card — only when product supports both
+                orientations. Toggling expands a second BOM beneath. */}
+            {selectedProduct && materialResult && alternateMaterialResult && (
+              <label className="flex cursor-pointer items-start gap-3 border border-stone-300 bg-stone-50 p-4">
+                <input
+                  type="checkbox"
+                  checked={showAlternateOrientation}
+                  onChange={(e) => setShowAlternateOrientation(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 border-stone-400"
+                />
+                <div className="text-sm">
+                  <span className="font-display text-ink">
+                    Al gedacht aan de {alternateOrientation === "vertical" ? "verticale" : "horizontale"} optie?
+                  </span>
+                  <span className="mt-0.5 block text-[12px] text-stone-600">
+                    Hetzelfde paneel kan ook {alternateOrientation === "vertical" ? "verticaal" : "horizontaal"} — vergelijk aantallen en prijs.
+                  </span>
                 </div>
-              );
-            })()}
+              </label>
+            )}
+
+            {showAlternateOrientation && alternateMaterialResult &&
+              bomBlock(alternateMaterialResult, orientationLabel(alternateOrientation))}
 
             {/* Product preview + CTA when selected */}
             {selectedProduct ? (
