@@ -17,7 +17,7 @@
 
 export type Orientation = "horizontal" | "vertical";
 export type ProductFamily = "ral" | "style";
-export type RalShape = "mono_flat" | "mono_groove" | "mono_textured";
+export type RalShape = "mono_flat" | "mono_groove" | "mono_textured" | "strip";
 export type StyleShape = "brick" | "wood";
 export type ToneNudge = -2 | -1 | 0 | 1 | 2;
 
@@ -97,11 +97,15 @@ function fasciaLineFor(opts: ResolvePromptOpts): string {
 // keeps klein-9b honest to the user's actual photo.
 function buildRalPrompt(opts: ResolvePromptOpts): string {
   const seamAxis = opts.orientation === "vertical" ? "vertical" : "horizontal";
-  const isGroove = opts.shape === "mono_groove";
 
-  const wallDesc = isGroove
-    ? `smooth painted matt metal panels in ${colorPhraseFor(opts)} with crisp ${seamAxis} grooves recessed into the metal every ~13cm. Each groove is a 5mm shadow line — clearly visible but same metal colour, never wood, never planks.`
-    : `smooth painted matt metal panels in ${colorPhraseFor(opts)}, with very faint same-coloured hairline ${seamAxis} seams every ~37cm.`;
+  let wallDesc: string;
+  if (opts.shape === "mono_groove") {
+    wallDesc = `smooth painted matt metal panels in ${colorPhraseFor(opts)} with crisp ${seamAxis} grooves recessed into the metal every ~13cm. Each groove is a 5mm shadow line — clearly visible but same metal colour, never wood, never planks.`;
+  } else if (opts.shape === "strip") {
+    wallDesc = `narrow painted matt metal strip panels in ${colorPhraseFor(opts)} — each strip is about 10cm wide, mounted side-by-side ${opts.orientation === "vertical" ? "vertically (top to bottom)" : "horizontally (left to right)"} with very faint same-coloured hairline seams between strips every ~10cm. NOT brick, NOT plank, NOT wood — uniform narrow metal strips of one colour, all the same width.`;
+  } else {
+    wallDesc = `smooth painted matt metal panels in ${colorPhraseFor(opts)}, with very faint same-coloured hairline ${seamAxis} seams every ~37cm.`;
+  }
 
   const tone = TONE_PHRASES[opts.toneNudge ?? 0] ?? "";
 
@@ -157,6 +161,9 @@ export function detectFamilyAndShape(product: {
   }
   if (sku.startsWith("SG") || sku.startsWith("YMSG")) {
     return { family: "ral", shape: "mono_groove" };
+  }
+  if (sku.startsWith("TS")) {
+    return { family: "ral", shape: "strip" };
   }
   if (sku.startsWith("PB") || sku.startsWith("YMPB")) {
     return { family: "ral", shape: "mono_flat" };
