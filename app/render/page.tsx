@@ -73,6 +73,12 @@ type RenderVariant = {
   colorCheck?: ColorCheck;
   engine?: string;
   toneNudge?: ToneNudge;
+  // Which photo this render was generated from. Used to filter the
+  // displayed variants when the user switches between sides (front /
+  // back / left / right) so each side keeps its own renders. Optional
+  // for backward compatibility with variants persisted before this
+  // field existed — those are shown on every photo (legacy behaviour).
+  sourcePhotoKey?: string;
 };
 
 // Kozijnen / deuren / boeideel customisations were removed for v1 —
@@ -544,29 +550,33 @@ export default function RenderPage() {
   const panelSectionRef = useRef<HTMLElement>(null);
   const rendersSectionRef = useRef<HTMLElement>(null);
   const initialMountRef = useRef(true);
-  const prevSourcePhotoRef = useRef("");
   const wasReadyToRenderRef = useRef(false);
 
+  // Per-photo scope key — variants are tagged with this at generation
+  // time and filtered on display so each side (front / back / left /
+  // right) keeps its own renders. For ad-hoc uploads/samples (no side
+  // tied) we fall back to a content-based short id derived from the
+  // dataUrl so two different uploads don't merge their renders.
+  const sourcePhotoKey = useMemo(() => {
+    if (selectedSideId && !photoOverride) return `side:${selectedSideId}`;
+    if (photoOverride) return `upload:${photoOverride.slice(20, 60)}`;
+    return "";
+  }, [selectedSideId, photoOverride]);
+
+  // Variants visible in the current photo scope. Legacy variants
+  // without a sourcePhotoKey are shown everywhere (treated as untagged).
+  const visibleVariants = useMemo(
+    () => variants.filter((v) => !v.sourcePhotoKey || v.sourcePhotoKey === sourcePhotoKey),
+    [variants, sourcePhotoKey],
+  );
+
   useEffect(() => {
-    const prev = prevSourcePhotoRef.current;
-    prevSourcePhotoRef.current = sourcePhoto;
-
-    // Wipe stale variants ONLY when the user actually switched to a
-    // DIFFERENT photo (both old and new set, and they differ). Skip:
-    // - initial mount / hydration (prev = "" — variants restored from
-    //   sessionStorage match the photo also restored from sessionStorage)
-    // - photo cleared (current = "" — handleNewFacade wipes variants
-    //   itself; we don't need to do it again)
-    // - same photo re-set (no-op)
-    // The previous unconditional wipe-on-change broke the /gevelcalc ->
-    // /render round-trip: rehydration set the photo after restoring the
-    // variants, the change was treated as "user picked new photo", and
-    // the variants were nuked before the user could see them again.
-    if (prev && sourcePhoto && prev !== sourcePhoto) {
-      setVariants([]);
-      setErrorMsg("");
-    }
-
+    setErrorMsg("");
+    // Note: NO setVariants([]) here — variants are now scoped per
+    // sourcePhotoKey via the visibleVariants filter, so switching
+    // sides preserves each side's renders. Explicit "Andere gevel"
+    // (handleNewFacade) still wipes everything when the user wants
+    // a clean slate.
     if (initialMountRef.current) {
       initialMountRef.current = false;
       return;
@@ -864,6 +874,7 @@ export default function RenderPage() {
           createdAt: Date.now(),
           engine: engineTag,
           toneNudge,
+          sourcePhotoKey,
         };
         // Append in tone-batch order regardless of completion order.
         setVariants((prev) => {
@@ -1467,7 +1478,7 @@ export default function RenderPage() {
               {t("render.section.renders")}
             </p>
             <span className="text-xs font-medium text-gray-500">
-              {variants.length > 0 ? `${variants.length}/${MAX_VARIANTS}` : ""}
+              {visibleVariants.length > 0 ? `${visibleVariants.length}/${MAX_VARIANTS}` : ""}
             </span>
           </div>
 
@@ -1482,14 +1493,14 @@ export default function RenderPage() {
             </div>
           )}
 
-          {!isGenerating && variants.length === 0 && !errorMsg && (
+          {!isGenerating && visibleVariants.length === 0 && !errorMsg && (
             <p className="mt-3 text-sm text-gray-500">{t("rendering_empty_state")}</p>
           )}
 
           {/* Selectie-banner — verschijnt zodra er meerdere varianten
               zijn. Geen banner bij maar één render (dan is de keuze
               impliciet). */}
-          {!isGenerating && variants.length > 1 && (
+          {!isGenerating && visibleVariants.length > 1 && (
             <div className="mt-4 rounded-md border border-ink bg-stone-50 p-3 text-sm text-ink">
               <p className="font-display">Bent u klaar?</p>
               <p className="mt-0.5 text-[12px] text-stone-700">
@@ -1512,7 +1523,7 @@ export default function RenderPage() {
           )}
 
           <div className="mt-4 space-y-4">
-            {variants.map((v) => (
+            {visibleVariants.map((v) => (
               <article
                 key={v.id}
                 className={`relative overflow-hidden rounded-xl border-2 transition-colors ${
@@ -1713,7 +1724,7 @@ export default function RenderPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-paper/95 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:px-4 md:pt-4 md:pb-4">
         <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-2 px-2 md:flex md:flex-wrap md:items-center md:justify-end md:px-12 lg:px-20">
-          {variants.length > 0 ? (
+          {visibleVariants.length > 0 ? (
             <>
               <button
                 type="button"

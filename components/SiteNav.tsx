@@ -25,15 +25,20 @@ export default function SiteNav() {
   return (
     <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md print:hidden">
       <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {!isHome && (
             <Link
               href="/"
               aria-label="Home"
-              className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
+              className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
             >
               <span aria-hidden>←</span>
-              <span>Home</span>
+              {/* On narrow mobile viewports the "Home" word + the
+                  Renisual logo + the right-side controls don't fit on
+                  one row and the pill wrapped under the logo. Hide
+                  the word on mobile, keep just the arrow as the back
+                  affordance — same look-and-feel pattern across pages. */}
+              <span className="hidden sm:inline">Home</span>
             </Link>
           )}
           <Link href="/" aria-label="Renisual home" className="inline-flex items-center">

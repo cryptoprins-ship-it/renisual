@@ -116,10 +116,11 @@ export function Logo({
     );
   }
 
-  // horizontal (default)
+  // horizontal (default) — gap-1.5 keeps the wordmark visually anchored
+  // to the mark instead of looking like two separate items.
   return (
     <div
-      className={"inline-flex items-center gap-3 " + (className ?? "")}
+      className={"inline-flex items-center gap-1.5 " + (className ?? "")}
     >
       <RenisualMark inverse={inverse} size={markSize ?? 32} />
       <span
