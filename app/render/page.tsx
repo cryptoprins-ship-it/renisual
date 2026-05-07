@@ -779,15 +779,6 @@ export default function RenderPage() {
     return runRenderBatch([0], true);
   }
 
-  // Optional follow-ups: each nudges in one direction (lighter or darker)
-  // and appends to the existing baseline tile. 2 BFL credits per click.
-  function handleShowLighter() {
-    return runRenderBatch([1, 2], false);
-  }
-  function handleShowDarker() {
-    return runRenderBatch([-1, -2], false);
-  }
-
   const [isHandingOff, setIsHandingOff] = useState(false);
 
   // "Bereken materiaal →" handler. Uploads the most relevant variant
@@ -1447,34 +1438,48 @@ export default function RenderPage() {
           )}
 
           <div className="mt-4 space-y-4">
-            {!isGenerating && variants.some((v) => v.toneNudge === 0) && (
-              <div className="grid grid-cols-2 gap-3">
-                {!variants.some((v) => v.toneNudge === 1 || v.toneNudge === 2) && (
-                  <button
-                    type="button"
-                    onClick={handleShowLighter}
-                    className="rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 px-4 py-3 text-center text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100"
-                  >
-                    Lichter
-                    <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-stone-500">
-                      +2 credits
-                    </span>
-                  </button>
-                )}
-                {!variants.some((v) => v.toneNudge === -1 || v.toneNudge === -2) && (
-                  <button
-                    type="button"
-                    onClick={handleShowDarker}
-                    className="rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 px-4 py-3 text-center text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100"
-                  >
-                    Donkerder
-                    <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-stone-500">
-                      +2 credits
-                    </span>
-                  </button>
-                )}
-              </div>
-            )}
+            {(() => {
+              if (isGenerating) return null;
+              const currentPanelSku =
+                selectedKeralitProduct && selectedKeralitColor
+                  ? `keralit-${selectedKeralitProduct.id}-${selectedKeralitColor.number}`
+                  : selectedPanel?.sku ?? null;
+              if (!currentPanelSku) return null;
+              const hasNudge = (n: ToneNudge) =>
+                variants.some((v) => v.panelSku === currentPanelSku && v.toneNudge === n);
+              if (!hasNudge(0)) return null;
+              const cls =
+                "rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 px-3 py-3 text-center text-xs font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100";
+              const credit = (
+                <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-stone-500">
+                  +1 credit
+                </span>
+              );
+              return (
+                <div className="grid grid-cols-2 gap-2">
+                  {!hasNudge(1) && (
+                    <button type="button" onClick={() => runRenderBatch([1], false)} className={cls}>
+                      Iets lichter{credit}
+                    </button>
+                  )}
+                  {!hasNudge(2) && (
+                    <button type="button" onClick={() => runRenderBatch([2], false)} className={cls}>
+                      Veel lichter{credit}
+                    </button>
+                  )}
+                  {!hasNudge(-1) && (
+                    <button type="button" onClick={() => runRenderBatch([-1], false)} className={cls}>
+                      Iets donkerder{credit}
+                    </button>
+                  )}
+                  {!hasNudge(-2) && (
+                    <button type="button" onClick={() => runRenderBatch([-2], false)} className={cls}>
+                      Veel donkerder{credit}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
             {variants.map((v) => (
               <article key={v.id} className="relative overflow-hidden rounded-xl border border-black">
                 <button

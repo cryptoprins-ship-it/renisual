@@ -100,9 +100,9 @@ function buildRalPrompt(opts: ResolvePromptOpts): string {
 
   let wallDesc: string;
   if (opts.shape === "mono_groove") {
-    wallDesc = `smooth painted matt metal panels in ${colorPhraseFor(opts)} with crisp ${seamAxis} grooves recessed into the metal every ~13cm. Each groove is a 5mm shadow line — clearly visible but same metal colour, never wood, never planks.`;
+    wallDesc = `matt painted metal panels in ${colorPhraseFor(opts)} with PROMINENT recessed ${seamAxis} grooves running across the wall. Each panel is ~37cm wide with one internal mid-groove plus panel-edge grooves, producing clearly visible deep parallel grooves every ~18cm. Each groove is a crisp ~10mm-wide shadow line distinctly recessed into the metal — same metal colour, just negative space casting a sharp shadow. The grooves MUST be visible as a regular cadence of parallel recessed lines. NOT mono flat, NOT planks, NOT wood — one continuous matt metal wall surface marked by deep parallel grooves at ~18cm intervals.`;
   } else if (opts.shape === "strip") {
-    wallDesc = `narrow painted matt metal strip panels in ${colorPhraseFor(opts)} — each strip is about 10cm wide, mounted side-by-side ${opts.orientation === "vertical" ? "vertically (top to bottom)" : "horizontally (left to right)"} with very faint same-coloured hairline seams between strips every ~10cm. NOT brick, NOT plank, NOT wood — uniform narrow metal strips of one colour, all the same width.`;
+    wallDesc = `matt painted metal wall panels in ${colorPhraseFor(opts)} with a TEXTURED RELIEF surface — short ${opts.orientation === "vertical" ? "vertical" : "horizontal"} raised rectangular blocks (each block roughly 25cm long and 6cm wide) arranged in an offset running-bond pattern across the panel, like a stylised stone relief but all in one uniform matt metal colour. The blocks rise slightly from the panel face and cast subtle shadows; all blocks are exactly the same matt metal colour with NO colour variation and NO mortar lines. NOT separate planks running across the wall, NOT real brick, NOT grooves cutting through the metal — one continuous textured matt metal wall finish.`;
   } else {
     wallDesc = `smooth painted matt metal panels in ${colorPhraseFor(opts)}, with very faint same-coloured hairline ${seamAxis} seams every ~37cm.`;
   }
