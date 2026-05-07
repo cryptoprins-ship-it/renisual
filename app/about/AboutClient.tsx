@@ -28,8 +28,8 @@ export default function AboutClient() {
       {/* Slim architectural header — mirrors homepage */}
       <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
-          <Link href="/" className="font-display text-xl tracking-tight">
-            Renisual
+          <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
+            <Logo variant="horizontal" />
           </Link>
           <div className="flex items-center gap-6">
             <div className="hidden items-center gap-6 font-mono text-xs uppercase tracking-[0.15em] text-stone-600 md:flex">
@@ -67,6 +67,9 @@ export default function AboutClient() {
           <h1 className="font-display text-4xl leading-[1.05] tracking-tight text-paper md:text-6xl lg:text-7xl">
             {t("about.title")}
           </h1>
+          <p className="mt-6 font-display text-lg italic tracking-tight text-paper/85 md:text-xl">
+            {t("home.hero.tagline")}
+          </p>
         </div>
       </section>
 
