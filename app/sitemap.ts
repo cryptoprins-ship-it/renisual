@@ -7,7 +7,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes: Array<{ path: string; priority: number }> = [
     { path: "", priority: 1 },
     { path: "/gevelcalc", priority: 0.7 },
-    { path: "/gevelcalc/mobile", priority: 0.7 },
     { path: "/render", priority: 0.7 },
     { path: "/subsidie", priority: 0.8 },
     { path: "/roi", priority: 0.7 },

@@ -18,7 +18,14 @@ const WA_URL = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)
 
 export default function WhatsAppButton() {
   const pathname = usePathname();
+  // Suppressed on:
+  // - /offerte/[ref] (recipient page; bell would target sender's WA)
+  // - /render and /gevelcalc (both have a fixed bottom action bar
+  //   competing for the same corner; keeping the bell here = guaranteed
+  //   visual collision on mobile)
   if (pathname?.startsWith("/offerte/")) return null;
+  if (pathname?.startsWith("/render")) return null;
+  if (pathname?.startsWith("/gevelcalc")) return null;
 
   return (
     <a

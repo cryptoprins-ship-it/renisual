@@ -1816,7 +1816,7 @@ export default function GevelCalcPage() {
 
       <main className="min-h-[100dvh] bg-paper text-ink print:!h-auto print:!min-h-0 print:!overflow-visible">
         <SiteNav />
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 md:px-12 lg:grid-cols-[1fr_500px] lg:gap-12 lg:px-20 lg:py-10 print:!block print:!h-auto">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 pb-56 md:px-12 md:pb-24 lg:grid-cols-[1fr_500px] lg:gap-12 lg:px-20 lg:py-10 print:!block print:!h-auto print:!pb-0">
           <div className="space-y-10 print:!h-auto print:!overflow-visible">
           <header className="border-b border-stone-200 pb-8 print-hidden">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
@@ -2483,18 +2483,20 @@ export default function GevelCalcPage() {
         </div>
 
         <div
-          className="fixed inset-x-0 bottom-0 border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] print:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] print:hidden"
         >
           <div className="mx-auto max-w-6xl">
-            <div className="flex flex-wrap items-center gap-2 pb-1">
-              {/* Prijzen-meenemen toggle is verplaatst naar de
-                  "Wilt u een offerte aanvragen?" kaart in de
-                  rechterkolom. Standaard is de offerte zonder prijzen;
-                  de gebruiker selecteert het daar expliciet als ze
-                  wel een richtprijs in de PDF willen. */}
+            {/* Mobile: 2-col grid with primaries side-by-side, Reset
+                full-width at the bottom (less prominent, harder to tap
+                accidentally). Desktop: original flex layout, all on one
+                row right-aligned.
+                Prijzen-meenemen toggle lives in the right-column
+                "Wilt u een offerte aanvragen?" card — single canonical
+                action point. */}
+            <div className="grid grid-cols-2 items-center gap-2 pb-1 md:flex md:flex-wrap">
               <Link
                 href={selectedProduct ? `/render?product=${encodeURIComponent(selectedProduct.id)}` : "/render"}
-                className={`flex-shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium ${
+                className={`rounded-xl px-4 py-2.5 text-center text-sm font-medium ${
                   selectedProduct
                     ? "bg-black text-white"
                     : "border border-stone-300 text-stone-400 cursor-not-allowed"
@@ -2506,20 +2508,15 @@ export default function GevelCalcPage() {
               >
                 {t("gc.viewRender")}
               </Link>
-              {/* Offerte-aanvragen CTA moved to the right-column
-                  "Wilt u een offerte aanvragen?" card so there's a
-                  single canonical action point. The mail-fallback link
-                  stays here as a quick alternate. */}
-              <button type="button" onClick={sendMail} className="flex-shrink-0 rounded-xl bg-black text-white px-4 py-2.5 text-sm font-medium">
+              <button type="button" onClick={sendMail} className="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white">
                 {t("gc.btnMail")}
               </button>
               {mode === "advanced" && (
                 <>
-                  <div className="flex-shrink-0 h-6 w-px bg-black/20" />
-                  <button type="button" onClick={exportConfig} className="flex-shrink-0 rounded-xl border border-black px-3 py-2 text-sm">
+                  <button type="button" onClick={exportConfig} className="rounded-xl border border-black px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
                   </button>
-                  <label className="flex-shrink-0 cursor-pointer rounded-xl border border-black px-3 py-2 text-sm">
+                  <label className="cursor-pointer rounded-xl border border-black px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}
                     <input
                       type="file"
@@ -2533,7 +2530,7 @@ export default function GevelCalcPage() {
               <button
                 type="button"
                 onClick={resetData}
-                className="flex-shrink-0 rounded-xl border border-red-600 text-red-600 px-3 py-2 text-sm"
+                className="col-span-2 rounded-xl border border-red-600 px-3 py-2 text-sm text-red-600 md:col-auto"
               >
                 {t("gc.btnReset")}
               </button>

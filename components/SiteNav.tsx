@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import NavLocaleSwitcher from "./NavLocaleSwitcher";
 import ResetProjectButton from "./ResetProjectButton";
 import { Logo } from "./Logo";
@@ -17,17 +16,12 @@ import { useLocale } from "@/lib/i18n";
 export default function SiteNav() {
   const { locale, t } = useLocale();
   const showSubsidies = locale === "nl";
-  const [calcHref, setCalcHref] = useState("/gevelcalc?modus=quick");
+  // /gevelcalc is responsive — modus=quick is the entry mode. The dead
+  // /gevelcalc/mobile route 301-redirects here anyway, so we save a hop
+  // by linking directly.
+  const calcHref = "/gevelcalc?modus=quick";
   const pathname = usePathname() ?? "/";
   const isHome = pathname === "/";
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const isMobile =
-      window.matchMedia?.("(max-width: 768px)").matches ||
-      /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-    if (isMobile) setCalcHref("/gevelcalc/mobile?modus=quick");
-  }, []);
 
   return (
     <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md print:hidden">

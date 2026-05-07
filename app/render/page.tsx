@@ -1010,7 +1010,7 @@ export default function RenderPage() {
     <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="render" />
       <SiteNav />
-      <div className="mx-auto max-w-[1400px] px-6 py-12 pb-28 md:px-12 md:py-16 lg:px-20">
+      <div className="mx-auto max-w-[1400px] px-6 py-12 pb-52 md:px-12 md:py-16 md:pb-28 lg:px-20">
         <header className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b border-stone-200 pb-8">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
@@ -1659,8 +1659,8 @@ export default function RenderPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-paper/95 p-3 backdrop-blur-md md:p-4">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-end gap-2 px-2 md:px-12 lg:px-20">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-paper/95 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:px-4 md:pt-4 md:pb-4">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-2 px-2 md:flex md:flex-wrap md:items-center md:justify-end md:px-12 lg:px-20">
           {variants.length > 0 ? (
             <>
               <button
@@ -1687,7 +1687,7 @@ export default function RenderPage() {
                   !sourcePhoto ||
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
                 }
-                className="border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40"
+                className="col-span-2 border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40 md:col-auto"
               >
                 {(() => {
                   const productLabel =
@@ -1701,7 +1701,7 @@ export default function RenderPage() {
                 type="button"
                 onClick={handleProceedToCalc}
                 disabled={isHandingOff}
-                className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+                className="col-span-2 bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40 md:col-auto"
               >
                 {isHandingOff ? "Bezig..." : "Bereken materiaal →"}
               </button>
@@ -1715,7 +1715,7 @@ export default function RenderPage() {
                 !sourcePhoto ||
                 (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
               }
-              className="bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40"
+              className="col-span-2 bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40 md:col-auto"
             >
               Genereer (1 credit)
             </button>

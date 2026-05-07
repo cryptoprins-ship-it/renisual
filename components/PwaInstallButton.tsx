@@ -118,7 +118,7 @@ export default function PwaInstallButton({ variant = "card" }: Props) {
     // (e.g. /gevelcalc). Mobile-only — md and up still has the card.
     return (
       <>
-        <div className="fixed inset-x-3 top-[calc(0.5rem+env(safe-area-inset-top))] z-40 mx-auto max-w-md rounded-2xl border border-stone-300 bg-paper/95 shadow-lg backdrop-blur print:hidden md:hidden">
+        <div className="fixed inset-x-3 top-[calc(0.5rem+env(safe-area-inset-top))] z-20 mx-auto max-w-md rounded-2xl border border-stone-300 bg-paper/95 shadow-lg backdrop-blur print:hidden md:hidden">
           <div className="flex items-center gap-3 p-3">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink text-paper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden>
