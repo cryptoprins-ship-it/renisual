@@ -323,6 +323,10 @@ export type OfferteDocumentProps = {
   // them rather than recomputing to keep one source of truth.
   subtotalExBtw: number;
   totalInclBtw: number;
+  // Human-readable product label, e.g. "Spanl PB9003A — white (RAL 9010)".
+  // Rendered as a PRODUCT column next to KLANT + PROJECT so the recipient
+  // can see at a glance which panel was quoted.
+  productLabel?: string;
   // Optional facade images (data URLs or signed URLs).
   photoSrc?: string;
   renderSrc?: string;
@@ -508,6 +512,12 @@ export function OfferteDocument(props: OfferteDocumentProps) {
             </Text>
             <Text style={styles.bodyText}>Opgesteld {fmtDate(props.generatedAt)}</Text>
           </View>
+          {props.productLabel ? (
+            <View style={styles.col}>
+              <Text style={styles.blockLabel}>PRODUCT</Text>
+              <Text style={styles.bodyText}>{props.productLabel}</Text>
+            </View>
+          ) : null}
         </View>
 
         {(props.photoSrc || props.renderSrc) && (

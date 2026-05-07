@@ -174,6 +174,7 @@ export async function POST(request: Request) {
 
     const calcMode = stringFromCalcInput(parsed.calcInput, "mode");
     const calcProject = stringFromCalcInput(parsed.calcInput, "projectName");
+    const productLabel = stringFromCalcInput(parsed.calcInput, "productLabel") || undefined;
     const modeLine = calcMode === "quick"
       ? "Schatting o.b.v. vierkante gevel — standaard kozijnen aangenomen."
       : calcMode === "advanced"
@@ -223,6 +224,7 @@ export async function POST(request: Request) {
       modeLine,
       primaryOrientation,
       alternate,
+      productLabel,
     });
 
     const pdfPath = `${inserted.ref}.pdf`;

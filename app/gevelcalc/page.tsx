@@ -1395,6 +1395,11 @@ export default function GevelCalcPage() {
       openings: s.openings,
     });
 
+    // Human-readable product label for the PDF — includes brand + SKU
+    // + colour. Spanl panels look like "Spanl PB9003A — white (RAL 9010)".
+    // The route reads this back out of calcInput.
+    const productLabel = `${selectedProduct.brand} ${selectedProduct.name}`;
+
     return {
       calcInput: {
         mode,
@@ -1402,6 +1407,7 @@ export default function GevelCalcPage() {
         orientation,
         projectName,
         selectedProductId,
+        productLabel,
         keralitColorNumber,
         sides: (mode === "quick" ? [quickSide] : sides).map(stripPhoto),
         // Pricing knobs the PDF needs but that the calc engine
