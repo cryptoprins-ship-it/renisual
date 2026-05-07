@@ -1076,10 +1076,15 @@ export default function RenderPage() {
       <div className="mx-auto max-w-[1400px] px-6 py-12 pb-52 md:px-12 md:py-16 md:pb-28 lg:px-20">
         <header className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b border-stone-200 pb-8">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-              {t("home.nav.render")}
-            </p>
-            <h1 className="mt-3 font-display text-4xl tracking-tight text-ink md:text-5xl">
+            <Link
+              href="/"
+              aria-label="Home"
+              className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
+            >
+              <span aria-hidden>←</span>
+              <span>Home</span>
+            </Link>
+            <h1 className="mt-3 font-display text-4xl font-bold uppercase tracking-tight text-ink md:text-6xl">
               {t("render.title")}
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-stone-600">

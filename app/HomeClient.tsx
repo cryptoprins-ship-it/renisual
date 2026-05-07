@@ -11,10 +11,16 @@ import { useLocale } from "@/lib/i18n";
 const SPONSOR_MAILTO =
   "mailto:info@renisual.com?subject=Sponsoring%20Renisual";
 
+// Removed entries:
+// - aiRender ("AI Gevel Rendering via Gemini") — implementation
+//   detail, not a user-facing capability the homepage needs to brag
+//   about. Render flow is its own /render entry; no need to call out
+//   the model provider in the roadmap.
+// - frames ("Kozijnen & deuren visualisatie") — feature was pulled
+//   from v1 (too much klein-9b prompt drift); shouldn't claim it as
+//   shipped until it lands again.
 const ROADMAP_AVAILABLE_KEYS = [
   "home.roadmap.avail.calc",
-  "home.roadmap.avail.aiRender",
-  "home.roadmap.avail.frames",
   "home.roadmap.avail.roi",
   "home.roadmap.avail.pdf",
   "home.roadmap.avail.modes",
