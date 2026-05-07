@@ -455,8 +455,8 @@ export default function HomeClient() {
             <p className="mt-1 text-xs text-gray-400">{t("home.footer.tagline")}</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link href={calcHref} className="hover:underline">{t("home.nav.calculator")}</Link>
             <Link href="/render" className="hover:underline">{t("home.nav.render")}</Link>
+            <Link href={calcHref} className="hover:underline">{t("home.nav.calculator")}</Link>
             <a href="#roi" className="hover:underline">{t("home.nav.roi")}</a>
             {showSubsidies && <Link href="/subsidie" className="hover:underline">{t("home.nav.subsidies")}</Link>}
             <a href="#roadmap" className="hover:underline">{t("home.roadmap.soon")}</a>

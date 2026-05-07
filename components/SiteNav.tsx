@@ -49,11 +49,11 @@ export default function SiteNav() {
         </div>
         <div className="flex items-center gap-6">
           <div className="hidden items-center gap-6 font-mono text-xs uppercase tracking-[0.15em] text-stone-600 md:flex">
-            <Link href={calcHref} className="transition-colors hover:text-ink">
-              {t("home.nav.calculator")}
-            </Link>
             <Link href="/render" className="transition-colors hover:text-ink">
               {t("home.nav.render")}
+            </Link>
+            <Link href={calcHref} className="transition-colors hover:text-ink">
+              {t("home.nav.calculator")}
             </Link>
             {showSubsidies && (
               <Link href="/subsidie" className="transition-colors hover:text-ink">
