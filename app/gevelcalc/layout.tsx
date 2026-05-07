@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import NavLocaleSwitcher from "@/components/NavLocaleSwitcher";
 
 export const metadata: Metadata = {
   title: "Renisual GevelCalc",
@@ -11,12 +10,10 @@ export default function GevelCalcLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <div className="fixed right-3 top-3 z-40 print:hidden">
-        <NavLocaleSwitcher />
-      </div>
-      {children}
-    </>
-  );
+  // SiteNav (rendered inside the page itself) already includes the
+  // NavLocaleSwitcher inline. Mounting another one here as a floating
+  // fixed-position element gave users two flag pickers — the floating
+  // one overlapped the inline one in the top-right and partially
+  // covered the Renisual wordmark on small viewports.
+  return <>{children}</>;
 }

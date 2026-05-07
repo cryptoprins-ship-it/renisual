@@ -544,11 +544,29 @@ export default function RenderPage() {
   const panelSectionRef = useRef<HTMLElement>(null);
   const rendersSectionRef = useRef<HTMLElement>(null);
   const initialMountRef = useRef(true);
+  const prevSourcePhotoRef = useRef("");
   const wasReadyToRenderRef = useRef(false);
 
   useEffect(() => {
-    setVariants([]);
-    setErrorMsg("");
+    const prev = prevSourcePhotoRef.current;
+    prevSourcePhotoRef.current = sourcePhoto;
+
+    // Wipe stale variants ONLY when the user actually switched to a
+    // DIFFERENT photo (both old and new set, and they differ). Skip:
+    // - initial mount / hydration (prev = "" — variants restored from
+    //   sessionStorage match the photo also restored from sessionStorage)
+    // - photo cleared (current = "" — handleNewFacade wipes variants
+    //   itself; we don't need to do it again)
+    // - same photo re-set (no-op)
+    // The previous unconditional wipe-on-change broke the /gevelcalc ->
+    // /render round-trip: rehydration set the photo after restoring the
+    // variants, the change was treated as "user picked new photo", and
+    // the variants were nuked before the user could see them again.
+    if (prev && sourcePhoto && prev !== sourcePhoto) {
+      setVariants([]);
+      setErrorMsg("");
+    }
+
     if (initialMountRef.current) {
       initialMountRef.current = false;
       return;
