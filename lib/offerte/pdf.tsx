@@ -638,7 +638,8 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           <View style={styles.qrCopy}>
             <Text style={styles.qrTitle}>SCAN VOOR LIVE OFFERTE</Text>
             <Text style={styles.qrSubtitle}>
-              Open de digitale versie met foto en gevelrender. Prijzen zijn indicatief.
+              Open de digitale versie met foto en gevelrender.
+              {includePrices ? " Prijzen zijn indicatief." : ""}
             </Text>
             <Text style={styles.qrUrl}>{offerteUrl}</Text>
           </View>
