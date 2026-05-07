@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NavLocaleSwitcher from "./NavLocaleSwitcher";
-import ResetProjectButton from "./ResetProjectButton";
 import { Logo } from "./Logo";
 import { useLocale } from "@/lib/i18n";
 
@@ -55,7 +54,6 @@ export default function SiteNav() {
               </Link>
             )}
           </div>
-          <ResetProjectButton />
           <NavLocaleSwitcher compact className="ml-1" />
         </div>
       </div>
