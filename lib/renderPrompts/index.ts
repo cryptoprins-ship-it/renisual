@@ -39,6 +39,11 @@ export type ResolvePromptOpts = {
   includeFascia?: boolean;
   windowFrame?: { material: string };
   door?: { material: string; colour: string };
+  // YMPB / YMSG / YPMB SKUs ship with an embossed linen wood-grain
+  // surface texture pressed into the paint. Appends a sentence to the
+  // RAL wall description so klein-9b actually renders the texture
+  // instead of a smooth panel identical to the non-Y SKU.
+  linenTexture?: boolean;
   // User-driven nudge from variant picker. 0 = exact RAL.
   toneNudge?: ToneNudge;
 };
@@ -101,6 +106,16 @@ function buildRalPrompt(opts: ResolvePromptOpts): string {
     wallDesc = `matt painted metal wall panels in ${colorPhraseFor(opts)} with a TEXTURED RELIEF surface — short ${opts.orientation === "vertical" ? "vertical" : "horizontal"} raised rectangular blocks (each block roughly 25cm long and 6cm wide) arranged in an offset running-bond pattern across the panel, like a stylised stone relief but all in one uniform matt metal colour. The blocks rise slightly from the panel face and cast subtle shadows; all blocks are exactly the same matt metal colour with NO colour variation and NO mortar lines. NOT separate planks running across the wall, NOT real brick, NOT grooves cutting through the metal — one continuous textured matt metal wall finish.`;
   } else {
     wallDesc = `smooth painted matt metal panels in ${colorPhraseFor(opts)}, with very faint same-coloured hairline ${seamAxis} seams every ~37cm.`;
+  }
+
+  // Embossed linen wood-grain surface texture (YMPB / YMSG / YPMB SKUs).
+  // Appended to the wall description so the linen variant reads
+  // visibly different from the smooth non-Y panel of the same RAL.
+  if (opts.linenTexture) {
+    wallDesc = wallDesc.replace(
+      /\.$/,
+      ", with a fine embossed linen wood-grain texture pressed into the paint — subtle horizontal weave-like fabric pattern catching the light, visibly textured surface (NOT smooth, NOT glossy).",
+    );
   }
 
   const tone = TONE_PHRASES[opts.toneNudge ?? 0] ?? "";

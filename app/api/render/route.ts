@@ -1098,6 +1098,11 @@ export async function POST(request: Request) {
         sku: product.sku,
         ral_code: product.ral_code,
       });
+      const skuUpper = (product.sku ?? "").toUpperCase();
+      const linenTexture =
+        skuUpper.startsWith("YMPB") ||
+        skuUpper.startsWith("YPMB") ||
+        skuUpper.startsWith("YMSG");
       const bflPrompt = resolveBflPrompt({
         family,
         shape,
@@ -1113,6 +1118,7 @@ export async function POST(request: Request) {
           ? { material: body.door.material, colour: body.door.colour }
           : undefined,
         toneNudge: body.toneNudge,
+        linenTexture,
       });
       const { bytes: outBytes, mime: outMime } = await renderViaBfl({
         apiKey: bflKey,
