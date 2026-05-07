@@ -87,7 +87,7 @@ export default function SubsidieClient() {
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <Link href="/render" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
-              AI Rendering
+              Gevelrendering
             </Link>
             <Link href="/gevelcalc" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
               Calculator
@@ -354,7 +354,7 @@ export default function SubsidieClient() {
             <p className="mt-1 text-xs text-gray-400">Het complete renovatieplatform voor Nederland.</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link href="/render" className="hover:underline">AI Rendering</Link>
+            <Link href="/render" className="hover:underline">Gevelrendering</Link>
             <Link href="/gevelcalc" className="hover:underline">Calculator</Link>
             <Link href="/subsidie" className="hover:underline">Subsidies</Link>
           </div>

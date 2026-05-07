@@ -637,11 +637,18 @@ export default function RenderPage() {
 
       // Multi-product compare: when clearFirst is true (Genereer /
       // Genereer opnieuw), wipe ONLY the variants that match the
-      // panel about to be rendered. Variants of other panels stay so
-      // the user can keep comparing them. clearFirst=false (Lichter /
-      // Donkerder follow-ups) leaves everything untouched.
+      // panel + orientation about to be rendered. Variants of other
+      // panels — and variants of the SAME panel in a DIFFERENT
+      // orientation — stay so the user can keep comparing them
+      // (e.g. PB9003A horizontaal naast PB9003A verticaal).
+      // clearFirst=false (per-tile lichter/donkerder) leaves
+      // everything untouched.
       if (clearFirst) {
-        setVariants((prev) => prev.filter((v) => v.panelSku !== panelSkuForVariant));
+        setVariants((prev) =>
+          prev.filter(
+            (v) => v.panelSku !== panelSkuForVariant || v.orientation !== effOrientation,
+          ),
+        );
       }
 
       const basePayload = {

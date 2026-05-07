@@ -485,7 +485,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
             <Text style={styles.brandWordmark}>Renisual</Text>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.documentLabel}>ADVIESOFFERTE</Text>
+            <Text style={styles.documentLabel}>OFFERTE</Text>
             <Text style={styles.refText}>
               {props.ref} {"·"} {fmtDate(props.generatedAt)}
             </Text>
@@ -522,14 +522,18 @@ export function OfferteDocument(props: OfferteDocumentProps) {
 
         {(props.photoSrc || props.renderSrc) && (
           <View style={styles.imageRow}>
-            <View style={styles.imageCell}>
-              {props.photoSrc ? <Image src={props.photoSrc} style={styles.facadeImage} /> : <View style={styles.facadeImage} />}
-              <Text style={styles.imageCaption}>BESTAANDE SITUATIE</Text>
-            </View>
-            <View style={styles.imageCell}>
-              {props.renderSrc ? <Image src={props.renderSrc} style={styles.facadeImage} /> : <View style={styles.facadeImage} />}
-              <Text style={styles.imageCaption}>VOORGESTELD EINDRESULTAAT</Text>
-            </View>
+            {props.photoSrc ? (
+              <View style={styles.imageCell}>
+                <Image src={props.photoSrc} style={styles.facadeImage} />
+                <Text style={styles.imageCaption}>BESTAANDE SITUATIE</Text>
+              </View>
+            ) : null}
+            {props.renderSrc ? (
+              <View style={styles.imageCell}>
+                <Image src={props.renderSrc} style={styles.facadeImage} />
+                <Text style={styles.imageCaption}>VOORGESTELD EINDRESULTAAT</Text>
+              </View>
+            ) : null}
           </View>
         )}
 
