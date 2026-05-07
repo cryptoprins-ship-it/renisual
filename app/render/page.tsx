@@ -885,8 +885,17 @@ export default function RenderPage() {
         mime = blob.type || "image/jpeg";
       }
       const file = new File([blob], filename, { type: mime });
-      if (
+      // Web Share API: gate to iOS only. Chrome / Edge on Windows + macOS
+      // also implement canShare, but on desktop the user expects a Save /
+      // Save As dialog — not the OS share sheet — when they click a
+      // download button. Anchor-with-download attribute gives them that.
+      // iOS Safari is the genuine outlier where blob anchors don't always
+      // trigger a save and the share sheet is the user's path to Files.
+      const isIOS =
         typeof navigator !== "undefined" &&
+        /iPad|iPhone|iPod/.test(navigator.userAgent ?? "");
+      if (
+        isIOS &&
         typeof navigator.canShare === "function" &&
         navigator.canShare({ files: [file] })
       ) {

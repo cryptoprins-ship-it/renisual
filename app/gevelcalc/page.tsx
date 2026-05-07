@@ -1244,12 +1244,17 @@ export default function GevelCalcPage() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const filename = `renisual-${new Date().toISOString().slice(0, 10)}.json`;
 
-    // Web Share API path — iOS Safari needs this for files to land in
-    // the share sheet (Save to Files, AirDrop, etc.). Falls back to the
-    // anchor-download path if the browser can't share files.
+    // Web Share API path — gated to iOS only. Desktop Chrome / Edge
+    // also implement canShare but the user expects a Save / Save As
+    // dialog when they click "export config", not the OS share sheet.
+    // iOS Safari is where blob anchors don't reliably download and the
+    // share sheet is the genuine path to Files.
     const file = new File([blob], filename, { type: "application/json" });
-    if (
+    const isIOS =
       typeof navigator !== "undefined" &&
+      /iPad|iPhone|iPod/.test(navigator.userAgent ?? "");
+    if (
+      isIOS &&
       typeof navigator.canShare === "function" &&
       navigator.canShare({ files: [file] })
     ) {
@@ -1445,11 +1450,15 @@ export default function GevelCalcPage() {
           const filename = `gevelcalc-${data.ref}-${today}.pdf`;
           const pdfRes = await fetch(data.pdfUrl);
           const blob = await pdfRes.blob();
-          // Web Share API path — iOS Safari needs this so the file
-          // lands in the share sheet (Save to Files / AirDrop / mail).
+          // Web Share API path — iOS only. Desktop Chrome / Edge also
+          // support canShare but on those a click-on-Download should
+          // produce a Save dialog, not the OS share sheet.
           const file = new File([blob], filename, { type: "application/pdf" });
-          if (
+          const isIOS =
             typeof navigator !== "undefined" &&
+            /iPad|iPhone|iPod/.test(navigator.userAgent ?? "");
+          if (
+            isIOS &&
             typeof navigator.canShare === "function" &&
             navigator.canShare({ files: [file] })
           ) {
