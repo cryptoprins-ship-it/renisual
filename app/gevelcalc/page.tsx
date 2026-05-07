@@ -1298,12 +1298,29 @@ export default function GevelCalcPage() {
   // engine label so display-side renaming never breaks the payload.
   function buildOffertePayload() {
     if (!selectedProduct || !materialResult) return null;
-    const findCount = (label: string) =>
-      materialResult.profileItems.find((p) => p.label === label)?.count ?? 0;
+    const findCount = (label: string, src = materialResult) =>
+      src.profileItems.find((p) => p.label === label)?.count ?? 0;
     const subtotal = round2Money(materialResult.totalExVat);
     const total = round2Money(subtotal * VAT);
     const photoStoragePath = useProjectStore.getState().photoStoragePath;
     const renderStoragePath = useProjectStore.getState().renderStoragePath;
+
+    // Include the alt orientation only when the user has explicitly
+    // toggled the comparison card on AND the engine produced a result
+    // for the opposite orientation (skipped for printed-look panels
+    // which only support one direction).
+    const alt = showAlternateOrientation && alternateMaterialResult ? alternateMaterialResult : null;
+    const alternateCalcOutput = alt
+      ? {
+          panelCount: alt.panelCount,
+          profileEndCount: findCount("Eindprofiel", alt),
+          profileMiddleCount: findCount("Verbindingsprofiel", alt),
+          profileCornerCount: findCount("Hoekprofiel", alt),
+          subtotalExclBtw: round2Money(alt.totalExVat),
+          totalInclBtw: round2Money(alt.totalExVat * VAT),
+        }
+      : undefined;
+
     return {
       calcInput: {
         mode,
@@ -1331,6 +1348,8 @@ export default function GevelCalcPage() {
         subtotalExclBtw: subtotal,
         totalInclBtw: total,
       },
+      alternateOrientation: alt ? alternateOrientation : undefined,
+      alternateCalcOutput,
       customer:
         customerLastName || customerEmail || customerAddress
           ? {

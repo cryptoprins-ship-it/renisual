@@ -48,11 +48,18 @@ const calcOutputSchema = z.object({
   totalInclBtw: z.number().nonnegative().max(10_000_000),
 });
 
+const orientationEnum = z.enum(["horizontal", "vertical"]);
+
 const bodySchema = z.object({
   // Free-form snapshot of the calc inputs. Schema may evolve so we
   // validate only that it's a JSON-serialisable object below 64 KB.
   calcInput: z.record(z.string(), z.unknown()),
   calcOutput: calcOutputSchema,
+  // Optional second BOM (the "Al gedacht aan de verticale/horizontale
+  // optie?" toggle on /gevelcalc). When present, the PDF renders both
+  // sections side-by-side. Both fields must be supplied together.
+  alternateCalcOutput: calcOutputSchema.optional(),
+  alternateOrientation: orientationEnum.optional(),
   customer: customerSchema.optional(),
   photoPath: z.string().max(500).optional(),
   renderPath: z.string().max(500).optional(),
@@ -104,7 +111,14 @@ export async function POST(request: Request) {
         customer_email: parsed.customer?.email ?? null,
         customer_company: parsed.customer?.company ?? null,
         project_address: parsed.customer?.projectAddress ?? null,
-        calc_input: parsed.calcInput,
+        // Pass-through the alt-orientation snapshot via calc_input so a
+        // future PDF re-generation or admin tool can recover both BOMs
+        // without a schema migration. Falsy fields stay absent.
+        calc_input: {
+          ...parsed.calcInput,
+          ...(parsed.alternateOrientation ? { alternateOrientation: parsed.alternateOrientation } : {}),
+          ...(parsed.alternateCalcOutput ? { alternateCalcOutput: parsed.alternateCalcOutput } : {}),
+        },
         panel_count: parsed.calcOutput.panelCount,
         profile_end_count: parsed.calcOutput.profileEndCount,
         profile_middle_count: parsed.calcOutput.profileMiddleCount,
@@ -154,6 +168,28 @@ export async function POST(request: Request) {
         ? "Berekening per zijde — exacte invoer."
         : undefined;
 
+    const calcOrientationRaw = stringFromCalcInput(parsed.calcInput, "orientation");
+    const primaryOrientation: "horizontal" | "vertical" | undefined =
+      calcOrientationRaw === "horizontal" || calcOrientationRaw === "vertical"
+        ? calcOrientationRaw
+        : undefined;
+
+    // Both alt fields must be present together — schema allows them
+    // independently for forward-compat but we only render when both
+    // arrived (orientation + counts).
+    const alternate =
+      parsed.alternateCalcOutput && parsed.alternateOrientation
+        ? {
+            orientation: parsed.alternateOrientation,
+            panelCount: parsed.alternateCalcOutput.panelCount,
+            profileEndCount: parsed.alternateCalcOutput.profileEndCount,
+            profileMiddleCount: parsed.alternateCalcOutput.profileMiddleCount,
+            profileCornerCount: parsed.alternateCalcOutput.profileCornerCount,
+            subtotalExBtw: parsed.alternateCalcOutput.subtotalExclBtw,
+            totalInclBtw: parsed.alternateCalcOutput.totalInclBtw,
+          }
+        : undefined;
+
     const pdfBuffer = await buildOffertePdf({
       ref: inserted.ref,
       generatedAt: new Date(),
@@ -173,6 +209,8 @@ export async function POST(request: Request) {
       photoSrc,
       renderSrc,
       modeLine,
+      primaryOrientation,
+      alternate,
     });
 
     const pdfPath = `${inserted.ref}.pdf`;

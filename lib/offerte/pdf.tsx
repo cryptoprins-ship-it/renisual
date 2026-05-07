@@ -316,6 +316,23 @@ export type OfferteDocumentProps = {
   modeLine?: string;
   // Pre-rendered QR code (data URL) pointing at the public offerte page.
   qrSrc: string;
+  // Orientation of the primary (chosen) BOM. Drives the section header
+  // when an alternate is also rendered. Optional — when absent, the
+  // primary block has no orientation header.
+  primaryOrientation?: "horizontal" | "vertical";
+  // Optional second BOM section (the "Al gedacht aan de X optie?"
+  // toggle on /gevelcalc). Rendered after the primary table with its
+  // own header. Prices are derived using the same per-unit rates as
+  // the primary — only the counts and totals differ.
+  alternate?: {
+    orientation: "horizontal" | "vertical";
+    panelCount: number;
+    profileEndCount: number;
+    profileMiddleCount: number;
+    profileCornerCount: number;
+    subtotalExBtw: number;
+    totalInclBtw: number;
+  };
 };
 
 const fmtMoney = (n: number) =>
@@ -330,47 +347,109 @@ const fmtDate = (d: Date) => {
   return `${day}-${month}-${d.getFullYear()}`;
 };
 
+type LineRow = { desc: string; qty: number; unit: number; total: number };
+
+// Build the BOM line-rows for one orientation. Prices are per-unit and
+// stay identical between primary and alternate — only the counts (and
+// derived totals) differ.
+function buildLineRows(
+  counts: {
+    panelCount: number;
+    profileEndCount: number;
+    profileMiddleCount: number;
+    profileCornerCount: number;
+    fastenerEstimateExBtw: number;
+  },
+  prices: {
+    pricePerPanel: number;
+    pricePerEndProfile: number;
+    pricePerMiddleProfile: number;
+    pricePerCornerProfile: number;
+  },
+  VAT: number,
+): LineRow[] {
+  return [
+    {
+      desc: "Gevelpaneel",
+      qty: counts.panelCount,
+      unit: prices.pricePerPanel * VAT,
+      total: counts.panelCount * prices.pricePerPanel * VAT,
+    },
+    {
+      desc: "Eindprofiel",
+      qty: counts.profileEndCount,
+      unit: prices.pricePerEndProfile * VAT,
+      total: counts.profileEndCount * prices.pricePerEndProfile * VAT,
+    },
+    {
+      desc: "Tussenprofiel",
+      qty: counts.profileMiddleCount,
+      unit: prices.pricePerMiddleProfile * VAT,
+      total: counts.profileMiddleCount * prices.pricePerMiddleProfile * VAT,
+    },
+    {
+      desc: "Hoekprofiel",
+      qty: counts.profileCornerCount,
+      unit: prices.pricePerCornerProfile * VAT,
+      total: counts.profileCornerCount * prices.pricePerCornerProfile * VAT,
+    },
+    {
+      desc: "Bevestigingsmateriaal (schroeven, klips, butyl)",
+      qty: 1,
+      unit: counts.fastenerEstimateExBtw * VAT,
+      total: counts.fastenerEstimateExBtw * VAT,
+    },
+  ].filter((row) => row.qty > 0);
+}
+
+const orientationLabelNl = (o: "horizontal" | "vertical") =>
+  o === "vertical" ? "VERTICALE OPTIE" : "HORIZONTALE OPTIE";
+
 export function OfferteDocument(props: OfferteDocumentProps) {
   const offerteUrl = `https://renisual.com/offerte/${props.ref}`;
   const includePrices = !!props.includePrices;
   const VAT = 1.21;
 
+  const prices = {
+    pricePerPanel: props.pricePerPanel,
+    pricePerEndProfile: props.pricePerEndProfile,
+    pricePerMiddleProfile: props.pricePerMiddleProfile,
+    pricePerCornerProfile: props.pricePerCornerProfile,
+  };
+
   // When prices are shown, all unit/total values are presented INCLUSIEF
   // BTW (input is ex-BTW from the calc engine, multiplied by 1.21 here).
   // Single TOTAAL row, no separate BTW row.
-  const lineRows: Array<{ desc: string; qty: number; unit: number; total: number }> = [
+  const lineRows = buildLineRows(
     {
-      desc: "Gevelpaneel",
-      qty: props.panelCount,
-      unit: props.pricePerPanel * VAT,
-      total: props.panelCount * props.pricePerPanel * VAT,
+      panelCount: props.panelCount,
+      profileEndCount: props.profileEndCount,
+      profileMiddleCount: props.profileMiddleCount,
+      profileCornerCount: props.profileCornerCount,
+      fastenerEstimateExBtw: props.fastenerEstimateExBtw,
     },
-    {
-      desc: "Eindprofiel",
-      qty: props.profileEndCount,
-      unit: props.pricePerEndProfile * VAT,
-      total: props.profileEndCount * props.pricePerEndProfile * VAT,
-    },
-    {
-      desc: "Tussenprofiel",
-      qty: props.profileMiddleCount,
-      unit: props.pricePerMiddleProfile * VAT,
-      total: props.profileMiddleCount * props.pricePerMiddleProfile * VAT,
-    },
-    {
-      desc: "Hoekprofiel",
-      qty: props.profileCornerCount,
-      unit: props.pricePerCornerProfile * VAT,
-      total: props.profileCornerCount * props.pricePerCornerProfile * VAT,
-    },
-    {
-      desc: "Bevestigingsmateriaal (schroeven, klips, butyl)",
-      qty: 1,
-      unit: props.fastenerEstimateExBtw * VAT,
-      total: props.fastenerEstimateExBtw * VAT,
-    },
-  ].filter((row) => row.qty > 0);
+    prices,
+    VAT,
+  );
   const totalInclBtw = lineRows.reduce((sum, row) => sum + row.total, 0);
+
+  // Alternate-orientation rows. Same prices, different counts. Same
+  // fastener estimate (single line, count = 1) survives because that
+  // line isn't orientation-dependent.
+  const altRows = props.alternate
+    ? buildLineRows(
+        {
+          panelCount: props.alternate.panelCount,
+          profileEndCount: props.alternate.profileEndCount,
+          profileMiddleCount: props.alternate.profileMiddleCount,
+          profileCornerCount: props.alternate.profileCornerCount,
+          fastenerEstimateExBtw: props.fastenerEstimateExBtw,
+        },
+        prices,
+        VAT,
+      )
+    : [];
+  const altTotalInclBtw = altRows.reduce((sum, row) => sum + row.total, 0);
 
   return (
     <Document>
@@ -425,6 +504,14 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           </View>
         )}
 
+        {props.alternate && props.primaryOrientation ? (
+          <View style={{ marginBottom: 6 }}>
+            <Text style={styles.blockLabel}>
+              GEKOZEN — {orientationLabelNl(props.primaryOrientation)}
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.table}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, styles.cellDescription]}>OMSCHRIJVING</Text>
@@ -459,6 +546,50 @@ export function OfferteDocument(props: OfferteDocumentProps) {
               </View>
             </View>
           </View>
+        ) : null}
+
+        {props.alternate ? (
+          <>
+            <View style={{ marginTop: 18, marginBottom: 6 }}>
+              <Text style={styles.blockLabel}>
+                ALTERNATIEF — {orientationLabelNl(props.alternate.orientation)}
+              </Text>
+            </View>
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderCell, styles.cellDescription]}>OMSCHRIJVING</Text>
+                <Text style={[styles.tableHeaderCell, styles.cellQty]}>AANTAL</Text>
+                {includePrices ? (
+                  <>
+                    <Text style={[styles.tableHeaderCell, styles.cellUnit]}>STUKPRIJS</Text>
+                    <Text style={[styles.tableHeaderCell, styles.cellTotal]}>SUBTOTAAL</Text>
+                  </>
+                ) : null}
+              </View>
+              {altRows.map((row) => (
+                <View style={styles.tableRow} key={`alt-${row.desc}`}>
+                  <Text style={[styles.bodyText, styles.cellDescription]}>{row.desc}</Text>
+                  <Text style={[styles.bodyText, styles.cellQty]}>{row.qty}</Text>
+                  {includePrices ? (
+                    <>
+                      <Text style={[styles.bodyText, styles.cellUnit]}>{fmtMoney(row.unit)}</Text>
+                      <Text style={[styles.bodyText, styles.cellTotal]}>{fmtMoney(row.total)}</Text>
+                    </>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+            {includePrices ? (
+              <View style={styles.totalsBlock}>
+                <View style={styles.totalsTable}>
+                  <View style={styles.totalsRowFinal}>
+                    <Text style={styles.totalsLabelFinal}>TOTAAL ALT (incl. BTW)</Text>
+                    <Text style={styles.totalsValueFinal}>{fmtMoney(altTotalInclBtw)}</Text>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+          </>
         ) : null}
 
         <View style={styles.disclaimerBox}>
