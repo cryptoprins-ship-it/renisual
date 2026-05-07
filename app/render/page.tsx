@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { products, type Orientation } from "@/lib/productCatalog";
 import { loadSpanlImageIndex, type SpanlImageProduct } from "@/lib/spanlImageCatalog";
@@ -537,10 +537,44 @@ export default function RenderPage() {
     }
   }, []);
 
+  // Refs for mobile auto-scroll: after picking a photo we scroll to the
+  // panel section, and after completing the panel/color choice we scroll
+  // to the renders aside. Saves a long manual scroll on mobile where
+  // these stack vertically (right column collapses below main).
+  const panelSectionRef = useRef<HTMLElement>(null);
+  const rendersSectionRef = useRef<HTMLElement>(null);
+  const initialMountRef = useRef(true);
+  const wasReadyToRenderRef = useRef(false);
+
   useEffect(() => {
     setVariants([]);
     setErrorMsg("");
+    if (initialMountRef.current) {
+      initialMountRef.current = false;
+      return;
+    }
+    if (!sourcePhoto) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    panelSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [sourcePhoto]);
+
+  // Spanl: panel choice is enough. Keralit: needs both a product AND a
+  // colour before render makes sense. Trigger fires only on transition
+  // from "not ready" -> "ready" so re-renders or downstream state
+  // changes don't re-scroll.
+  const isReadyToRender = brand === "spanl"
+    ? !!selectedSku
+    : !!selectedKeralitProductId && selectedKeralitColorNumber !== null;
+
+  useEffect(() => {
+    const wasReady = wasReadyToRenderRef.current;
+    wasReadyToRenderRef.current = isReadyToRender;
+    if (wasReady || !isReadyToRender) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    rendersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [isReadyToRender]);
 
   // Mirror /render's product selection into the cross-page project store
   // so /gevelcalc can hydrate with the same product when the user clicks
@@ -1144,7 +1178,7 @@ export default function RenderPage() {
           )}
         </section>
 
-        <section>
+        <section ref={panelSectionRef} className="scroll-mt-20">
           <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
             02 — {t("render.section.panel")}
           </p>
@@ -1389,7 +1423,7 @@ export default function RenderPage() {
 
         </div>
 
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+        <aside ref={rendersSectionRef} className="flex scroll-mt-20 flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <header>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
               04 — {t("render.section.renders")}
