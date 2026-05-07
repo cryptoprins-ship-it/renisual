@@ -1407,8 +1407,29 @@ export default function GevelCalcPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        console.error("[offerte] HTTP", res.status, await res.text());
-        showToast(t("gc.offerte.errorGeneric"), "error");
+        const body = await res.text();
+        console.error("[offerte] HTTP", res.status, body);
+        // Surface the server-side error code/message in the toast so a
+        // user can tell support exactly what failed (RLS denial code,
+        // column mismatch, etc.) instead of a generic "probeer opnieuw".
+        let suffix = "";
+        try {
+          const parsed = JSON.parse(body) as {
+            error?: string;
+            detail?: { code?: string; message?: string } | string;
+          };
+          if (typeof parsed.detail === "object" && parsed.detail) {
+            if (parsed.detail.code) suffix = ` [${parsed.detail.code}]`;
+            else if (parsed.detail.message) suffix = `: ${parsed.detail.message.slice(0, 80)}`;
+          } else if (typeof parsed.detail === "string") {
+            suffix = `: ${parsed.detail.slice(0, 80)}`;
+          } else if (parsed.error) {
+            suffix = ` (${parsed.error})`;
+          }
+        } catch {
+          /* non-JSON body — keep generic toast */
+        }
+        showToast(t("gc.offerte.errorGeneric") + suffix, "error");
         return;
       }
       const data = (await res.json()) as { ref: string; offerteUrl: string; pdfUrl: string | null };

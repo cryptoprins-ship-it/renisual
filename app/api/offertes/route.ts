@@ -144,7 +144,19 @@ export async function POST(request: Request) {
 
   if (!inserted) {
     logger.error({ err: lastError }, "offerte_insert_failed");
-    return NextResponse.json({ error: "insert_failed" }, { status: 500 });
+    // Surface the actual Postgres / Supabase error so the client (and
+    // browser console) shows what tripped — covers RLS denials, column
+    // mismatches, NOT-NULL violations, etc. instead of a generic message.
+    const detail =
+      lastError && typeof lastError === "object"
+        ? {
+            message: (lastError as { message?: string }).message,
+            code: (lastError as { code?: string }).code,
+            hint: (lastError as { hint?: string }).hint,
+            details: (lastError as { details?: string }).details,
+          }
+        : String(lastError);
+    return NextResponse.json({ error: "insert_failed", detail }, { status: 500 });
   }
 
   const offerteUrl = `https://renisual.com/offerte/${inserted.ref}`;
