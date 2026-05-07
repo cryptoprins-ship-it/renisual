@@ -413,12 +413,9 @@ function buildLineRows(
       unit: prices.pricePerCornerProfile * VAT,
       total: counts.profileCornerCount * prices.pricePerCornerProfile * VAT,
     },
-    {
-      desc: "Bevestigingsmateriaal (schroeven, klips, butyl)",
-      qty: 1,
-      unit: counts.fastenerEstimateExBtw * VAT,
-      total: counts.fastenerEstimateExBtw * VAT,
-    },
+    // Bevestigingsmateriaal regel verwijderd — qty=1 met onbekende
+    // prijs gaf een hardcoded 1 zonder context die nergens op sloeg.
+    // Schroeven / klips / butyl rekent de leverancier los af.
   ].filter((row) => row.qty > 0);
 }
 
@@ -626,12 +623,15 @@ export function OfferteDocument(props: OfferteDocumentProps) {
         ) : null}
 
         <View style={styles.disclaimerBox}>
+          <Text style={styles.disclaimerText}>
+            Deze offerte is alleen gebaseerd op materiaal, exclusief arbeidskosten.
+          </Text>
           {includePrices ? (
-            <Text style={styles.disclaimerText}>
+            <Text style={[styles.disclaimerText, { marginTop: 4 }]}>
               Prijs gebaseerd op laatste adviesprijs. Prijzen zijn indicatief.
             </Text>
           ) : (
-            <Text style={styles.disclaimerText}>
+            <Text style={[styles.disclaimerText, { marginTop: 4 }]}>
               Materiaaladvies op basis van jouw gevelmaten. Vraag je leverancier voor de definitieve prijs en levertijd.
             </Text>
           )}
