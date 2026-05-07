@@ -188,7 +188,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "gc.opening.other": "Overige opening",
     "gc.panelInfo": "Paneel: {length} mm × {work} mm werkmaat",
     "gc.panelArea": "Paneeloppervlak: {area} m²",
-    "gc.pricePerPanel": "Prijs per paneel: €{price} excl. btw",
+    "gc.pricePerPanel": "Prijs per paneel: €{price} incl. btw",
     "gc.pricePerM2": "Prijs per m²: €{price} excl. btw",
     "gc.wasteFactor": "Snijverlies: {percent}%",
 
@@ -237,7 +237,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
 
     "render.noReference": "geen referentiefoto",
     "render.error.noPhoto": "Foto niet gevonden — upload opnieuw in de calculator.",
-    "gc.priceDisclaimer": "* Prijzen zijn indicatief en exclusief BTW, montage, profielen en overig materiaal. Actuele prijzen kunnen afwijken. Vraag een offerte aan voor exacte kosten.",
+    "gc.priceDisclaimer": "* Prijzen zijn indicatief en inclusief BTW. Montage, profielen en overig materiaal worden apart berekend. Actuele prijzen kunnen afwijken — vraag een offerte aan voor exacte kosten.",
     "offerte.advisorNote": "Onze adviseur neemt contact op met een exacte prijsopgave op basis van je berekening.",
 
     "home.nav.calculator": "Calculator",
@@ -605,7 +605,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "gc.opening.other": "Other opening",
     "gc.panelInfo": "Panel: {length} mm × {work} mm working size",
     "gc.panelArea": "Panel area: {area} m²",
-    "gc.pricePerPanel": "Price per panel: €{price} excl. VAT",
+    "gc.pricePerPanel": "Price per panel: €{price} incl. VAT",
     "gc.pricePerM2": "Price per m²: €{price} excl. VAT",
     "gc.wasteFactor": "Waste factor: {percent}%",
 
@@ -1022,7 +1022,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "gc.opening.other": "Sonstige Öffnung",
     "gc.panelInfo": "Paneel: {length} mm × {work} mm Arbeitsmaß",
     "gc.panelArea": "Paneelfläche: {area} m²",
-    "gc.pricePerPanel": "Preis pro Paneel: €{price} exkl. MwSt.",
+    "gc.pricePerPanel": "Preis pro Paneel: €{price} inkl. MwSt.",
     "gc.pricePerM2": "Preis pro m²: €{price} exkl. MwSt.",
     "gc.wasteFactor": "Verschnitt: {percent}%",
 
@@ -1439,7 +1439,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "gc.opening.other": "Autre ouverture",
     "gc.panelInfo": "Panneau : {length} mm × {work} mm taille utile",
     "gc.panelArea": "Surface du panneau : {area} m²",
-    "gc.pricePerPanel": "Prix par panneau : €{price} HT",
+    "gc.pricePerPanel": "Prix par panneau : €{price} TTC",
     "gc.pricePerM2": "Prix par m² : €{price} HT",
     "gc.wasteFactor": "Chutes : {percent}%",
 
@@ -1856,7 +1856,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "gc.opening.other": "Otro hueco",
     "gc.panelInfo": "Panel: {length} mm × {work} mm tamaño útil",
     "gc.panelArea": "Superficie del panel: {area} m²",
-    "gc.pricePerPanel": "Precio por panel: €{price} sin IVA",
+    "gc.pricePerPanel": "Precio por panel: €{price} con IVA",
     "gc.pricePerM2": "Precio por m²: €{price} sin IVA",
     "gc.wasteFactor": "Mermas: {percent}%",
 

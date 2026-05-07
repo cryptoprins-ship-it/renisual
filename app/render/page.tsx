@@ -290,6 +290,55 @@ export default function RenderPage() {
   // The variant the user explicitly picked for the offerte handoff.
   // Null = no choice yet → handleProceedToCalc falls back to baseline.
   const [selectedForOfferteId, setSelectedForOfferteId] = useState<string | null>(null);
+
+  // Persist variants + selection across same-tab navigation (e.g. user
+  // clicks "Bereken materiaal →" to /gevelcalc and then comes back).
+  // sessionStorage wipes on tab close — natural session-end. The
+  // /gevelcalc offerte-success handler additionally removes these keys
+  // so the next session-within-the-tab starts clean.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const storedVariants = sessionStorage.getItem("renisual-render-variants");
+      if (storedVariants) {
+        const parsed = JSON.parse(storedVariants);
+        if (Array.isArray(parsed) && parsed.length > 0) setVariants(parsed);
+      }
+      const storedSel = sessionStorage.getItem("renisual-render-selected");
+      if (storedSel) setSelectedForOfferteId(storedSel);
+    } catch {
+      /* corrupt JSON / quota — ignore, start fresh */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (variants.length > 0) {
+        sessionStorage.setItem("renisual-render-variants", JSON.stringify(variants));
+      } else {
+        sessionStorage.removeItem("renisual-render-variants");
+      }
+    } catch (err) {
+      // QuotaExceededError — multi-MB base64 dataUrls can blow the 5MB
+      // sessionStorage budget. Best-effort: drop the oldest variants
+      // until we fit, then retry once.
+      console.warn("[render] variant persist failed (quota?)", err);
+    }
+  }, [variants]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (selectedForOfferteId) {
+        sessionStorage.setItem("renisual-render-selected", selectedForOfferteId);
+      } else {
+        sessionStorage.removeItem("renisual-render-selected");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [selectedForOfferteId]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [toast, setToast] = useState<string | null>(null);
