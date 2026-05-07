@@ -229,9 +229,12 @@ export default function RenderPage() {
 
 
   const [variants, setVariants] = useState<RenderVariant[]>([]);
-  // The variant the user explicitly picked for the offerte handoff.
-  // Null = no choice yet → handleProceedToCalc falls back to baseline.
-  const [selectedForOfferteId, setSelectedForOfferteId] = useState<string | null>(null);
+  // Variants the user explicitly picked for the offerte handoff (multi-
+  // select, fase 1). Empty array = no choice yet → handleProceedToCalc
+  // falls back to baseline. Per-merk constraint enforced at toggle time
+  // (see toggleSelectedForOfferte): mixing Spanl + Keralit in one offerte
+  // is blocked because they go to different leveranciers anyway.
+  const [selectedForOfferteIds, setSelectedForOfferteIds] = useState<string[]>([]);
 
   // Persist variants + selection across same-tab navigation (e.g. user
   // clicks "Bereken materiaal →" to /gevelcalc and then comes back).
@@ -247,7 +250,20 @@ export default function RenderPage() {
         if (Array.isArray(parsed) && parsed.length > 0) setVariants(parsed);
       }
       const storedSel = sessionStorage.getItem("renisual-render-selected");
-      if (storedSel) setSelectedForOfferteId(storedSel);
+      if (storedSel) {
+        try {
+          const parsedSel = JSON.parse(storedSel);
+          if (Array.isArray(parsedSel) && parsedSel.every((s) => typeof s === "string")) {
+            setSelectedForOfferteIds(parsedSel);
+          }
+        } catch {
+          // Legacy format was a single string — wrap in an array so we
+          // pick up the older selection cleanly during the migration window.
+          if (typeof storedSel === "string" && storedSel.length > 0) {
+            setSelectedForOfferteIds([storedSel]);
+          }
+        }
+      }
     } catch {
       /* corrupt JSON / quota — ignore, start fresh */
     }
@@ -272,15 +288,51 @@ export default function RenderPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      if (selectedForOfferteId) {
-        sessionStorage.setItem("renisual-render-selected", selectedForOfferteId);
+      if (selectedForOfferteIds.length > 0) {
+        sessionStorage.setItem(
+          "renisual-render-selected",
+          JSON.stringify(selectedForOfferteIds),
+        );
       } else {
         sessionStorage.removeItem("renisual-render-selected");
       }
     } catch {
       /* ignore */
     }
-  }, [selectedForOfferteId]);
+  }, [selectedForOfferteIds]);
+
+  // Toggle a variant in/out of the offerte selection. Enforces the
+  // single-merk constraint: a Spanl tile cannot sit next to a Keralit
+  // tile in the same offerte (different leveranciers, different
+  // pricing logic). When the user clicks a tile from a different brand
+  // than what's already selected, we surface a toast and ignore the
+  // click. They have to clear the existing selection first.
+  function toggleSelectedForOfferte(variant: RenderVariant) {
+    const isKeralit = (sku: string) => sku.startsWith("keralit-");
+    const variantBrand: "spanl" | "keralit" = isKeralit(variant.panelSku) ? "keralit" : "spanl";
+
+    setSelectedForOfferteIds((prev) => {
+      // Already in selection → remove (always allowed).
+      if (prev.includes(variant.id)) {
+        return prev.filter((id) => id !== variant.id);
+      }
+      // Adding — check brand consistency against currently selected
+      // variants. Mixed brands get blocked with a toast.
+      const conflictsWithBrand = prev.some((id) => {
+        const v = variants.find((x) => x.id === id);
+        if (!v) return false;
+        const otherBrand: "spanl" | "keralit" = isKeralit(v.panelSku) ? "keralit" : "spanl";
+        return otherBrand !== variantBrand;
+      });
+      if (conflictsWithBrand) {
+        setToast(
+          "Per offerte één merk — verschillende merken gaan altijd naar verschillende leveranciers. Verwijder eerst de andere selectie.",
+        );
+        return prev;
+      }
+      return [...prev, variant.id];
+    });
+  }
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [toast, setToast] = useState<string | null>(null);
@@ -825,11 +877,14 @@ export default function RenderPage() {
       return;
     }
     setIsHandingOff(true);
-    // Prefer the user's explicit selection. Fallback chain when nothing
-    // is picked: a tone-nudge=0 baseline, otherwise the most recently
-    // generated variant.
+    // Pick a single "lead" variant for the render image that lands in
+    // the PDF + projectStore. With multi-select (fase 1) we use the
+    // first explicitly selected variant; falls back to a tone-nudge=0
+    // baseline, then the most recently generated variant.
     const baseline =
-      (selectedForOfferteId && variants.find((v) => v.id === selectedForOfferteId)) ||
+      selectedForOfferteIds
+        .map((id) => variants.find((v) => v.id === id))
+        .find((v): v is RenderVariant => Boolean(v)) ||
       variants.find((v) => v.toneNudge === 0) ||
       variants[variants.length - 1];
     try {
@@ -1395,17 +1450,29 @@ export default function RenderPage() {
             </div>
           )}
 
+          {/* Selection summary — count badge above tiles when 2+ are
+              picked, so the user sees at a glance how many panelen in
+              the offerte zitten. Single selection = implicit, no chip. */}
+          {selectedForOfferteIds.length > 1 && (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-ink bg-ink px-3 py-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-paper">
+              <span aria-hidden>✓</span>
+              <span>
+                {selectedForOfferteIds.length} panelen geselecteerd voor offerte
+              </span>
+            </div>
+          )}
+
           <div className="mt-4 space-y-4">
             {variants.map((v) => (
               <article
                 key={v.id}
                 className={`relative overflow-hidden rounded-xl border-2 transition-colors ${
-                  selectedForOfferteId === v.id
+                  selectedForOfferteIds.includes(v.id)
                     ? "border-ink ring-2 ring-ink/30"
                     : "border-black"
                 }`}
               >
-                {selectedForOfferteId === v.id && (
+                {selectedForOfferteIds.includes(v.id) && (
                   <span
                     className="absolute left-2 top-2 z-10 flex h-7 items-center gap-1 rounded-full border border-ink bg-ink px-2 text-[10px] font-mono uppercase tracking-[0.15em] text-paper shadow-sm"
                     aria-label="Geselecteerd voor offerte"
@@ -1547,16 +1614,16 @@ export default function RenderPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedForOfferteId((prev) => (prev === v.id ? null : v.id))
+                        toggleSelectedForOfferte(v)
                       }
                       className={`rounded-lg border px-2 py-1 transition-colors ${
-                        selectedForOfferteId === v.id
+                        selectedForOfferteIds.includes(v.id)
                           ? "border-ink bg-ink text-paper"
                           : "border-black bg-white text-ink hover:bg-stone-100"
                       }`}
-                      aria-pressed={selectedForOfferteId === v.id}
+                      aria-pressed={selectedForOfferteIds.includes(v.id)}
                     >
-                      {selectedForOfferteId === v.id ? "✓ Voor offerte" : "Voor offerte"}
+                      {selectedForOfferteIds.includes(v.id) ? "✓ Voor offerte" : "Voor offerte"}
                     </button>
                     <button
                       type="button"
