@@ -59,9 +59,6 @@ export default function SiteNav() {
                 {t("home.nav.subsidies")}
               </Link>
             )}
-            <Link href="/offerte" className="transition-colors hover:text-ink">
-              {t("home.nav.offerte")}
-            </Link>
           </div>
           <ResetProjectButton />
           <NavLocaleSwitcher compact className="ml-1" />

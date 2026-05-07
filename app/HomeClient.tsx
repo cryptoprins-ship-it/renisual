@@ -61,7 +61,6 @@ const ROI_BARS: Array<{ labelKey: string; adviceKey: string; roi: number; color:
 const HOW_STEPS: Array<{ step: string; titleKey: string; descKey: string; href: string; ctaKey: string }> = [
   { step: "01", titleKey: "home.how.step1.title", descKey: "home.how.step1.desc", href: "/render", ctaKey: "home.how.step1.cta" },
   { step: "02", titleKey: "home.how.step2.title", descKey: "home.how.step2.desc", href: "/render", ctaKey: "home.how.step2.cta" },
-  { step: "03", titleKey: "home.how.step3.title", descKey: "home.how.step3.desc", href: "#offerte", ctaKey: "home.how.step3.cta" },
 ];
 
 const FEATURE_CARDS: Array<{ icon: string; titleKey: string; descKey: string }> = [
@@ -139,9 +138,6 @@ export default function HomeClient() {
                   {t("home.nav.subsidies")}
                 </Link>
               )}
-              <a href="#offerte" className="hover:text-ink transition-colors">
-                {t("home.nav.offerte")}
-              </a>
             </div>
             <NavLocaleSwitcher compact className="ml-1" />
           </div>
@@ -451,34 +447,6 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section id="offerte" className="bg-black px-4 py-20 text-white scroll-mt-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold md:text-4xl">
-            {t("home.cta.heading")}
-          </h2>
-          <p className="mt-4 text-lg text-gray-400">
-            {t("home.cta.subtitle")}
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href={calcHref}
-              className="rounded-2xl bg-white px-8 py-4 text-base font-bold text-black hover:bg-gray-100"
-            >
-              {t("home.cta.btnStart")}
-            </Link>
-            <Link
-              href="/render"
-              className="rounded-2xl border-2 border-white px-8 py-4 text-base font-bold text-white hover:bg-white/10"
-            >
-              {t("home.cta.btnRender")}
-            </Link>
-          </div>
-          <p className="mt-6 text-sm text-gray-500">
-            {t("home.cta.note")}
-          </p>
-        </div>
-      </section>
-
       <footer className="border-t border-black bg-white px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div>
@@ -491,7 +459,6 @@ export default function HomeClient() {
             <a href="#roi" className="hover:underline">{t("home.nav.roi")}</a>
             {showSubsidies && <Link href="/subsidie" className="hover:underline">{t("home.nav.subsidies")}</Link>}
             <a href="#roadmap" className="hover:underline">{t("home.roadmap.soon")}</a>
-            <a href="#offerte" className="hover:underline">{t("home.nav.offerte")}</a>
           </div>
           <p className="text-xs text-gray-400">© 2026 Renisual</p>
         </div>

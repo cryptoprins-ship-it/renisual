@@ -88,11 +88,8 @@ export default function SubsidieClient() {
             <Link href="/gevelcalc" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
               Calculator
             </Link>
-            <Link href="/render" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
+            <Link href="/render" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
               AI Rendering
-            </Link>
-            <Link href="/offerte" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
-              Offerte aanvragen
             </Link>
           </div>
         </div>
@@ -332,7 +329,7 @@ export default function SubsidieClient() {
 
             <div className="mt-8 text-center">
               <Link
-                href="/offerte?subsidie=true"
+                href="/contact?onderwerp=subsidie-aanvraagpakket"
                 className="inline-block rounded-2xl bg-black px-8 py-4 text-base font-bold text-white hover:opacity-80"
               >
                 Aanvraagpakket bestellen voor €25 →
@@ -359,7 +356,6 @@ export default function SubsidieClient() {
             <Link href="/gevelcalc" className="hover:underline">Calculator</Link>
             <Link href="/render" className="hover:underline">AI Rendering</Link>
             <Link href="/subsidie" className="hover:underline">Subsidies</Link>
-            <Link href="/offerte" className="hover:underline">Offerte</Link>
           </div>
         </div>
       </footer>

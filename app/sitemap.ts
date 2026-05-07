@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/render", priority: 0.7 },
     { path: "/subsidie", priority: 0.8 },
     { path: "/roi", priority: 0.7 },
-    { path: "/offerte", priority: 0.7 },
     { path: "/privacy", priority: 0.7 },
     { path: "/contact", priority: 0.7 },
     { path: "/wachten", priority: 0.7 },
