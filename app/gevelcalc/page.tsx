@@ -813,6 +813,10 @@ export default function GevelCalcPage() {
   const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [showAlternateOrientation, setShowAlternateOrientation] = useState(false);
+  // Collapse the long product-picker section once a product is selected
+  // (typically carried over from /render). The user can still expand
+  // via "Paneel wijzigen" if they want to switch panels here.
+  const [showProductPicker, setShowProductPicker] = useState(false);
   const [showInclVat, setShowInclVat] = useState(false);
   // projectName is now the auto-generated project number (e.g.
   // P-2026-05-06-A3B4). Kept under the old key for storage compat.
@@ -990,6 +994,14 @@ export default function GevelCalcPage() {
       setProductCategory("gevelbekleding");
     }
   }, [adviesPrijs, productCategory]);
+
+  // Auto-expand the product picker when no product is selected, so a
+  // greenfield calc still surfaces the catalog. Once a product is set
+  // (manually or via /render handoff) it stays collapsed unless the
+  // user explicitly clicks "Paneel wijzigen".
+  useEffect(() => {
+    if (!selectedProductId) setShowProductPicker(true);
+  }, [selectedProductId]);
 
   function fmtMoney(amount: number) {
     const value = showInclVat ? round2(amount * VAT) : amount;
@@ -2058,8 +2070,53 @@ export default function GevelCalcPage() {
               );
             })}
 
+          {/* Compact panel chip — visible when a product is already
+              selected (via /render handoff or earlier interaction) and
+              the picker section is collapsed. Click expands the full
+              picker so the user can swap panels. */}
+          {!showProductPicker && selectedProduct && (
+            <section className="rounded-2xl border border-stone-300 bg-stone-50 p-4 print-hidden">
+              <button
+                type="button"
+                onClick={() => setShowProductPicker(true)}
+                className="flex w-full items-center justify-between gap-4 text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {selectedProduct.brand === "Spanl" ? (
+                    <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
+                  ) : selectedProduct.brand === "Keralit" ? (
+                    <KeralitThumb productName={selectedProduct.name} selectedNumber={keralitColorNumber} />
+                  ) : null}
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                      {t("gc.selectedProduct")}
+                    </p>
+                    <p className="truncate font-display text-sm text-ink">
+                      {selectedProduct.brand} — {selectedProduct.name}
+                    </p>
+                  </div>
+                </div>
+                <span className="flex-shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 hover:text-ink">
+                  Paneel wijzigen ▾
+                </span>
+              </button>
+            </section>
+          )}
+
+          {showProductPicker && (
           <section className="rounded-2xl border border-black bg-white p-4 page-break-before">
-            <h2 className="text-lg font-semibold">{t("gc.productChoice")}</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-lg font-semibold">{t("gc.productChoice")}</h2>
+              {selectedProduct && (
+                <button
+                  type="button"
+                  onClick={() => setShowProductPicker(false)}
+                  className="flex-shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 hover:text-ink print-hidden"
+                >
+                  Inklappen ▴
+                </button>
+              )}
+            </div>
             <div className="mt-3 inline-flex rounded-xl border border-black p-1 print-hidden">
               <button
                 type="button"
@@ -2294,6 +2351,7 @@ export default function GevelCalcPage() {
               </div>
             )}
           </section>
+          )}
 
           {/* Bottom material-calculation block removed — the right-column
               "04 — Totaaloverzicht" aside shows the same numbers. */}
