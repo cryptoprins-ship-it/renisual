@@ -671,7 +671,7 @@ export default function RenderPage() {
         productSku,
         productLabel,
         productDescription,
-        orientation,
+        orientation: effOrientation,
         panelWidthCm,
         facadeWidthCm: Number(manualFacadeWidthCm) > 0 ? Number(manualFacadeWidthCm) : facadeDims?.widthCm,
         facadeHeightCm: Number(manualFacadeHeightCm) > 0 ? Number(manualFacadeHeightCm) : facadeDims?.heightCm,
@@ -760,7 +760,7 @@ export default function RenderPage() {
           id: crypto.randomUUID(),
           panelLabel: productLabel,
           panelSku: panelSkuForVariant,
-          orientation,
+          orientation: effOrientation,
           prompt: "",
           dataUrl: renderDataUrl,
           createdAt: Date.now(),
@@ -773,7 +773,7 @@ export default function RenderPage() {
           next.sort((a, b) => TONE_BATCH.indexOf(a.toneNudge ?? 0) - TONE_BATCH.indexOf(b.toneNudge ?? 0));
           return next;
         });
-        sha256(`${photoLarge}|${panelSkuForVariant}|${orientation}|${variant.id}`)
+        sha256(`${photoLarge}|${panelSkuForVariant}|${effOrientation}|${variant.id}`)
           .then((key) => saveRender(key, renderDataUrl!))
           .catch(() => {});
         if (targetHex) {
@@ -1485,48 +1485,6 @@ export default function RenderPage() {
           )}
 
           <div className="mt-4 space-y-4">
-            {(() => {
-              if (isGenerating) return null;
-              const currentPanelSku =
-                selectedKeralitProduct && selectedKeralitColor
-                  ? `keralit-${selectedKeralitProduct.id}-${selectedKeralitColor.number}`
-                  : selectedPanel?.sku ?? null;
-              if (!currentPanelSku) return null;
-              const hasNudge = (n: ToneNudge) =>
-                variants.some((v) => v.panelSku === currentPanelSku && v.toneNudge === n);
-              if (!hasNudge(0)) return null;
-              const cls =
-                "rounded-xl border-2 border-dashed border-stone-400 bg-stone-50 px-3 py-3 text-center text-xs font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100";
-              const credit = (
-                <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-stone-500">
-                  +1 credit
-                </span>
-              );
-              return (
-                <div className="grid grid-cols-2 gap-2">
-                  {!hasNudge(1) && (
-                    <button type="button" onClick={() => runRenderBatch([1], false)} className={cls}>
-                      Iets lichter{credit}
-                    </button>
-                  )}
-                  {!hasNudge(2) && (
-                    <button type="button" onClick={() => runRenderBatch([2], false)} className={cls}>
-                      Veel lichter{credit}
-                    </button>
-                  )}
-                  {!hasNudge(-1) && (
-                    <button type="button" onClick={() => runRenderBatch([-1], false)} className={cls}>
-                      Iets donkerder{credit}
-                    </button>
-                  )}
-                  {!hasNudge(-2) && (
-                    <button type="button" onClick={() => runRenderBatch([-2], false)} className={cls}>
-                      Veel donkerder{credit}
-                    </button>
-                  )}
-                </div>
-              );
-            })()}
             {variants.map((v) => (
               <article key={v.id} className="relative overflow-hidden rounded-xl border border-black">
                 <button
@@ -1543,6 +1501,61 @@ export default function RenderPage() {
                   alt={v.panelLabel}
                   className="block w-full"
                 />
+
+                {/* Per-tile lighter/darker buttons. Only on baselines
+                    (toneNudge===0) so users can target a specific panel
+                    when comparing multiple. Each button calls the batch
+                    runner with an override that points back at THIS
+                    variant's panelSku + orientation, so per-panel state
+                    in the picker doesn't matter. Buttons that already
+                    have a generated variant for this panel hide
+                    themselves. */}
+                {v.toneNudge === 0 && !isGenerating && (() => {
+                  const hasNudgeForThis = (n: ToneNudge) =>
+                    variants.some((x) => x.panelSku === v.panelSku && x.toneNudge === n);
+                  const cls =
+                    "rounded-md border border-stone-300 bg-stone-50 px-2 py-1.5 text-center text-[11px] font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100";
+                  return (
+                    <div className="grid grid-cols-2 gap-1.5 border-t border-black p-2">
+                      {!hasNudgeForThis(1) && (
+                        <button
+                          type="button"
+                          onClick={() => runRenderBatch([1], false, { panelSku: v.panelSku, orientation: v.orientation })}
+                          className={cls}
+                        >
+                          Iets lichter
+                        </button>
+                      )}
+                      {!hasNudgeForThis(2) && (
+                        <button
+                          type="button"
+                          onClick={() => runRenderBatch([2], false, { panelSku: v.panelSku, orientation: v.orientation })}
+                          className={cls}
+                        >
+                          Veel lichter
+                        </button>
+                      )}
+                      {!hasNudgeForThis(-1) && (
+                        <button
+                          type="button"
+                          onClick={() => runRenderBatch([-1], false, { panelSku: v.panelSku, orientation: v.orientation })}
+                          className={cls}
+                        >
+                          Iets donkerder
+                        </button>
+                      )}
+                      {!hasNudgeForThis(-2) && (
+                        <button
+                          type="button"
+                          onClick={() => runRenderBatch([-2], false, { panelSku: v.panelSku, orientation: v.orientation })}
+                          className={cls}
+                        >
+                          Veel donkerder
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
