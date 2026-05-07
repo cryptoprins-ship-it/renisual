@@ -10,12 +10,28 @@ import {
   Document,
   Image,
   Page,
+  Path,
   StyleSheet,
+  Svg,
   Text,
   View,
   renderToBuffer,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+
+// Inline SVG version of the Renisual mark (flat-colour variant — no
+// brick pattern because @react-pdf/renderer does not support SVG
+// pattern fills, only solid fills). Three faces of the isometric mark:
+// anthracite top, grass-green left, terracotta right.
+function RenisualMarkPdf({ size = 22 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 100 100">
+      <Path d="M50 12 L86 32 L50 52 L14 32 Z" fill="#2D3437" />
+      <Path d="M14 32 L50 52 L50 92 L14 72 Z" fill="#6B8E4E" />
+      <Path d="M86 32 L50 52 L50 92 L86 72 Z" fill="#A14B2A" />
+    </Svg>
+  );
+}
 
 const INK = "#0a0a0a";
 const PAPER = "#f5f4f0";
@@ -460,7 +476,10 @@ export function OfferteDocument(props: OfferteDocumentProps) {
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.brandWordmark}>Renisual</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <RenisualMarkPdf size={26} />
+            <Text style={styles.brandWordmark}>Renisual</Text>
+          </View>
           <View style={styles.headerRight}>
             <Text style={styles.documentLabel}>ADVIESOFFERTE</Text>
             <Text style={styles.refText}>
@@ -622,7 +641,10 @@ export function OfferteDocument(props: OfferteDocumentProps) {
         </View>
 
         <View style={styles.footer} fixed>
-          <Text style={styles.footerWordmark}>Renisual</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <RenisualMarkPdf size={14} />
+            <Text style={styles.footerWordmark}>Renisual</Text>
+          </View>
           <Text style={styles.footerText}>
             Deze offerte is opgesteld via Renisual.com — het platform voor
             gevelvisualisatie en m{"²"}-berekening.
