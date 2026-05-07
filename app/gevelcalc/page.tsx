@@ -858,6 +858,11 @@ export default function GevelCalcPage() {
   // user request — the offerte is a BOM document by default; prices
   // are explicit consent.
   const [includePrices, setIncludePrices] = useState(false);
+  // Whether to attach the /render handoff render to the offerte (PDF +
+  // mail). Default true when a render exists, but the user can toggle
+  // off — useful when they loaded a saved config and the inherited
+  // render is from a different project.
+  const [includeRenderPhoto, setIncludeRenderPhoto] = useState(true);
   // Signed URL for the render produced on /render, resolved at mount
   // so the right-column overview can preview the visual the offerte
   // PDF will embed. Null when the user arrived without going through
@@ -1428,7 +1433,10 @@ export default function GevelCalcPage() {
             }
           : undefined,
       photoPath: photoStoragePath ?? undefined,
-      renderPath: renderStoragePath ?? undefined,
+      // Render-foto meesturen is optioneel — gebruiker kan in de
+      // offerte-CTA kaart de toggle uitvinken (bv. wanneer ze een
+      // saved config laadden en de oude render niet meer relevant is).
+      renderPath: includeRenderPhoto ? (renderStoragePath ?? undefined) : undefined,
       includePrices,
     };
   }
@@ -2622,6 +2630,26 @@ export default function GevelCalcPage() {
                     </span>
                   </span>
                 </label>
+                {renderPreviewUrl && (
+                  <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md border border-stone-300 bg-stone-50 p-2.5 text-[12px] text-stone-700 select-none">
+                    <input
+                      type="checkbox"
+                      checked={includeRenderPhoto}
+                      onChange={(e) => setIncludeRenderPhoto(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0"
+                    />
+                    <span>
+                      <span className="block font-medium text-ink">
+                        Render-foto meesturen
+                      </span>
+                      <span className="block text-[11px] text-stone-600">
+                        De render uit /render wordt mee in de PDF en als bijlage
+                        bij de mail. Vink uit als de render niet bij deze offerte
+                        hoort (bv. na het laden van een oude config).
+                      </span>
+                    </span>
+                  </label>
+                )}
                 <button
                   type="button"
                   onClick={downloadOfferte}
