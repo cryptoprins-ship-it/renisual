@@ -1467,7 +1467,16 @@ export default function RenderPage() {
               </div>
             )}
             {variants.map((v) => (
-              <article key={v.id} className="overflow-hidden rounded-xl border border-black">
+              <article key={v.id} className="relative overflow-hidden rounded-xl border border-black">
+                <button
+                  type="button"
+                  onClick={() => setVariants((prev) => prev.filter((x) => x.id !== v.id))}
+                  aria-label={t("render.delete")}
+                  title={t("render.delete")}
+                  className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-black bg-white/90 text-base leading-none text-ink shadow-sm hover:bg-white"
+                >
+                  ×
+                </button>
                 <img
                   src={v.dataUrl}
                   alt={v.panelLabel}
@@ -1540,13 +1549,6 @@ export default function RenderPage() {
                       className="rounded-lg border border-black px-2 py-1"
                     >
                       {t("render.download")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVariants((prev) => prev.filter((x) => x.id !== v.id))}
-                      className="rounded-lg border border-black px-2 py-1"
-                    >
-                      {t("render.delete")}
                     </button>
                   </div>
                 </div>

@@ -76,15 +76,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  // Read env case-insensitively across both naming conventions:
+  //   SMTP_HOST / SMTP_USER / SMTP_PASS (legacy)
+  //   Hostinger_SMTP_Host / User / Password (newer, mixed-case
+  //     per the user's env-var convention)
+  // so a single set of variables covers both /api/offerte and
+  // /api/offertes/send.
+  const env = (name: string): string | undefined => {
+    const target = name.toLowerCase();
+    for (const k of Object.keys(process.env)) {
+      if (k.toLowerCase() === target) {
+        const v = process.env[k];
+        if (typeof v === "string" && v.trim().length > 0) return v.trim();
+      }
+    }
+    return undefined;
+  };
+  const host = env("SMTP_HOST") ?? env("Hostinger_SMTP_Host") ?? "smtp.hostinger.com";
+  const port = Number(env("SMTP_PORT") ?? env("Hostinger_SMTP_Port") ?? "465") || 465;
+  const user = env("SMTP_USER") ?? env("Hostinger_SMTP_User");
+  const pass = env("SMTP_PASS") ?? env("Hostinger_SMTP_Password");
+
+  if (!user || !pass) {
+    logger.error("offerte_smtp_not_configured");
+    return NextResponse.json({ error: "smtp_not_configured" }, { status: 500 });
+  }
+
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 465),
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
     });
 
     const timestamp = new Date().toLocaleString("nl-NL", {
@@ -107,8 +130,8 @@ export async function POST(req: NextRequest) {
 
     // E-mail naar jou
     await transporter.sendMail({
-      from: `"Renisual Leads" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER,
+      from: `"Renisual Leads" <${user}>`,
+      to: user,
       subject: `Nieuwe lead: ${body.naam} — ${body.postcode}`,
       html: `
         <h2>Nieuwe offerte aanvraag</h2>
@@ -129,7 +152,7 @@ export async function POST(req: NextRequest) {
 
     // Bevestiging naar klant
     await transporter.sendMail({
-      from: `"Renisual" <${process.env.SMTP_USER}>`,
+      from: `"Renisual" <${user}>`,
       to: body.email,
       subject: "Je offerte aanvraag is ontvangen — Renisual",
       html: `
