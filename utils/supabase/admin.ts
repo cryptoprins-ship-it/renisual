@@ -25,9 +25,18 @@ let cached: SupabaseClient | null = null;
 export function createAdminClient(): SupabaseClient {
   if (cached) return cached;
   const url = readEnvCaseInsensitive("NEXT_PUBLIC_SUPABASE_URL");
-  const key = readEnvCaseInsensitive("SUPABASE_SERVICE_ROLE_KEY");
+  // Supabase recently renamed service_role → "secret key". Accept both
+  // so projects on either generation of the dashboard work without
+  // env churn. SERVICE_ROLE_KEY wins if both are set.
+  const key =
+    readEnvCaseInsensitive("SUPABASE_SERVICE_ROLE_KEY") ??
+    readEnvCaseInsensitive("SUPABASE_SECRET_KEY");
   if (!url) throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set");
-  if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
+  if (!key) {
+    throw new Error(
+      "Set SUPABASE_SECRET_KEY (new naming) or SUPABASE_SERVICE_ROLE_KEY (legacy)",
+    );
+  }
   cached = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
