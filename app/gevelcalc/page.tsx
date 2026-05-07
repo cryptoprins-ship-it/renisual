@@ -2618,6 +2618,10 @@ export default function GevelCalcPage() {
                   leverancier(s). Vul je achternaam, e-mail en adres in zodat
                   we — en de leverancier — contact op kunnen nemen.
                 </p>
+                <p className="mt-1.5 text-[11px] leading-snug text-stone-500">
+                  Wilt u zelf dit traject doen, dan kunt u de PDF opslaan en
+                  gebruiken als offerte.
+                </p>
                 <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-md border border-stone-300 bg-stone-50 p-2.5 text-[12px] text-stone-700 select-none">
                   <input
                     type="checkbox"
