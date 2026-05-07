@@ -15,7 +15,6 @@ import {
   type CalcSide,
   type OpeningType,
   type OpeningGroup,
-  type ProfileCalculation,
   calculateMaterialResult,
   calculateSideGrossM2,
   calculateSideOpeningsM2,
@@ -1277,15 +1276,6 @@ export default function GevelCalcPage() {
     showToast(t("gc.toast.dataCleared"));
   }
 
-  function exportPdf() {
-    const err = validateForExport();
-    if (err) {
-      showToast(err, "error");
-      return;
-    }
-    setCalcDate(new Date().toISOString());
-    setTimeout(() => window.print(), 100);
-  }
 
   // Build the calc snapshot the offerte API expects. Pulls profile
   // counts out of materialResult.profileItems by their canonical
@@ -2198,97 +2188,8 @@ export default function GevelCalcPage() {
             )}
           </section>
 
-          {/* Totals card moved to right-column 04 — OVERZICHT (sticky). */}
-
-          {selectedProduct && materialResult && (
-            <section className="rounded-2xl border border-black bg-white p-4">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <h2 className="text-lg font-semibold">{t("gc.materialCalc")}</h2>
-                {mode === "advanced" && (
-                  <div className="w-64 print-hidden">
-                    <ToggleSwitch checked={showInclVat} onChange={setShowInclVat} label={t("gc.inclVat")} />
-                  </div>
-                )}
-              </div>
-              <div className="metrics-row mt-4 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-black p-3">
-                  <div className="text-xs text-gray-500">{t("gc.netWithWaste")}</div>
-                  <div className="text-base font-semibold">{materialResult.netWithWaste.toFixed(2)} m²</div>
-                </div>
-                {selectedProduct.type === "panel" && (
-                  <div className="rounded-xl border border-black p-3">
-                    <div className="text-xs text-gray-500">{t("gc.panelsNeeded")}</div>
-                    <div className="text-base font-semibold">{materialResult.panelCount}</div>
-                  </div>
-                )}
-                <div className="rounded-xl border border-black p-3">
-                  <div className="text-xs text-gray-500">{t("gc.materialPrice")}</div>
-                  <div className="text-base font-semibold">{fmtMoney(materialResult.materialPriceExVat)}</div>
-                </div>
-              </div>
-              {materialResult.profileItems.length > 0 && (
-                <>
-                  <h3 className="mt-6 font-semibold">{t("gc.profiles")}</h3>
-                  <div className="mt-3 overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
-                      <thead>
-                        <tr className="border border-black bg-neutral-100">
-                          <th className="border border-black p-2 text-left">{t("gc.profileType")}</th>
-                          <th className="border border-black p-2 text-left">{t("gc.profileName")}</th>
-                          <th className="border border-black p-2 text-right">{t("gc.metersNeeded")}</th>
-                          <th className="border border-black p-2 text-right">{t("gc.lengthEach")}</th>
-                          <th className="border border-black p-2 text-right">{t("gc.count")}</th>
-                          <th className="border border-black p-2 text-right">{t("gc.priceEach")}</th>
-                          <th className="border border-black p-2 text-right">{t("gc.total")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {materialResult.profileItems.map((item: ProfileCalculation) => (
-                          <tr key={item.label}>
-                            <td className="border border-black p-2">{item.label}</td>
-                            <td className="border border-black p-2">{item.name}</td>
-                            <td className="border border-black p-2 text-right">{item.neededMeters.toFixed(2)} m</td>
-                            <td className="border border-black p-2 text-right">{item.lengthMeters.toFixed(2)} m</td>
-                            <td className="border border-black p-2 text-right">{item.count}</td>
-                            <td className="border border-black p-2 text-right">{fmtMoney(item.priceEachExVat)}</td>
-                            <td className="border border-black p-2 text-right">{fmtMoney(item.totalExVat)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
-              <div className="mt-4 rounded-xl border border-black p-4 text-sm space-y-1">
-                <p>
-                  {t("gc.materialPrice")}: {fmtMoney(materialResult.materialPriceExVat)}
-                </p>
-                {materialResult.profileItems.length > 0 && (
-                  <p>
-                    {t("gc.profilesPrice")}: {fmtMoney(materialResult.profilePriceExVat)}
-                  </p>
-                )}
-                <p>
-                  {t("gc.subtotal")}: {fmtMoney(materialResult.subtotalExVat)}
-                </p>
-                <p className="font-semibold pt-1 border-t border-black">
-                  {t("gc.totalLabel")}: {fmtMoney(materialResult.totalExVat)}
-                </p>
-                <p className="mt-3 text-xs text-gray-400 border-t border-gray-200 pt-3">
-                  {t("gc.priceDisclaimer")}
-                </p>
-              </div>
-            </section>
-          )}
-
-          <div className="hidden print:block mt-6 pt-4 border-t border-gray-300 text-xs text-gray-400">
-            <p>{t("gc.priceDisclaimer")}</p>
-            <p className="mt-2">
-              {t("gc.title")}
-              {projectName ? ` — ${projectName}` : ""}
-              {calcDate ? ` — ${formatDate(calcDate, locale)}` : ""}
-            </p>
-          </div>
+          {/* Bottom material-calculation block removed — the right-column
+              "04 — Totaaloverzicht" aside shows the same numbers. */}
         </div>
 
         <div
@@ -2444,19 +2345,19 @@ export default function GevelCalcPage() {
                       <span className="font-semibold text-ink">{materialResult.panelCount}</span>
                     </div>
                   )}
-                  {endProfile && (
+                  {endProfile && endProfile.count > 0 && (
                     <div className="flex justify-between">
                       <span className="text-stone-600">{t("gc.endProfilesNeeded")}</span>
                       <span className="font-semibold text-ink">{endProfile.count}</span>
                     </div>
                   )}
-                  {connProfile && (
+                  {connProfile && connProfile.count > 0 && (
                     <div className="flex justify-between">
                       <span className="text-stone-600">{t("gc.middleProfilesNeeded")}</span>
                       <span className="font-semibold text-ink">{connProfile.count}</span>
                     </div>
                   )}
-                  {cornerProfile && (
+                  {cornerProfile && cornerProfile.count > 0 && (
                     <div className="flex justify-between">
                       <span className="text-stone-600">{t("gc.cornerProfilesNeeded")}</span>
                       <span className="font-semibold text-ink">{cornerProfile.count}</span>
