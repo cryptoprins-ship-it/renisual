@@ -194,11 +194,13 @@ export function calculateMaterialResult({
     materialPriceExVat = round2(netWithWaste * product.pricePerM2ExVat);
   }
 
-  // Stick-count and meter-coverage accumulators. For continuous rails
-  // (start/end/corner/insideCorner/connection) we round PER SEGMENT
-  // because installers butt-join within a single side but never pool
-  // offcuts across sides — joining two short pieces from different
-  // walls would put a seam mid-side.
+  // Per-side / per-corner stick counts. Every continuous rail (start,
+  // end, corner, inside corner, connection) gets its own dedicated
+  // sticks — no offcut pooling across sides or across corners. The
+  // installer cuts each rail/corner from its own stick(s) so a
+  // visible seam never lands mid-side or mid-corner. This over-orders
+  // slightly vs a perfect-pooling theoretical minimum, but matches
+  // the actual install practice the user described.
   let startSticks = 0;
   let endSticks = 0;
   let connectionSticks = 0;
@@ -227,9 +229,13 @@ export function calculateMaterialResult({
       .map((s) => toNumber(s.height) / 100)
       .filter((h) => Number.isFinite(h) && h > 0),
   );
-  const insideCornerSticks =
-    Math.max(0, insideCornerCount) * (maxHeightM > 0 ? Math.ceil(maxHeightM / insideCornerLen) : 0);
   const insideCornerMeters = Math.max(0, insideCornerCount) * maxHeightM;
+  // Per-corner ceiling, matching the outside-corner approach: each
+  // inside corner cut from its own sticks, no pooling.
+  const insideCornerSticksPerCorner =
+    maxHeightM > 0 ? Math.ceil(maxHeightM / insideCornerLen) : 0;
+  const insideCornerSticks =
+    Math.max(0, insideCornerCount) * insideCornerSticksPerCorner;
 
   sides.forEach((side) => {
     const widthCm = toNumber(side.width);
@@ -239,9 +245,12 @@ export function calculateMaterialResult({
     const widthM = widthCm / 100;
     const heightM = heightCm / 100;
 
-    // Each side contributes ONE vertical corner edge (shared with the
-    // next side at the meeting line). For a closed rectangular facade
-    // (4 sides) this produces 4 corner edges = 4 unique outside corners.
+    // Each side contributes ONE vertical outside-corner edge (shared
+    // with the next side at the meeting line). For a closed rectangular
+    // facade (4 sides) this is 4 corner edges = 4 unique corners.
+    // Each corner cut from its own stick(s) — no pooling across corners
+    // because joining a short extension to a 3m main piece would put
+    // a visible seam mid-corner.
     cornerMeters += heightM;
     cornerSticks += Math.ceil(heightM / cornerLen);
 
