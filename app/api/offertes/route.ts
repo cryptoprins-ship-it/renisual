@@ -48,6 +48,10 @@ const calcOutputSchema = z.object({
   profileEndCount: z.number().int().nonnegative().max(100000),
   profileMiddleCount: z.number().int().nonnegative().max(100000),
   profileCornerCount: z.number().int().nonnegative().max(100000),
+  // YJDZ binnenhoek — only set when the user entered a non-zero
+  // inside-corner count on /gevelcalc. Optional + defaults to 0
+  // server-side so older payloads don't fail validation.
+  profileInsideCornerCount: z.number().int().nonnegative().max(100000).optional(),
   subtotalExclBtw: z.number().nonnegative().max(10_000_000),
   totalInclBtw: z.number().nonnegative().max(10_000_000),
 });
@@ -203,6 +207,7 @@ export async function POST(request: Request) {
             profileEndCount: parsed.alternateCalcOutput.profileEndCount,
             profileMiddleCount: parsed.alternateCalcOutput.profileMiddleCount,
             profileCornerCount: parsed.alternateCalcOutput.profileCornerCount,
+            profileInsideCornerCount: parsed.alternateCalcOutput.profileInsideCornerCount,
             subtotalExBtw: parsed.alternateCalcOutput.subtotalExclBtw,
             totalInclBtw: parsed.alternateCalcOutput.totalInclBtw,
           }
@@ -219,10 +224,12 @@ export async function POST(request: Request) {
       profileEndCount: parsed.calcOutput.profileEndCount,
       profileMiddleCount: parsed.calcOutput.profileMiddleCount,
       profileCornerCount: parsed.calcOutput.profileCornerCount,
+      profileInsideCornerCount: parsed.calcOutput.profileInsideCornerCount,
       pricePerStartProfile: numberFromCalcInput(parsed.calcInput, "pricePerStartProfile"),
       pricePerEndProfile: numberFromCalcInput(parsed.calcInput, "pricePerEndProfile"),
       pricePerMiddleProfile: numberFromCalcInput(parsed.calcInput, "pricePerMiddleProfile"),
       pricePerCornerProfile: numberFromCalcInput(parsed.calcInput, "pricePerCornerProfile"),
+      pricePerInsideCornerProfile: numberFromCalcInput(parsed.calcInput, "pricePerInsideCornerProfile"),
       fastenerEstimateExBtw: numberFromCalcInput(parsed.calcInput, "fastenerEstimateExBtw"),
       subtotalExBtw: parsed.calcOutput.subtotalExclBtw,
       totalInclBtw: parsed.calcOutput.totalInclBtw,

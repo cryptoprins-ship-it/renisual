@@ -303,10 +303,14 @@ export type OfferteDocumentProps = {
   profileEndCount: number;
   profileMiddleCount: number;
   profileCornerCount: number;
+  // YJDZ binnenhoek — only meaningful for L-shape / U-shape facades.
+  // Defaults to 0 / undefined for typical rectangular installs.
+  profileInsideCornerCount?: number;
   pricePerStartProfile?: number;
   pricePerEndProfile: number;
   pricePerMiddleProfile: number;
   pricePerCornerProfile: number;
+  pricePerInsideCornerProfile?: number;
   fastenerEstimateExBtw: number;
   // Derived totals already computed by the calc engine — we re-display
   // them rather than recomputing to keep one source of truth.
@@ -340,6 +344,7 @@ export type OfferteDocumentProps = {
     profileEndCount: number;
     profileMiddleCount: number;
     profileCornerCount: number;
+    profileInsideCornerCount?: number;
     subtotalExBtw: number;
     totalInclBtw: number;
   };
@@ -369,6 +374,7 @@ function buildLineRows(
     profileEndCount: number;
     profileMiddleCount: number;
     profileCornerCount: number;
+    profileInsideCornerCount?: number;
     fastenerEstimateExBtw: number;
   },
   prices: {
@@ -377,11 +383,14 @@ function buildLineRows(
     pricePerEndProfile: number;
     pricePerMiddleProfile: number;
     pricePerCornerProfile: number;
+    pricePerInsideCornerProfile?: number;
   },
   VAT: number,
 ): LineRow[] {
   const startCount = counts.profileStartCount ?? 0;
   const startPrice = prices.pricePerStartProfile ?? 0;
+  const insideCornerCount = counts.profileInsideCornerCount ?? 0;
+  const insideCornerPrice = prices.pricePerInsideCornerProfile ?? 0;
   return [
     {
       desc: "Gevelpaneel",
@@ -408,10 +417,16 @@ function buildLineRows(
       total: counts.profileMiddleCount * prices.pricePerMiddleProfile * VAT,
     },
     {
-      desc: "Hoekprofiel",
+      desc: "Hoekprofiel (buiten)",
       qty: counts.profileCornerCount,
       unit: prices.pricePerCornerProfile * VAT,
       total: counts.profileCornerCount * prices.pricePerCornerProfile * VAT,
+    },
+    {
+      desc: "Hoekprofiel (binnen)",
+      qty: insideCornerCount,
+      unit: insideCornerPrice * VAT,
+      total: insideCornerCount * insideCornerPrice * VAT,
     },
     // Bevestigingsmateriaal regel verwijderd — qty=1 met onbekende
     // prijs gaf een hardcoded 1 zonder context die nergens op sloeg.
@@ -433,6 +448,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
     pricePerEndProfile: props.pricePerEndProfile,
     pricePerMiddleProfile: props.pricePerMiddleProfile,
     pricePerCornerProfile: props.pricePerCornerProfile,
+    pricePerInsideCornerProfile: props.pricePerInsideCornerProfile,
   };
 
   // When prices are shown, all unit/total values are presented INCLUSIEF
@@ -445,6 +461,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
       profileEndCount: props.profileEndCount,
       profileMiddleCount: props.profileMiddleCount,
       profileCornerCount: props.profileCornerCount,
+      profileInsideCornerCount: props.profileInsideCornerCount,
       fastenerEstimateExBtw: props.fastenerEstimateExBtw,
     },
     prices,
@@ -463,6 +480,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           profileEndCount: props.alternate.profileEndCount,
           profileMiddleCount: props.alternate.profileMiddleCount,
           profileCornerCount: props.alternate.profileCornerCount,
+          profileInsideCornerCount: props.alternate.profileInsideCornerCount,
           fastenerEstimateExBtw: props.fastenerEstimateExBtw,
         },
         prices,

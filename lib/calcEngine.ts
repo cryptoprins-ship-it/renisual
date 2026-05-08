@@ -41,6 +41,7 @@ export type ProfileSet = {
   endProfile: ProfileItem;
   connectionProfile: ProfileItem;
   cornerProfile: ProfileItem;
+  insideCornerProfile: ProfileItem;
 };
 
 export const DEFAULT_SPANL_PROFILES: ProfileSet = {
@@ -50,9 +51,13 @@ export const DEFAULT_SPANL_PROFILES: ProfileSet = {
     priceEachExVat: 7.95,
   },
   endProfile: {
-    name: "SBT J Channel eindprofiel wit",
-    lengthMm: 3000,
-    priceEachExVat: 12.95,
+    // 3,8 m sticks (not 3 m as previously stored). Price corrected per
+    // Spanl catalog. The same SKU also serves as the BOTTOM rail for
+    // vertical installs (mounted upside down with drainage holes
+    // drilled every 1 m + primer-coated interior — see install notes).
+    name: "SBT J Channel eindprofiel",
+    lengthMm: 3800,
+    priceEachExVat: 14.95,
   },
   connectionProfile: {
     name: "PJ01 verbindingsprofiel",
@@ -60,9 +65,21 @@ export const DEFAULT_SPANL_PROFILES: ProfileSet = {
     priceEachExVat: 12.95,
   },
   cornerProfile: {
-    name: "YJ03 outside corner buitenhoek",
+    // YJ01 is the white outside-corner profile per Spanl's catalog.
+    // Earlier code referenced "YJ03 buitenhoek €19.95" which was wrong
+    // on both SKU and price.
+    name: "YJ01 hoekprofiel buitenhoek wit",
     lengthMm: 3000,
-    priceEachExVat: 19.95,
+    priceEachExVat: 12.95,
+  },
+  insideCornerProfile: {
+    // YJDZ — aluminium binnenhoek, used wherever the facade folds
+    // INWARD (L-shape, U-shape, gevel-uitbouw). Default zero usage;
+    // count is driven by an explicit user input on /gevelcalc since
+    // it can't be derived from per-side dimensions alone.
+    name: "YJDZ hoekprofiel binnenhoek aluminium",
+    lengthMm: 3000,
+    priceEachExVat: 15.95,
   },
 };
 
@@ -134,11 +151,17 @@ export function calculateMaterialResult({
   product,
   orientation,
   profiles = DEFAULT_SPANL_PROFILES,
+  insideCornerCount = 0,
 }: {
   sides: CalcSide[];
   product: Product;
   orientation: Orientation;
   profiles?: ProfileSet;
+  // Number of inwardly-folding corners (L-shape, U-shape,
+  // gevel-uitbouw). Cannot be derived from per-side widths +
+  // heights alone — has to come from the user. Each inside corner
+  // gets a YJDZ binnenhoek profile spanning the max facade height.
+  insideCornerCount?: number;
 }) {
   const totals = calculateTotals(sides);
 
@@ -164,9 +187,21 @@ export function calculateMaterialResult({
   let endMeters = 0;
   let connectionMeters = 0;
   let cornerMeters = 0;
+  let insideCornerMeters = 0;
 
   const panelLengthCm = product.panelLength / 10;
   const panelWorkCm = product.panelWorkSize / 10;
+  // Inside corners run the full vertical edge of the building. We use
+  // the max side height as a proxy — slight overestimate when facades
+  // vary, but inside corners are uncommon (L-shape, U-shape) so the
+  // approximation is acceptable until we get per-corner heights.
+  const maxHeightM = Math.max(
+    0,
+    ...sides
+      .map((s) => toNumber(s.height) / 100)
+      .filter((h) => Number.isFinite(h) && h > 0),
+  );
+  insideCornerMeters = Math.max(0, insideCornerCount) * maxHeightM;
 
   sides.forEach((side) => {
     const widthCm = toNumber(side.width);
@@ -210,6 +245,11 @@ export function calculateMaterialResult({
     profileItems.push(calculateProfile("Verbindingsprofiel", profiles.connectionProfile, connectionMeters));
   if (rules.needsCornerProfile)
     profileItems.push(calculateProfile("Hoekprofiel", profiles.cornerProfile, cornerMeters));
+  // Inside corner profile is gated by user-supplied count rather than a
+  // product-level rule. If the user didn't enter any binnenhoeken the
+  // line is skipped (calculateProfile returns count=0 → drops anyway).
+  if (insideCornerMeters > 0)
+    profileItems.push(calculateProfile("Binnenhoekprofiel", profiles.insideCornerProfile, insideCornerMeters));
 
   const profilePriceExVat = round2(
     profileItems.reduce((sum, item) => sum + item.totalExVat, 0)

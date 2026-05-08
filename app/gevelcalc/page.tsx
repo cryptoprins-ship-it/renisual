@@ -832,6 +832,11 @@ export default function GevelCalcPage() {
   const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [showAlternateOrientation, setShowAlternateOrientation] = useState(false);
+  // Number of inside corners (binnenhoeken) — L-shape, U-shape, or
+  // gevel-uitbouw. Default 0 since most rectangular houses have none.
+  // Stored as string so the input field accepts "" while editing;
+  // calc engine coerces with toNumber().
+  const [insideCornerCount, setInsideCornerCount] = useState<string>("0");
   // Collapse the long product-picker section once a product is selected
   // (typically carried over from /render). The user can still expand
   // via "Paneel wijzigen" if they want to switch panels here.
@@ -987,6 +992,11 @@ export default function GevelCalcPage() {
     [effectiveSides]
   );
 
+  const insideCornerCountNum = useMemo(() => {
+    const n = toNumber(insideCornerCount);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  }, [insideCornerCount]);
+
   const materialResult = useMemo(() => {
     if (!selectedProduct) return null;
     return calculateMaterialResult({
@@ -994,8 +1004,9 @@ export default function GevelCalcPage() {
       product: selectedProduct,
       orientation,
       profiles: DEFAULT_SPANL_PROFILES,
+      insideCornerCount: insideCornerCountNum,
     });
-  }, [selectedProduct, orientation, activeSides]);
+  }, [selectedProduct, orientation, activeSides, insideCornerCountNum]);
 
   // The opposite orientation for the comparison card. Only computed when
   // the selected product physically supports both (Spanl Mono Flat/Groove
@@ -1009,8 +1020,9 @@ export default function GevelCalcPage() {
       product: selectedProduct,
       orientation: alternateOrientation,
       profiles: DEFAULT_SPANL_PROFILES,
+      insideCornerCount: insideCornerCountNum,
     });
-  }, [selectedProduct, alternateOrientation, activeSides]);
+  }, [selectedProduct, alternateOrientation, activeSides, insideCornerCountNum]);
 
   const totals = materialResult?.totals ?? { gross: 0, openings: 0, net: 0 };
   const adviesPrijs = materialResult?.totalExVat ?? 0;
@@ -1393,6 +1405,7 @@ export default function GevelCalcPage() {
           profileEndCount: findCount("Eindprofiel", alt),
           profileMiddleCount: findCount("Verbindingsprofiel", alt),
           profileCornerCount: findCount("Hoekprofiel", alt),
+          profileInsideCornerCount: findCount("Binnenhoekprofiel", alt),
           subtotalExclBtw: round2Money(alt.totalExVat),
           totalInclBtw: round2Money(alt.totalExVat * VAT),
         }
@@ -1436,6 +1449,7 @@ export default function GevelCalcPage() {
         pricePerEndProfile: DEFAULT_SPANL_PROFILES.endProfile.priceEachExVat,
         pricePerMiddleProfile: DEFAULT_SPANL_PROFILES.connectionProfile.priceEachExVat,
         pricePerCornerProfile: DEFAULT_SPANL_PROFILES.cornerProfile.priceEachExVat,
+        pricePerInsideCornerProfile: DEFAULT_SPANL_PROFILES.insideCornerProfile.priceEachExVat,
         fastenerEstimateExBtw: 0,
       },
       calcOutput: {
@@ -1444,6 +1458,7 @@ export default function GevelCalcPage() {
         profileEndCount: findCount("Eindprofiel"),
         profileMiddleCount: findCount("Verbindingsprofiel"),
         profileCornerCount: findCount("Hoekprofiel"),
+        profileInsideCornerCount: findCount("Binnenhoekprofiel"),
         subtotalExclBtw: subtotal,
         totalInclBtw: total,
       },
@@ -1750,6 +1765,7 @@ export default function GevelCalcPage() {
     const endProfile = result.profileItems.find((p) => p.label === "Eindprofiel");
     const connProfile = result.profileItems.find((p) => p.label === "Verbindingsprofiel");
     const cornerProfile = result.profileItems.find((p) => p.label === "Hoekprofiel");
+    const insideCornerProfile = result.profileItems.find((p) => p.label === "Binnenhoekprofiel");
     return (
       <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
         {label && (
@@ -1789,6 +1805,12 @@ export default function GevelCalcPage() {
           <div className="flex justify-between">
             <span className="text-stone-600">{t("gc.cornerProfilesNeeded")}</span>
             <span className="font-semibold text-ink">{cornerProfile.count}</span>
+          </div>
+        )}
+        {insideCornerProfile && insideCornerProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.insideCornerProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{insideCornerProfile.count}</span>
           </div>
         )}
         <div className="flex justify-between">
@@ -2446,6 +2468,26 @@ export default function GevelCalcPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+              )}
+              {selectedProduct && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    {t("gc.insideCornerCount")}
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    value={insideCornerCount}
+                    onChange={(e) => setInsideCornerCount(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-xl border border-black p-3"
+                  />
+                  <p className="mt-1 text-xs text-stone-500">
+                    {t("gc.insideCornerHint")}
+                  </p>
                 </div>
               )}
             </div>
