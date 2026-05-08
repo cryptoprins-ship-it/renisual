@@ -73,6 +73,13 @@ export const metadata: Metadata = {
       es: "https://renisual.com",
     },
   },
+  // Google Search Console domain verification. Token issued for the
+  // https://renisual.com URL-prefix property — Next.js emits
+  // <meta name="google-site-verification" content="..."> in <head>,
+  // which GSC's "Verify" button checks for after the deploy lands.
+  verification: {
+    google: "E6xy53lqmTTislc7kQWPjzUUG3t9Pid_q-t7DaXRc_o",
+  },
 };
 
 export const viewport: Viewport = {
