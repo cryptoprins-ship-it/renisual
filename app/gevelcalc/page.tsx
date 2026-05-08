@@ -754,16 +754,21 @@ export default function GevelCalcPage() {
 
   // Hydrate the product picker from the cross-page project store so a
   // user landing here from /render's "Bereken materiaal" arrives with
-  // their chosen panel already selected. Runs once at mount; later
-  // selections on this page stomp the store via the existing
-  // setProduct call so the two stay consistent.
+  // their chosen panel already selected AND the picker collapsed so
+  // the compact "Geselecteerd product" chip is the first thing on the
+  // page. Subscribe via the hook (not getState) so a late zustand
+  // persist hydration still triggers — same gotcha as renderStoragePath
+  // below. The `productHydrated` guard makes this run once.
+  const storedProductSubscribed = useProjectStore((s) => s.selectedProduct);
+  const [productHydrated, setProductHydrated] = useState(false);
   useEffect(() => {
-    const stored = useProjectStore.getState().selectedProduct;
-    if (!stored) return;
-    if (products.find((p) => p.id === stored.id)) {
-      setSelectedProductId(stored.id);
-    }
-  }, []);
+    if (productHydrated) return;
+    if (!storedProductSubscribed) return;
+    if (!products.find((p) => p.id === storedProductSubscribed.id)) return;
+    setSelectedProductId(storedProductSubscribed.id);
+    setShowProductPicker(false);
+    setProductHydrated(true);
+  }, [storedProductSubscribed, products, productHydrated]);
 
   // Resolve the render-storage path from the project store into a
   // signed URL so the right-column overview can preview the AI-render
