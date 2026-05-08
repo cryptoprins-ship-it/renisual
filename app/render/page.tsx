@@ -315,30 +315,15 @@ export default function RenderPage() {
   // than what's already selected, we surface a toast and ignore the
   // click. They have to clear the existing selection first.
   function toggleSelectedForOfferte(variant: RenderVariant) {
-    const isKeralit = (sku: string) => sku.startsWith("keralit-");
-    const variantBrand: "spanl" | "keralit" = isKeralit(variant.panelSku) ? "keralit" : "spanl";
-
-    setSelectedForOfferteIds((prev) => {
-      // Already in selection → remove (always allowed).
-      if (prev.includes(variant.id)) {
-        return prev.filter((id) => id !== variant.id);
-      }
-      // Adding — check brand consistency against currently selected
-      // variants. Mixed brands get blocked with a toast.
-      const conflictsWithBrand = prev.some((id) => {
-        const v = variants.find((x) => x.id === id);
-        if (!v) return false;
-        const otherBrand: "spanl" | "keralit" = isKeralit(v.panelSku) ? "keralit" : "spanl";
-        return otherBrand !== variantBrand;
-      });
-      if (conflictsWithBrand) {
-        setToast(
-          "Per offerte één merk — verschillende merken gaan altijd naar verschillende leveranciers. Verwijder eerst de andere selectie.",
-        );
-        return prev;
-      }
-      return [...prev, variant.id];
-    });
+    // Single-select: the offerte handoff (goToCalc, ~line 1004) only
+    // ships ONE render image to the PDF + email — see the "fase 1"
+    // comment there. Letting the user mark multiple variants in the UI
+    // suggested they'd get all of them in the offerte, which silently
+    // wasn't true. Enforce single-select here so the UI matches the
+    // backend until phase 2 lands proper multi-render in the offerte.
+    setSelectedForOfferteIds((prev) =>
+      prev.includes(variant.id) ? [] : [variant.id],
+    );
   }
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
