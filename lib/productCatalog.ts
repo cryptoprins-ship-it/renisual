@@ -76,7 +76,10 @@ const paintProfileRules: Record<Orientation, ProfileRules> = {
 
 const SPANL_PROFILE_RULES: Record<Orientation, ProfileRules> = {
   horizontal: { needsConnectionProfile: true, needsStartProfile: true, needsEndProfile: true, needsCornerProfile: true },
-  vertical: { needsConnectionProfile: false, needsStartProfile: true, needsEndProfile: false, needsCornerProfile: true },
+  // Vertical: no PJ01 between panels (built-in interlock) but still
+  // needs a top-rail (Eindprofiel / J-channel) so the upper edge of
+  // the panels has a clean finish where it meets fascia/roofline.
+  vertical: { needsConnectionProfile: false, needsStartProfile: true, needsEndProfile: true, needsCornerProfile: true },
 };
 
 const SPANL_PRICE_PER_M2 = 29.5;

@@ -173,11 +173,16 @@ export function calculateMaterialResult({
     const heightCm = toNumber(side.height);
     if (widthCm <= 0 || heightCm <= 0) return;
 
+    // Bottom rail (Beginprofiel) — width of each side, regardless of
+    // panel orientation. Top rail (Eindprofiel) likewise — both
+    // orientations finish the upper edge with a J-channel.
     startMeters += widthCm / 100;
+    endMeters += widthCm / 100;
     cornerMeters += 2 * (heightCm / 100);
 
+    // PJ01 verbindingsprofiel exists only for horizontal panels.
+    // Vertical panels have a built-in interlock and don't need it.
     if (orientation === "horizontal") {
-      endMeters += widthCm / 100;
       if (panelWorkCm > 0 && panelLengthCm > 0) {
         const rows = Math.ceil(heightCm / panelWorkCm);
         const panelsPerRow = Math.ceil(widthCm / panelLengthCm);
