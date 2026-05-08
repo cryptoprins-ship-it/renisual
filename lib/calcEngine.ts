@@ -208,7 +208,14 @@ export function calculateMaterialResult({
     const heightCm = toNumber(side.height);
     if (widthCm <= 0 || heightCm <= 0) return;
 
-    cornerMeters += 2 * (heightCm / 100);
+    // Each side contributes ONE vertical corner edge (shared with the
+    // next side at the meeting line). For a closed rectangular facade
+    // (4 sides) this produces 4 corner edges = 4 unique outside corners.
+    // The previous `2 * height` formula double-counted (both "left" and
+    // "right" of each side counted once each), giving 8 edges for what's
+    // physically 4 corners — meaning the BOM ordered twice the corner
+    // profiles needed.
+    cornerMeters += heightCm / 100;
 
     if (orientation === "horizontal") {
       // Bottom: Beginprofiel (QBJ aluminium starter).
