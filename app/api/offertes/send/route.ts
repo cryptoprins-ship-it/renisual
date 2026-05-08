@@ -42,10 +42,24 @@ function readEnvCaseInsensitive(name: string): string | undefined {
 }
 
 function smtpConfig() {
-  const host = readEnvCaseInsensitive("Hostinger_SMTP_Host") ?? "smtp.hostinger.com";
-  const portRaw = readEnvCaseInsensitive("Hostinger_SMTP_Port") ?? "465";
-  const user = readEnvCaseInsensitive("Hostinger_SMTP_User");
-  const pass = readEnvCaseInsensitive("Hostinger_SMTP_Password");
+  // Accept both the Hostinger-prefixed names and the generic SMTP_* names
+  // (which is what the README documents and what most setups have in
+  // .env.local). Hostinger-prefixed wins if both are set.
+  const host =
+    readEnvCaseInsensitive("Hostinger_SMTP_Host") ??
+    readEnvCaseInsensitive("SMTP_HOST") ??
+    "smtp.hostinger.com";
+  const portRaw =
+    readEnvCaseInsensitive("Hostinger_SMTP_Port") ??
+    readEnvCaseInsensitive("SMTP_PORT") ??
+    "465";
+  const user =
+    readEnvCaseInsensitive("Hostinger_SMTP_User") ??
+    readEnvCaseInsensitive("SMTP_USER");
+  const pass =
+    readEnvCaseInsensitive("Hostinger_SMTP_Password") ??
+    readEnvCaseInsensitive("SMTP_PASS") ??
+    readEnvCaseInsensitive("SMTP_PASSWORD");
   const port = Number(portRaw) || 465;
   return { host, port, secure: port === 465, user, pass };
 }
