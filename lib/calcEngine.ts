@@ -173,21 +173,29 @@ export function calculateMaterialResult({
     const heightCm = toNumber(side.height);
     if (widthCm <= 0 || heightCm <= 0) return;
 
-    // Bottom rail (Beginprofiel) — width of each side, regardless of
-    // panel orientation. Top rail (Eindprofiel) likewise — both
-    // orientations finish the upper edge with a J-channel.
-    startMeters += widthCm / 100;
-    endMeters += widthCm / 100;
     cornerMeters += 2 * (heightCm / 100);
 
-    // PJ01 verbindingsprofiel exists only for horizontal panels.
-    // Vertical panels have a built-in interlock and don't need it.
     if (orientation === "horizontal") {
+      // Bottom: Beginprofiel (QBJ aluminium starter).
+      // Top: Eindprofiel (SBT-J channel).
+      // PJ01 verbindingsprofiel between panels in the same row when
+      // facade is wider than one panel length.
+      startMeters += widthCm / 100;
+      endMeters += widthCm / 100;
       if (panelWorkCm > 0 && panelLengthCm > 0) {
         const rows = Math.ceil(heightCm / panelWorkCm);
         const panelsPerRow = Math.ceil(widthCm / panelLengthCm);
         connectionMeters += Math.max(0, panelsPerRow - 1) * rows * (panelWorkCm / 100);
       }
+    } else {
+      // Vertical (per Spanl docs):
+      //  - bottom rail = SBT-J Eindprofiel with drainage holes drilled
+      //    (8-10 mm @ ~1 m intervals, edges sealed with clear lacquer)
+      //  - top rail = SBT-J Eindprofiel (standard)
+      //  - panels click endlessly in length without a verbindingsprofiel
+      //  - no QBJ Beginprofiel anywhere
+      // Net: 2× width per side counts toward Eindprofiel meters.
+      endMeters += 2 * (widthCm / 100);
     }
   });
 
