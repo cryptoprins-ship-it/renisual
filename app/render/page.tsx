@@ -361,6 +361,7 @@ export default function RenderPage() {
   const [batchStartedAt, setBatchStartedAt] = useState<number | null>(null);
   const [batchAbort, setBatchAbort] = useState<AbortController | null>(null);
   const [failedTones, setFailedTones] = useState<ReadonlySet<ToneNudge>>(new Set());
+  const [batchTones, setBatchTones] = useState<readonly ToneNudge[]>([]);
   const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
@@ -932,6 +933,7 @@ export default function RenderPage() {
       setBatchStartedAt(Date.now());
       setFailedTones(new Set());
       setAttemptByTone({});
+      setBatchTones(toneNudges);
 
       const results = await Promise.allSettled(
         toneNudges.map((tn) => runOne(tn, controller.signal)),
@@ -962,6 +964,7 @@ export default function RenderPage() {
       setIsGenerating(false);
       setBatchAbort(null);
       setBatchStartedAt(null);
+      setBatchTones([]);
     }
   }
 
@@ -1531,15 +1534,15 @@ export default function RenderPage() {
           {batchStartedAt !== null && (
             <BatchStatusBand
               startedAt={batchStartedAt}
-              completed={visibleVariants.length}
-              total={5}
+              completed={batchTones.filter((t) => visibleVariants.some((v) => v.toneNudge === t)).length}
+              total={batchTones.length}
               onCancel={() => batchAbort?.abort()}
             />
           )}
 
-          {batchStartedAt !== null && (
+          {batchStartedAt !== null && batchTones.length > 0 && (
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              {TONE_BATCH.map((tone) => {
+              {batchTones.map((tone) => {
                 const variant = visibleVariants.find((v) => v.toneNudge === tone);
                 const failed = failedTones.has(tone);
                 let state: VariantSlotState;
