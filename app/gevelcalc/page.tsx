@@ -307,7 +307,15 @@ function InputWithSuffix({
   );
 }
 
-function SpanlThumb({ productId, productName }: { productId: string; productName: string }) {
+function SpanlThumb({
+  productId,
+  productName,
+  compact = false,
+}: {
+  productId: string;
+  productName: string;
+  compact?: boolean;
+}) {
   const sku = productId.replace(/^spanl-/, "");
   const src = useSpanlImage(sku, productName);
   if (!src) return null;
@@ -315,7 +323,11 @@ function SpanlThumb({ productId, productName }: { productId: string; productName
     <img
       src={src}
       alt={productName}
-      className="block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      className={
+        compact
+          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      }
     />
   );
 }
@@ -323,9 +335,11 @@ function SpanlThumb({ productId, productName }: { productId: string; productName
 function KeralitThumb({
   productName,
   selectedNumber,
+  compact = false,
 }: {
   productName: string;
   selectedNumber: number | null;
+  compact?: boolean;
 }) {
   // Prefer the user's currently picked colour; otherwise show a representative
   // sample so the product card doesn't look empty before they pick a colour.
@@ -339,7 +353,11 @@ function KeralitThumb({
       src={color.thumbnailUrl}
       alt={`${productName} — ${color.name}`}
       loading="lazy"
-      className="block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      className={
+        compact
+          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      }
     />
   );
 }
@@ -2320,9 +2338,9 @@ export default function GevelCalcPage() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {selectedProduct.brand === "Spanl" ? (
-                    <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
+                    <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} compact />
                   ) : selectedProduct.brand === "Keralit" ? (
-                    <KeralitThumb productName={selectedProduct.name} selectedNumber={keralitColorNumber} />
+                    <KeralitThumb productName={selectedProduct.name} selectedNumber={keralitColorNumber} compact />
                   ) : null}
                   <div className="min-w-0">
                     <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
