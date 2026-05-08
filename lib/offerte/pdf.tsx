@@ -296,9 +296,14 @@ export type OfferteDocumentProps = {
   includePrices?: boolean;
   panelCount: number;
   pricePerPanel: number;
+  // Beginprofiel (start rail) — was missing from the PDF schema even
+  // though calc engine and UI display it. Optional for backward compat
+  // with older payloads in flight.
+  profileStartCount?: number;
   profileEndCount: number;
   profileMiddleCount: number;
   profileCornerCount: number;
+  pricePerStartProfile?: number;
   pricePerEndProfile: number;
   pricePerMiddleProfile: number;
   pricePerCornerProfile: number;
@@ -331,6 +336,7 @@ export type OfferteDocumentProps = {
   alternate?: {
     orientation: "horizontal" | "vertical";
     panelCount: number;
+    profileStartCount?: number;
     profileEndCount: number;
     profileMiddleCount: number;
     profileCornerCount: number;
@@ -359,6 +365,7 @@ type LineRow = { desc: string; qty: number; unit: number; total: number };
 function buildLineRows(
   counts: {
     panelCount: number;
+    profileStartCount?: number;
     profileEndCount: number;
     profileMiddleCount: number;
     profileCornerCount: number;
@@ -366,18 +373,27 @@ function buildLineRows(
   },
   prices: {
     pricePerPanel: number;
+    pricePerStartProfile?: number;
     pricePerEndProfile: number;
     pricePerMiddleProfile: number;
     pricePerCornerProfile: number;
   },
   VAT: number,
 ): LineRow[] {
+  const startCount = counts.profileStartCount ?? 0;
+  const startPrice = prices.pricePerStartProfile ?? 0;
   return [
     {
       desc: "Gevelpaneel",
       qty: counts.panelCount,
       unit: prices.pricePerPanel * VAT,
       total: counts.panelCount * prices.pricePerPanel * VAT,
+    },
+    {
+      desc: "Beginprofiel",
+      qty: startCount,
+      unit: startPrice * VAT,
+      total: startCount * startPrice * VAT,
     },
     {
       desc: "Eindprofiel",
@@ -413,6 +429,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
 
   const prices = {
     pricePerPanel: props.pricePerPanel,
+    pricePerStartProfile: props.pricePerStartProfile,
     pricePerEndProfile: props.pricePerEndProfile,
     pricePerMiddleProfile: props.pricePerMiddleProfile,
     pricePerCornerProfile: props.pricePerCornerProfile,
@@ -424,6 +441,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
   const lineRows = buildLineRows(
     {
       panelCount: props.panelCount,
+      profileStartCount: props.profileStartCount,
       profileEndCount: props.profileEndCount,
       profileMiddleCount: props.profileMiddleCount,
       profileCornerCount: props.profileCornerCount,
@@ -441,6 +459,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
     ? buildLineRows(
         {
           panelCount: props.alternate.panelCount,
+          profileStartCount: props.alternate.profileStartCount,
           profileEndCount: props.alternate.profileEndCount,
           profileMiddleCount: props.alternate.profileMiddleCount,
           profileCornerCount: props.alternate.profileCornerCount,

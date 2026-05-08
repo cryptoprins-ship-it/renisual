@@ -41,6 +41,10 @@ const customerSchema = z
 
 const calcOutputSchema = z.object({
   panelCount: z.number().int().nonnegative().max(100000),
+  // Beginprofiel (QBJ aluminium starter) — bottom rail, was missing
+  // from the schema even though the calc engine produced it. Optional
+  // for backward compat with payloads from older clients.
+  profileStartCount: z.number().int().nonnegative().max(100000).optional(),
   profileEndCount: z.number().int().nonnegative().max(100000),
   profileMiddleCount: z.number().int().nonnegative().max(100000),
   profileCornerCount: z.number().int().nonnegative().max(100000),
@@ -195,6 +199,7 @@ export async function POST(request: Request) {
         ? {
             orientation: parsed.alternateOrientation,
             panelCount: parsed.alternateCalcOutput.panelCount,
+            profileStartCount: parsed.alternateCalcOutput.profileStartCount,
             profileEndCount: parsed.alternateCalcOutput.profileEndCount,
             profileMiddleCount: parsed.alternateCalcOutput.profileMiddleCount,
             profileCornerCount: parsed.alternateCalcOutput.profileCornerCount,
@@ -210,9 +215,11 @@ export async function POST(request: Request) {
       includePrices: parsed.includePrices,
       panelCount: parsed.calcOutput.panelCount,
       pricePerPanel: derivePricePerPanel(parsed),
+      profileStartCount: parsed.calcOutput.profileStartCount,
       profileEndCount: parsed.calcOutput.profileEndCount,
       profileMiddleCount: parsed.calcOutput.profileMiddleCount,
       profileCornerCount: parsed.calcOutput.profileCornerCount,
+      pricePerStartProfile: numberFromCalcInput(parsed.calcInput, "pricePerStartProfile"),
       pricePerEndProfile: numberFromCalcInput(parsed.calcInput, "pricePerEndProfile"),
       pricePerMiddleProfile: numberFromCalcInput(parsed.calcInput, "pricePerMiddleProfile"),
       pricePerCornerProfile: numberFromCalcInput(parsed.calcInput, "pricePerCornerProfile"),

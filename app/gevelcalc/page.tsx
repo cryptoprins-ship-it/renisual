@@ -1389,6 +1389,7 @@ export default function GevelCalcPage() {
     const alternateCalcOutput = alt
       ? {
           panelCount: alt.panelCount,
+          profileStartCount: findCount("Beginprofiel", alt),
           profileEndCount: findCount("Eindprofiel", alt),
           profileMiddleCount: findCount("Verbindingsprofiel", alt),
           profileCornerCount: findCount("Hoekprofiel", alt),
@@ -1431,6 +1432,7 @@ export default function GevelCalcPage() {
         pricePerPanel:
           selectedProduct.pricePerPanelExVat ??
           selectedProduct.panelAreaM2 * selectedProduct.pricePerM2ExVat,
+        pricePerStartProfile: DEFAULT_SPANL_PROFILES.startProfile.priceEachExVat,
         pricePerEndProfile: DEFAULT_SPANL_PROFILES.endProfile.priceEachExVat,
         pricePerMiddleProfile: DEFAULT_SPANL_PROFILES.connectionProfile.priceEachExVat,
         pricePerCornerProfile: DEFAULT_SPANL_PROFILES.cornerProfile.priceEachExVat,
@@ -1438,6 +1440,7 @@ export default function GevelCalcPage() {
       },
       calcOutput: {
         panelCount: materialResult.panelCount,
+        profileStartCount: findCount("Beginprofiel"),
         profileEndCount: findCount("Eindprofiel"),
         profileMiddleCount: findCount("Verbindingsprofiel"),
         profileCornerCount: findCount("Hoekprofiel"),
@@ -1743,6 +1746,7 @@ export default function GevelCalcPage() {
     o === "horizontal" ? t("render.horizontal") : t("render.vertical");
   const bomBlock = (result: NonNullable<typeof materialResult>, label?: string) => {
     if (!selectedProduct) return null;
+    const startProfile = result.profileItems.find((p) => p.label === "Beginprofiel");
     const endProfile = result.profileItems.find((p) => p.label === "Eindprofiel");
     const connProfile = result.profileItems.find((p) => p.label === "Verbindingsprofiel");
     const cornerProfile = result.profileItems.find((p) => p.label === "Hoekprofiel");
@@ -1761,6 +1765,12 @@ export default function GevelCalcPage() {
           <div className="flex justify-between">
             <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
             <span className="font-semibold text-ink">{result.panelCount}</span>
+          </div>
+        )}
+        {startProfile && startProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.startProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{startProfile.count}</span>
           </div>
         )}
         {endProfile && endProfile.count > 0 && (
