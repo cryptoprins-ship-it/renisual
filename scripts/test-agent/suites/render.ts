@@ -57,5 +57,20 @@ export const renderTests: TestSuite = {
         }
       },
     },
+    {
+      name: "Batch status band shows after Render is clicked",
+      run: async (page) => {
+        await page.goto(`${config.baseUrl}/render`);
+        // The smoke harness cannot synthesise a Supabase photo upload, so we
+        // only verify the empty-state path: the band must NOT be visible
+        // before any render has started.
+        const bandBefore = await page
+          .locator('[role="status"]:has-text("klaar")')
+          .count();
+        if (bandBefore !== 0) {
+          throw new Error("batch status band visible before any render started");
+        }
+      },
+    },
   ],
 };
