@@ -227,23 +227,17 @@ export function calculateMaterialResult({
     materialPriceExVat = round2(netWithWaste * product.pricePerM2ExVat);
   }
 
-  // Cutting model summary:
-  //   Start / End / Connection rails (horizontal cladding lines):
-  //     bin-packing FFD across all sides. Offcuts pool — a long
-  //     side's leftover can supply a short side's extension. Hidden
-  //     butt-joins are acceptable here.
-  //   Outside corners + inside corners (vertical edges):
-  //     per-edge ceiling — each corner cut from its own dedicated
-  //     stick(s), no pooling. Mid-corner seams are visible/structural.
-  //   Vertical orientation:
-  //     ONLY the bottom rail uses SBT-J Eindprofiel (with drainage
-  //     holes drilled by installer). Per Spanl docs there is no
-  //     specified top rail for vertical — the panel terminates against
-  //     the eaves/fascia.
+  // Cutting model: bin-packing FFD for EVERY profile type. Installer
+  // pools offcuts — a long side's leftover supplies a short side's
+  // extension, a tall corner's leftover supplies the next corner's
+  // extension. Per-edge / per-side ceiling would over-order with
+  // huge offcut waste; the user confirmed pooling is mandatory.
+  // Vertical orientation uses only the BOTTOM rail (SBT-J Eindprofiel
+  // with drainage holes); no top rail per Spanl docs.
   const startSegments: number[] = [];
   const endSegments: number[] = [];
   const connectionSegments: number[] = [];
-  let cornerSticks = 0;
+  const cornerSegments: number[] = [];
   let startMeters = 0;
   let endMeters = 0;
   let connectionMeters = 0;
@@ -269,10 +263,13 @@ export function calculateMaterialResult({
       .filter((h) => Number.isFinite(h) && h > 0),
   );
   const insideCornerMeters = Math.max(0, insideCornerCount) * maxHeightM;
-  // Per-corner ceiling: each inside corner cut from its own sticks.
-  const insideCornerSticks =
-    Math.max(0, insideCornerCount) *
-    (maxHeightM > 0 ? Math.ceil(maxHeightM / insideCornerLen) : 0);
+  // Inside-corner segments: one per inside corner, all equal to maxHeight.
+  const insideCornerSegments: number[] = [];
+  if (maxHeightM > 0) {
+    for (let i = 0; i < Math.max(0, insideCornerCount); i++) {
+      insideCornerSegments.push(maxHeightM);
+    }
+  }
 
   sides.forEach((side) => {
     const widthCm = toNumber(side.width);
@@ -282,10 +279,12 @@ export function calculateMaterialResult({
     const widthM = widthCm / 100;
     const heightM = heightCm / 100;
 
-    // Outside corner: each side contributes ONE vertical corner edge
-    // (shared with the next side). Per-corner ceiling — no pooling.
+    // Outside corner: each side contributes ONE vertical corner edge.
+    // Bin-packing pools offcuts across corners (4 corners @ 3.55m on
+    // 3m sticks: 4 main 3m pieces + 1 shared 3m stick cut into 4x
+    // 0.55m extensions = 5 sticks).
     cornerMeters += heightM;
-    cornerSticks += Math.ceil(heightM / cornerLen);
+    cornerSegments.push(heightM);
 
     if (orientation === "horizontal") {
       // Bottom: Beginprofiel (QBJ).  Top: Eindprofiel (SBT-J).
@@ -318,6 +317,8 @@ export function calculateMaterialResult({
   const startSticks = packSticks(startSegments, startLen);
   const endSticks = packSticks(endSegments, endLen);
   const connectionSticks = packSticks(connectionSegments, connectionLen);
+  const cornerSticks = packSticks(cornerSegments, cornerLen);
+  const insideCornerSticks = packSticks(insideCornerSegments, insideCornerLen);
 
   const rules = product.profileRules[orientation];
   const profileItems: ProfileCalculation[] = [];
