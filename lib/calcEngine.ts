@@ -132,29 +132,62 @@ function calculateProfile(
   label: string,
   profile: ProfileItem,
   neededMeters: number,
-  // Optional explicit stick count. When provided, overrides the
-  // ceil-of-total-meters calculation. Used by callers that want
-  // per-segment rounding (one continuous rail per facade side, no
-  // pooling of offcuts across sides) instead of the cheaper but
-  // installer-unrealistic global ceil.
-  explicitCount?: number
+  // Caller supplies the actual stick count derived from the cutting
+  // strategy (bin-packing for horizontal rails, per-edge ceiling for
+  // corners). The profile object only knows length + price.
+  explicitCount: number,
 ): ProfileCalculation {
   const lengthMeters = profile.lengthMm / 1000;
-  const count =
-    typeof explicitCount === "number"
-      ? explicitCount
-      : neededMeters > 0
-        ? Math.ceil(neededMeters / lengthMeters)
-        : 0;
   return {
     label,
     name: profile.name,
     neededMeters: round2(neededMeters),
     lengthMeters,
-    count,
+    count: explicitCount,
     priceEachExVat: profile.priceEachExVat,
-    totalExVat: round2(count * profile.priceEachExVat),
+    totalExVat: round2(explicitCount * profile.priceEachExVat),
   };
+}
+
+/**
+ * Bin-packing first-fit-decreasing for stick allocation.
+ *
+ * Each segment must fit into a single stick (with butt-joins WITHIN
+ * a stick allowed for segments longer than stickLen — those produce
+ * one or more "full" closed sticks plus a remainder). Smaller leftover
+ * pieces from one stick can be used by other segments — that's how
+ * a long side's offcut can cover a short side's extension.
+ *
+ * For 4 sides x 2.5m on 3.8m sticks: 4 sticks (each 2.5m piece doesn't
+ * fit in another's 1.3m offcut).
+ * For [13.5, 13.5, 5, 5] on 3.8m sticks: 10 sticks (offcuts pool
+ * neatly to cover the short-side extensions).
+ */
+function packSticks(segmentsM: number[], stickLenM: number): number {
+  if (stickLenM <= 0) return 0;
+  const sorted = segmentsM
+    .filter((s) => s > 0)
+    .sort((a, b) => b - a);
+  const remaining: number[] = []; // remaining capacity per opened stick
+  for (const seg of sorted) {
+    let toPlace = seg;
+    // Segments longer than one stick: split into N full sticks + a
+    // remainder. Each full stick is closed (no usable offcut, since
+    // the segment occupies the whole length).
+    while (toPlace > stickLenM) {
+      remaining.push(0);
+      toPlace -= stickLenM;
+    }
+    if (toPlace <= 0) continue;
+    // Try to fit the remainder into an already-opened stick.
+    const slot = remaining.findIndex((rem) => rem >= toPlace);
+    if (slot >= 0) {
+      remaining[slot] -= toPlace;
+    } else {
+      remaining.push(stickLenM - toPlace);
+    }
+  }
+  return remaining.length;
 }
 
 export function calculateMaterialResult({
@@ -194,16 +227,22 @@ export function calculateMaterialResult({
     materialPriceExVat = round2(netWithWaste * product.pricePerM2ExVat);
   }
 
-  // Per-side / per-corner stick counts. Every continuous rail (start,
-  // end, corner, inside corner, connection) gets its own dedicated
-  // sticks — no offcut pooling across sides or across corners. The
-  // installer cuts each rail/corner from its own stick(s) so a
-  // visible seam never lands mid-side or mid-corner. This over-orders
-  // slightly vs a perfect-pooling theoretical minimum, but matches
-  // the actual install practice the user described.
-  let startSticks = 0;
-  let endSticks = 0;
-  let connectionSticks = 0;
+  // Cutting model summary:
+  //   Start / End / Connection rails (horizontal cladding lines):
+  //     bin-packing FFD across all sides. Offcuts pool — a long
+  //     side's leftover can supply a short side's extension. Hidden
+  //     butt-joins are acceptable here.
+  //   Outside corners + inside corners (vertical edges):
+  //     per-edge ceiling — each corner cut from its own dedicated
+  //     stick(s), no pooling. Mid-corner seams are visible/structural.
+  //   Vertical orientation:
+  //     ONLY the bottom rail uses SBT-J Eindprofiel (with drainage
+  //     holes drilled by installer). Per Spanl docs there is no
+  //     specified top rail for vertical — the panel terminates against
+  //     the eaves/fascia.
+  const startSegments: number[] = [];
+  const endSegments: number[] = [];
+  const connectionSegments: number[] = [];
   let cornerSticks = 0;
   let startMeters = 0;
   let endMeters = 0;
@@ -230,12 +269,10 @@ export function calculateMaterialResult({
       .filter((h) => Number.isFinite(h) && h > 0),
   );
   const insideCornerMeters = Math.max(0, insideCornerCount) * maxHeightM;
-  // Per-corner ceiling, matching the outside-corner approach: each
-  // inside corner cut from its own sticks, no pooling.
-  const insideCornerSticksPerCorner =
-    maxHeightM > 0 ? Math.ceil(maxHeightM / insideCornerLen) : 0;
+  // Per-corner ceiling: each inside corner cut from its own sticks.
   const insideCornerSticks =
-    Math.max(0, insideCornerCount) * insideCornerSticksPerCorner;
+    Math.max(0, insideCornerCount) *
+    (maxHeightM > 0 ? Math.ceil(maxHeightM / insideCornerLen) : 0);
 
   sides.forEach((side) => {
     const widthCm = toNumber(side.width);
@@ -245,44 +282,42 @@ export function calculateMaterialResult({
     const widthM = widthCm / 100;
     const heightM = heightCm / 100;
 
-    // Each side contributes ONE vertical outside-corner edge (shared
-    // with the next side at the meeting line). For a closed rectangular
-    // facade (4 sides) this is 4 corner edges = 4 unique corners.
-    // Each corner cut from its own stick(s) — no pooling across corners
-    // because joining a short extension to a 3m main piece would put
-    // a visible seam mid-corner.
+    // Outside corner: each side contributes ONE vertical corner edge
+    // (shared with the next side). Per-corner ceiling — no pooling.
     cornerMeters += heightM;
     cornerSticks += Math.ceil(heightM / cornerLen);
 
     if (orientation === "horizontal") {
       // Bottom: Beginprofiel (QBJ).  Top: Eindprofiel (SBT-J).
-      // PJ01 verbindingsprofiel between panels in the same row when
-      // facade is wider than one panel length.
       startMeters += widthM;
-      startSticks += Math.ceil(widthM / startLen);
+      startSegments.push(widthM);
       endMeters += widthM;
-      endSticks += Math.ceil(widthM / endLen);
+      endSegments.push(widthM);
+      // PJ01 verbindingsprofiel between panels in the same row when
+      // facade is wider than one panel length. Each row is its own
+      // continuous segment for bin-packing.
       if (panelWorkCm > 0 && panelLengthCm > 0) {
         const rows = Math.ceil(heightCm / panelWorkCm);
         const panelsPerRow = Math.ceil(widthCm / panelLengthCm);
         const connectionsPerRow = Math.max(0, panelsPerRow - 1);
         const meterPerRow = connectionsPerRow * (panelWorkCm / 100);
-        connectionMeters += rows * meterPerRow;
-        connectionSticks += rows * Math.ceil(meterPerRow / connectionLen);
+        if (meterPerRow > 0) {
+          for (let r = 0; r < rows; r++) connectionSegments.push(meterPerRow);
+          connectionMeters += rows * meterPerRow;
+        }
       }
     } else {
-      // Vertical (per Spanl docs):
-      //  - bottom rail = SBT-J Eindprofiel with drainage holes drilled
-      //    (8-10 mm @ ~1 m intervals, edges sealed with clear lacquer)
-      //  - top rail = SBT-J Eindprofiel (standard)
-      //  - panels click endlessly in length without a verbindingsprofiel
-      //  - no QBJ Beginprofiel anywhere
-      // Per side: 2 continuous rails (top + bottom), each rounded
-      // independently.
-      endMeters += 2 * widthM;
-      endSticks += 2 * Math.ceil(widthM / endLen);
+      // Vertical: only the BOTTOM rail uses SBT-J Eindprofiel (with
+      // drainage holes drilled). No top rail per Spanl docs. No QBJ
+      // start profile, no PJ01 verbindingsprofiel (built-in interlock).
+      endMeters += widthM;
+      endSegments.push(widthM);
     }
   });
+
+  const startSticks = packSticks(startSegments, startLen);
+  const endSticks = packSticks(endSegments, endLen);
+  const connectionSticks = packSticks(connectionSegments, connectionLen);
 
   const rules = product.profileRules[orientation];
   const profileItems: ProfileCalculation[] = [];

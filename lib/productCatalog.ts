@@ -77,13 +77,12 @@ const paintProfileRules: Record<Orientation, ProfileRules> = {
 const SPANL_PROFILE_RULES: Record<Orientation, ProfileRules> = {
   horizontal: { needsConnectionProfile: true, needsStartProfile: true, needsEndProfile: true, needsCornerProfile: true },
   // Vertical (per Spanl mounting docs):
-  // - NO Beginprofiel (QBJ). Bottom is the SBT-J Eindprofiel with
-  //   drainage holes drilled (8-10 mm, every 1 m) — same SKU as the
-  //   top rail, mounted upside-down at the base.
-  // - Top rail is Eindprofiel as usual.
+  // - NO Beginprofiel (QBJ). Bottom rail is the SBT-J Eindprofiel
+  //   with drainage holes drilled (8-10 mm, every 1 m).
+  // - NO top rail mentioned by Spanl — panel terminates against
+  //   eaves/fascia. The calc accumulates one width per side (bottom
+  //   only), not two.
   // - NO PJ01 verbindingsprofiel (built-in panel interlock).
-  // The endMeters calc compensates by counting Eindprofiel for BOTH
-  // top and bottom (2× width per side) when orientation is vertical.
   vertical: { needsConnectionProfile: false, needsStartProfile: false, needsEndProfile: true, needsCornerProfile: true },
 };
 
