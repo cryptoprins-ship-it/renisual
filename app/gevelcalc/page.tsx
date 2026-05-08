@@ -832,13 +832,12 @@ export default function GevelCalcPage() {
     }
   }, [mode, modeHydrated]);
 
-  // Restore the full calc form from the sessionStorage handoff that
-  // goToRender() writes when the user navigates to /render. Without
-  // this effect, "Bekijk de rendering / Naar de rendering" silently
-  // doubles as a Reset — the form is saved on the way out but never
-  // read back on return, so every dimension and side has to be
-  // re-entered. Run once after `mode` settles so the URL ?modus=
-  // doesn't re-overwrite the restored mode.
+  // Restore the full calc form from sessionStorage on mount. Pairs
+  // with the auto-save effect below that keeps sessionStorage current
+  // on every form change — together they survive any navigation away
+  // (SiteNav links, hamburger sheet, browser back from /render).
+  // Run once after `mode` settles so the URL ?modus= can't re-overwrite
+  // the restored mode.
   const [calcRestored, setCalcRestored] = useState(false);
   useEffect(() => {
     if (!modeHydrated || calcRestored) return;
@@ -971,8 +970,6 @@ export default function GevelCalcPage() {
   //      on the next user click we want the input to be unambiguously
   //      fresh rather than reusing whatever React reconciled.
   const [inputResetKey, setInputResetKey] = useState(0);
-
-  const hasPhotos = Object.keys(photos).length > 0;
 
   // Initialise sides with translated names once locale is known
   useEffect(() => {
@@ -1334,6 +1331,44 @@ export default function GevelCalcPage() {
     }
   }
 
+  // Auto-save the calc form to sessionStorage on change so any
+  // navigation away — SiteNav, hamburger sheet, browser back from
+  // /render — preserves state for the on-mount restore. Debounced so
+  // we don't thrash storage on every keystroke. Gated on calcRestored
+  // so the empty pre-restore state can't overwrite a freshly-loaded
+  // payload. Photos excluded — they're in IndexedDB and would
+  // otherwise blow the ~5MB sessionStorage cap.
+  useEffect(() => {
+    if (!calcRestored) return;
+    const handle = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false)));
+      } catch {
+        /* quota / serialise failure — photos are in IndexedDB so a
+           skip just means re-typing dimensions if the next
+           navigation happens before the next attempt */
+      }
+    }, 600);
+    return () => window.clearTimeout(handle);
+    // buildSaveData is a non-stable closure but only reads the listed
+    // state, so the deps here are exhaustive in practice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    calcRestored,
+    projectName,
+    mode,
+    unit,
+    quickTotalArea,
+    quickWindowCount,
+    quickDoorCount,
+    sides,
+    frontBackSame,
+    leftRightSame,
+    selectedProductId,
+    keralitColorNumber,
+    orientation,
+  ]);
+
   async function exportConfig() {
     const data = buildSaveData(true);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1395,7 +1430,7 @@ export default function GevelCalcPage() {
   async function resetData() {
     if (!confirm(t("gc.confirmReset"))) return;
     localStorage.removeItem(STORAGE_KEY);
-    // Also wipe the sessionStorage handoff payload that goToRender()
+    // Also wipe the sessionStorage payload that the auto-save effect
     // writes — otherwise the on-mount restore would revert this reset
     // the next time the user returns to /gevelcalc in the same tab.
     try {
@@ -1743,52 +1778,6 @@ export default function GevelCalcPage() {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  }
-
-  async function goToRender() {
-    // No photos yet, no calculation to hand off — just go to /render and let
-    // the user upload a fresh photo there. Otherwise /render would treat the
-    // empty config as "missing photo" and show a confusing error.
-    const anyPhoto = Object.values(photos).some(Boolean);
-    if (!anyPhoto) {
-      try {
-        sessionStorage.removeItem(STORAGE_KEY);
-      } catch {}
-      window.location.href = "/render";
-      return;
-    }
-
-    // 1. Make sure every photo currently in component state is also persisted
-    //    to IndexedDB. After importing a config file the writes were fire-and-forget,
-    //    so navigating before they completed left /render with no photo.
-    const sidesToSync = mode === "quick" ? [quickSide] : sides;
-    const sideIds = sidesToSync.map((s) => s.id);
-    try {
-      await Promise.all(
-        sideIds
-          .filter((id) => photos[id])
-          .map((id) => savePhoto(id, photos[id]))
-      );
-    } catch {
-      showToast(t("gc.toast.handoffFailed"), "error");
-      return;
-    }
-
-    // 2. Hand off the config plus an inline photo map. /render prefers IndexedDB
-    //    but falls back to this map if a side photo is missing there. Photos can
-    //    be large; if sessionStorage rejects the payload, retry without them.
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(true)));
-    } catch {
-      try {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false)));
-      } catch {
-        showToast(t("gc.toast.handoffFailed"), "error");
-        return;
-      }
-    }
-
-    window.location.href = "/render";
   }
 
   const unitLabel = unit === "ft2" ? "ft²" : "m²";
@@ -2859,46 +2848,12 @@ export default function GevelCalcPage() {
               </div>
             )}
 
-            {/* Product preview + CTA when selected */}
-            {selectedProduct ? (
-              <div className="border border-stone-200 bg-paper p-4">
-                <div className="flex items-center gap-3">
-                  {overviewThumbSrc ? (
-                    <img
-                      src={overviewThumbSrc}
-                      alt={selectedProduct.name}
-                      loading="lazy"
-                      className="block h-16 w-16 flex-shrink-0 border border-stone-200 object-cover"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 flex-shrink-0 border border-stone-200 bg-stone-100" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
-                      {t("gc.selectedProduct")}
-                    </p>
-                    <p className="truncate font-display text-sm text-ink">{selectedProduct.name}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={goToRender}
-                  className="mt-4 flex w-full items-center justify-center gap-2 bg-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
-                >
-                  <span>{t("gc.goToRendering")}</span>
-                  <span aria-hidden>→</span>
-                </button>
-                {!hasPhotos && (
-                  <p className="mt-2 text-[11px] text-stone-500">{t("gc.uploadHint")}</p>
-                )}
-              </div>
-            ) : (
-              <div className="border border-dashed border-stone-300 p-6 text-center">
-                <p className="text-xs text-stone-500">
-                  {t("overview.select_panel_hint")}
-                </p>
-              </div>
-            )}
+            {/* "Geselecteerd product + Naar de rendering" card removed
+                — it duplicated the compact picker chip at the top of
+                the form (selected product display) and the bottom-bar
+                "Bekijk de rendering" link (navigation). The collapsed
+                chip + the calc-state-preserving auto-save effect cover
+                both functions without a redundant aside section. */}
           </aside>
         </div>
       </main>
