@@ -609,6 +609,16 @@ export default function RenderPage() {
     rendersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [isReadyToRender]);
 
+  // Scroll to the renders section every time a batch starts — keeps the
+  // slot grid in view from second one whether the user is on mobile or
+  // desktop. Triggers on batchStartedAt flip from null → number; clears
+  // back to null on batch end and re-arms for the next click.
+  useEffect(() => {
+    if (batchStartedAt === null) return;
+    if (typeof window === "undefined") return;
+    rendersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [batchStartedAt]);
+
   // Mirror /render's product selection into the cross-page project store
   // so /gevelcalc can hydrate with the same product when the user clicks
   // "Bereken materiaal" → from this page. Without this write, the store
