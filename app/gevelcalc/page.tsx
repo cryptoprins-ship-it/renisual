@@ -809,6 +809,29 @@ export default function GevelCalcPage() {
     }
   }, [mode, modeHydrated]);
 
+  // Restore the full calc form from the sessionStorage handoff that
+  // goToRender() writes when the user navigates to /render. Without
+  // this effect, "Bekijk de rendering / Naar de rendering" silently
+  // doubles as a Reset — the form is saved on the way out but never
+  // read back on return, so every dimension and side has to be
+  // re-entered. Run once after `mode` settles so the URL ?modus=
+  // doesn't re-overwrite the restored mode.
+  const [calcRestored, setCalcRestored] = useState(false);
+  useEffect(() => {
+    if (!modeHydrated || calcRestored) return;
+    setCalcRestored(true);
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.sides)) {
+        restoreFromData(data);
+      }
+    } catch {
+      /* ignore — corrupt payload, treat as fresh start */
+    }
+  }, [modeHydrated, calcRestored]);
+
   // Display preference for the product picker: "foto" shows reference
   // images, "tekst" shows a text-only list. Session-only — re-derived
   // from `mode` whenever the mode changes (and on first hydration).
@@ -1349,6 +1372,14 @@ export default function GevelCalcPage() {
   async function resetData() {
     if (!confirm(t("gc.confirmReset"))) return;
     localStorage.removeItem(STORAGE_KEY);
+    // Also wipe the sessionStorage handoff payload that goToRender()
+    // writes — otherwise the on-mount restore would revert this reset
+    // the next time the user returns to /gevelcalc in the same tab.
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
     await clearAllPhotos().catch(() => {});
     // Also wipe the cross-page projectStore (photo + product handed off
     // from /render). Without this, hitting Reset cleared the gevelcalc
