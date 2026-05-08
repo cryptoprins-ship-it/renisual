@@ -356,7 +356,10 @@ export default function RenderPage() {
     const id = window.setTimeout(() => setToast(null), 3500);
     return () => window.clearTimeout(id);
   }, [toast]);
-  const [attemptCount, setAttemptCount] = useState(0);
+  const [attemptByTone, setAttemptByTone] = useState<Record<number, number>>({});
+  const [batchStartedAt, setBatchStartedAt] = useState<number | null>(null);
+  const [batchAbort, setBatchAbort] = useState<AbortController | null>(null);
+  const [failedTones, setFailedTones] = useState<ReadonlySet<ToneNudge>>(new Set());
   const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
@@ -715,7 +718,7 @@ export default function RenderPage() {
 
     setIsGenerating(true);
     setErrorMsg("");
-    setAttemptCount(0);
+    setAttemptByTone({});
     try {
       const refUrls: string[] = [];
       if (effBrand === "spanl" && effSpanlPanel) {
@@ -793,74 +796,85 @@ export default function RenderPage() {
 
       // Per-call render. Returns the friendly error key on failure so the
       // batch caller can surface a single message for an all-fail outcome.
-      async function runOne(toneNudge: ToneNudge): Promise<{ ok: true } | { ok: false; errorKey: string }> {
+      async function runOne(
+  toneNudge: ToneNudge,
+  signal: AbortSignal,
+): Promise<{ ok: true } | { ok: false; errorKey: string }> {
         const payload = { ...basePayload, toneNudge };
         const MAX_ATTEMPTS = 3;
         let renderDataUrl: string | null = null;
         let lastErrorKey: string = "render.error.retry";
         let engineTag: string | undefined;
         let wallMean: { r: number; g: number; b: number } | undefined;
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-          setAttemptCount(attempt);
-          const res = await fetch("/api/render", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const bodyText = await res.text();
-          if (res.ok) {
-            let data: { renderDataUrl?: string; engine?: string; wallMean?: { r: number; g: number; b: number } };
-            try {
-              data = JSON.parse(bodyText);
-            } catch (parseErr) {
-              console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
-              lastErrorKey = "render.error.server";
-              break;
-            }
-            if (data.renderDataUrl) {
-              renderDataUrl = data.renderDataUrl;
-              engineTag = data.engine;
-              wallMean = data.wallMean;
-              // Fire a Plausible custom event so the team can see how
-              // many renders the platform served. Engine + brand are
-              // attached as props for filterable views in the dashboard.
-              if (typeof window !== "undefined") {
-                const win = window as unknown as {
-                  plausible?: (event: string, opts?: { props?: Record<string, string | number> }) => void;
-                };
-                win.plausible?.("render", {
-                  props: {
-                    engine: engineTag ?? "unknown",
-                    brand,
-                    toneNudge,
-                  },
-                });
+        try {
+          for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            setAttemptByTone((prev) => ({ ...prev, [toneNudge]: attempt }));
+            const res = await fetch("/api/render", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(payload),
+              signal,
+            });
+            const bodyText = await res.text();
+            if (res.ok) {
+              let data: { renderDataUrl?: string; engine?: string; wallMean?: { r: number; g: number; b: number } };
+              try {
+                data = JSON.parse(bodyText);
+              } catch (parseErr) {
+                console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
+                lastErrorKey = "render.error.server";
+                break;
               }
-              break;
+              if (data.renderDataUrl) {
+                renderDataUrl = data.renderDataUrl;
+                engineTag = data.engine;
+                wallMean = data.wallMean;
+                // Fire a Plausible custom event so the team can see how
+                // many renders the platform served. Engine + brand are
+                // attached as props for filterable views in the dashboard.
+                if (typeof window !== "undefined") {
+                  const win = window as unknown as {
+                    plausible?: (event: string, opts?: { props?: Record<string, string | number> }) => void;
+                  };
+                  win.plausible?.("render", {
+                    props: {
+                      engine: engineTag ?? "unknown",
+                      brand,
+                      toneNudge,
+                    },
+                  });
+                }
+                break;
+              }
+              lastErrorKey = "render.error.retry";
+              continue;
             }
+            console.error("[render] HTTP error", { status: res.status, bodyText, toneNudge });
+            let upstreamErrorText = "";
+            try {
+              const parsed = JSON.parse(bodyText) as { error?: string };
+              upstreamErrorText = String(parsed.error ?? "");
+            } catch {
+              upstreamErrorText = bodyText;
+            }
+            if (res.status === 401 || res.status === 403) { lastErrorKey = "render.error.auth"; break; }
+            if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
+              lastErrorKey = "render.error.rateLimit";
+              if (attempt >= MAX_ATTEMPTS) break;
+              const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
+              const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
+              await new Promise((r) => setTimeout(r, delaySec * 1000));
+              continue;
+            }
+            if (res.status >= 500) { lastErrorKey = "render.error.server"; break; }
             lastErrorKey = "render.error.retry";
-            continue;
+            break;
           }
-          console.error("[render] HTTP error", { status: res.status, bodyText, toneNudge });
-          let upstreamErrorText = "";
-          try {
-            const parsed = JSON.parse(bodyText) as { error?: string };
-            upstreamErrorText = String(parsed.error ?? "");
-          } catch {
-            upstreamErrorText = bodyText;
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") {
+            return { ok: false, errorKey: "render.error.aborted" };
           }
-          if (res.status === 401 || res.status === 403) { lastErrorKey = "render.error.auth"; break; }
-          if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
-            lastErrorKey = "render.error.rateLimit";
-            if (attempt >= MAX_ATTEMPTS) break;
-            const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
-            const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
-            await new Promise((r) => setTimeout(r, delaySec * 1000));
-            continue;
-          }
-          if (res.status >= 500) { lastErrorKey = "render.error.server"; break; }
-          lastErrorKey = "render.error.retry";
-          break;
+          throw err;
         }
         if (!renderDataUrl) return { ok: false, errorKey: lastErrorKey };
 
@@ -908,7 +922,19 @@ export default function RenderPage() {
         return { ok: true };
       }
 
-      const results = await Promise.allSettled(toneNudges.map((tn) => runOne(tn)));
+      // Abort any prior batch that's still in flight (clicking Render again
+      // while a batch is running clears variants — also clear the old fetches).
+      batchAbort?.abort();
+      const controller = new AbortController();
+      setBatchAbort(controller);
+      // eslint-disable-next-line react-hooks/purity
+      setBatchStartedAt(Date.now());
+      setFailedTones(new Set());
+      setAttemptByTone({});
+
+      const results = await Promise.allSettled(
+        toneNudges.map((tn) => runOne(tn, controller.signal)),
+      );
       const successCount = results.filter((r) => r.status === "fulfilled" && r.value.ok).length;
       if (successCount === 0) {
         const firstFailure = results.find(
@@ -922,10 +948,19 @@ export default function RenderPage() {
       } else if (successCount < toneNudges.length) {
         setToast(`${successCount} van ${toneNudges.length} varianten gerenderd — sommige nudges zijn mislukt`);
       }
+      const failed = new Set<ToneNudge>();
+      results.forEach((r, i) => {
+        if (r.status === "fulfilled" && !r.value.ok) {
+          failed.add(toneNudges[i]);
+        }
+      });
+      setFailedTones(failed);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t("render.error.generic"));
     } finally {
       setIsGenerating(false);
+      setBatchAbort(null);
+      setBatchStartedAt(null);
     }
   }
 
@@ -1494,7 +1529,7 @@ export default function RenderPage() {
 
           {isGenerating && (
             <div className="mt-3 overflow-hidden rounded-xl border border-black">
-              <RenderingLoader attempt={attemptCount} />
+              <RenderingLoader />
             </div>
           )}
 
