@@ -26,8 +26,8 @@ export default function AboutClient() {
       <DynamicMetadata page="about" />
 
       {/* Slim architectural header — mirrors homepage */}
-      <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
+      <nav className="sticky top-0 z-30 border-b border-stone-200 bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
           <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
             <Logo variant="horizontal" />
           </Link>
