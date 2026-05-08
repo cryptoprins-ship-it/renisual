@@ -1773,6 +1773,14 @@ export default function GevelCalcPage() {
             {label}
           </div>
         )}
+        {/* Snel mode treats the project as ONE virtual side, so profile
+            counts (especially Hoek + Verbinding) under-estimate the real
+            need. Per-zijde mode bin-packs each side individually. */}
+        {mode === "quick" && (
+          <div className="-mt-1 mb-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-[11px] leading-snug text-amber-900">
+            {t("gc.modeAccuracyDisclaimer")}
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-stone-600">{t("gc.netWithWaste")}</span>
           <span className="font-semibold text-ink">{result.netWithWaste.toFixed(2)} m²</span>
