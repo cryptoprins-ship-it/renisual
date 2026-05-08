@@ -151,7 +151,7 @@ export async function POST(request: Request) {
   if (photoBuf) attachments.push({ filename: `${row.ref}-foto.jpg`, content: photoBuf, contentType: "image/jpeg" });
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `Renisual <${cfg.user}>`,
       to: TO_ADDRESS,
       replyTo: row.customer_email ?? undefined,
@@ -159,6 +159,17 @@ export async function POST(request: Request) {
       text: bodyLines.join("\n"),
       attachments,
     });
+    logger.info(
+      {
+        ref: parsed.ref,
+        messageId: info.messageId,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response,
+        envelope: info.envelope,
+      },
+      "offerte_send_smtp_ok",
+    );
   } catch (err) {
     logger.error({ err, ref: parsed.ref }, "offerte_send_smtp_failed");
     return NextResponse.json({ error: "send_failed" }, { status: 502 });
