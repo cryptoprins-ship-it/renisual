@@ -92,7 +92,7 @@ export default function PhotoUploader({
             />
           </label>
         </div>
-        {hintLabel && <span className="text-xs text-stone-500">{hintLabel}</span>}
+        {hintLabel && <span className="hidden text-xs text-stone-500 md:inline">{hintLabel}</span>}
       </div>
     </div>
   );
