@@ -265,6 +265,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.btnQuick": "Snelle berekening →",
     "home.hero.btnRender": "Bekijk gevelrender",
     "home.hero.ctaHint": "Upload je foto en zie direct hoe je nieuwe gevel eruitziet.",
+    "home.hero.ctaCalc": "Of direct rekenen",
 
     "pwa.banner.eyebrow": "Installeren",
     "pwa.banner.title": "Renisual als app op je telefoon",
@@ -688,6 +689,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.btnQuick": "Quick calculation →",
     "home.hero.btnRender": "View facade render",
     "home.hero.ctaHint": "Upload your photo and see your new facade right away.",
+    "home.hero.ctaCalc": "Or just calculate",
 
     "pwa.banner.eyebrow": "Install",
     "pwa.banner.title": "Renisual as an app on your phone",
@@ -1111,6 +1113,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.btnQuick": "Schnell-Berechnung →",
     "home.hero.btnRender": "Fassadenrender ansehen",
     "home.hero.ctaHint": "Foto hochladen und Ihre neue Fassade sofort sehen.",
+    "home.hero.ctaCalc": "Oder direkt berechnen",
 
     "pwa.banner.eyebrow": "Installieren",
     "pwa.banner.title": "Renisual als App auf Ihrem Telefon",
@@ -1534,6 +1537,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.btnQuick": "Calcul rapide →",
     "home.hero.btnRender": "Voir le rendu de façade",
     "home.hero.ctaHint": "Téléchargez votre photo et voyez votre nouvelle façade tout de suite.",
+    "home.hero.ctaCalc": "Ou calculer directement",
 
     "pwa.banner.eyebrow": "Installer",
     "pwa.banner.title": "Renisual comme application sur votre téléphone",
@@ -1957,6 +1961,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.hero.btnQuick": "Cálculo rápido →",
     "home.hero.btnRender": "Ver renderizado de fachada",
     "home.hero.ctaHint": "Sube tu foto y mira al instante cómo queda tu nueva fachada.",
+    "home.hero.ctaCalc": "O calcular directamente",
 
     "pwa.banner.eyebrow": "Instalar",
     "pwa.banner.title": "Renisual como app en tu teléfono",

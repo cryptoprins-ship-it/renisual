@@ -181,6 +181,14 @@ export default function HomeClient() {
             <p className="font-mono text-[11px] tracking-[0.05em] text-paper/70">
               {t("home.hero.ctaHint")}
             </p>
+            {/* Secondary path for users who only want a quick m² + price
+                estimate without going through the render flow first. */}
+            <Link
+              href="/gevelcalc?modus=snel"
+              className="mt-1 font-mono text-[11px] uppercase tracking-[0.15em] text-paper/80 underline underline-offset-4 transition-colors hover:text-paper"
+            >
+              {t("home.hero.ctaCalc")} →
+            </Link>
           </div>
         </div>
       </section>
