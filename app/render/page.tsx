@@ -571,7 +571,10 @@ export default function RenderPage() {
   // Variants visible in the current photo scope. Legacy variants
   // without a sourcePhotoKey are shown everywhere (treated as untagged).
   const visibleVariants = useMemo(
-    () => variants.filter((v) => !v.sourcePhotoKey || v.sourcePhotoKey === sourcePhotoKey),
+    () =>
+      sourcePhotoKey
+        ? variants.filter((v) => v.sourcePhotoKey === sourcePhotoKey)
+        : [],
     [variants, sourcePhotoKey],
   );
 
