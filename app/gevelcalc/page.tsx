@@ -1560,6 +1560,7 @@ export default function GevelCalcPage() {
       // hanging with no toast and no inbox delivery. The await adds
       // 1-3s but the user sees the offerteSubmitting spinner the whole
       // time so it doesn't read as "stuck".
+      let sendOk = false;
       try {
         const sendRes = await fetch("/api/offertes/send", {
           method: "POST",
@@ -1567,7 +1568,7 @@ export default function GevelCalcPage() {
           body: JSON.stringify({ ref: data.ref }),
         });
         if (sendRes.ok) {
-          showToast("Offerte verstuurd naar Renisual ✓");
+          sendOk = true;
         } else {
           let detail = `HTTP ${sendRes.status}`;
           try {
@@ -1577,6 +1578,9 @@ export default function GevelCalcPage() {
             /* non-JSON */
           }
           console.warn("[offerte] send to info@renisual.com failed", detail);
+          // Persistent error toast — no auto-dismiss, no overwrite by
+          // the downstream linkCopied OK toast (gated below) so the
+          // diagnostic code stays visible until the user reads it.
           showToast(
             `Verzending naar Renisual mislukt (${detail}) — uw PDF is wel opgeslagen, deel zelf de link of mail naar info@renisual.com.`,
             "error",
@@ -1631,9 +1635,15 @@ export default function GevelCalcPage() {
       }
       // Best-effort copy of the public offerte URL — most browsers
       // grant clipboard inside a click handler without prompting.
+      // Only surface the success toast when the send to info@ also
+      // succeeded; otherwise an OK toast here would overwrite the
+      // persistent error toast set above and make the diagnostic
+      // code disappear before the user can read it.
       try {
         await navigator.clipboard.writeText(data.offerteUrl);
-        showToast(t("gc.offerte.linkCopied"));
+        if (sendOk) {
+          showToast(`Offerte verstuurd naar Renisual ✓ — ${t("gc.offerte.linkCopied")}`);
+        }
       } catch {
         /* clipboard blocked — link is still in the success block */
       }
