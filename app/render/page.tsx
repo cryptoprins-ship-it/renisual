@@ -17,9 +17,10 @@ import { useProjectStore } from "@/lib/projectStore";
 import { getPhotoUrl } from "@/lib/photoStorage";
 import { checkRenderColor, deltaE76, hexToRgb, rgbToHex, verdictFromDeltaE, type ColorCheck } from "@/lib/colorCheck";
 import DynamicMetadata from "@/components/DynamicMetadata";
-import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
 import PhotoUploader from "@/components/PhotoUploader";
+import BatchStatusBand from "@/components/render/BatchStatusBand";
+import VariantSlot, { type VariantSlotState } from "@/components/render/VariantSlot";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 // One render click now produces five tiles: the exact RAL baseline plus
@@ -1527,20 +1528,59 @@ export default function RenderPage() {
             <p>{t("render.disclaimer")}</p>
           </div>
 
-          {isGenerating && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-black">
-              <RenderingLoader />
+          {batchStartedAt !== null && (
+            <BatchStatusBand
+              startedAt={batchStartedAt}
+              completed={visibleVariants.length}
+              total={5}
+              onCancel={() => batchAbort?.abort()}
+            />
+          )}
+
+          {batchStartedAt !== null && (
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {TONE_BATCH.map((tone) => {
+                const variant = visibleVariants.find((v) => v.toneNudge === tone);
+                const failed = failedTones.has(tone);
+                let state: VariantSlotState;
+                if (variant) {
+                  state = { kind: "success", dataUrl: variant.dataUrl, alt: variant.panelLabel };
+                } else if (failed) {
+                  state = { kind: "failed" };
+                } else {
+                  state = { kind: "pending", attempt: attemptByTone[tone] ?? 1 };
+                }
+                return (
+                  <VariantSlot
+                    key={tone}
+                    state={state}
+                    toneLabel={TONE_LABEL_NL[tone]}
+                    onRetry={
+                      state.kind === "failed"
+                        ? () => {
+                            setFailedTones((prev) => {
+                              const next = new Set(prev);
+                              next.delete(tone);
+                              return next;
+                            });
+                            void runRenderBatch([tone], false);
+                          }
+                        : undefined
+                    }
+                  />
+                );
+              })}
             </div>
           )}
 
-          {!isGenerating && visibleVariants.length === 0 && !errorMsg && (
+          {batchStartedAt === null && visibleVariants.length === 0 && !errorMsg && (
             <p className="mt-3 text-sm text-gray-500">{t("rendering_empty_state")}</p>
           )}
 
           {/* Selectie-banner — verschijnt zodra er meerdere varianten
               zijn. Geen banner bij maar één render (dan is de keuze
               impliciet). */}
-          {!isGenerating && visibleVariants.length > 1 && (
+          {batchStartedAt === null && visibleVariants.length > 1 && (
             <div className="mt-4 rounded-md border border-ink bg-stone-50 p-3 text-sm text-ink">
               <p className="font-display">Bent u klaar?</p>
               <p className="mt-0.5 text-[12px] text-stone-700">
@@ -1562,6 +1602,7 @@ export default function RenderPage() {
             </div>
           )}
 
+          {batchStartedAt === null && (
           <div className="mt-4 space-y-4">
             {visibleVariants.map((v) => (
               <article
@@ -1737,6 +1778,7 @@ export default function RenderPage() {
               </article>
             ))}
           </div>
+          )}
 
           {errorMsg && (
             <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
