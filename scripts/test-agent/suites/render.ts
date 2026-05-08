@@ -72,5 +72,26 @@ export const renderTests: TestSuite = {
         }
       },
     },
+    {
+      name: "Hamburger sheet opens and closes on mobile viewport",
+      run: async (page) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.goto(`${config.baseUrl}/render`);
+        const button = page.locator('button[aria-controls="mobile-nav-sheet"]');
+        if ((await button.count()) === 0) {
+          throw new Error("hamburger button not present on mobile viewport");
+        }
+        await button.click();
+        const sheet = page.locator("#mobile-nav-sheet");
+        if (!(await sheet.isVisible())) {
+          throw new Error("sheet did not open after hamburger click");
+        }
+        // Click backdrop (the first sibling — fixed inset-0 button).
+        await page.locator('button[aria-label*="sluiten"], button[aria-label*="close"]').first().click();
+        if (await sheet.isVisible()) {
+          throw new Error("sheet did not close after backdrop click");
+        }
+      },
+    },
   ],
 };
