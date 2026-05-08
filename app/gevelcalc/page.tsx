@@ -894,6 +894,16 @@ export default function GevelCalcPage() {
   const [customerLastName, setCustomerLastName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
+  // Postcode + huisnummer drive the optional autofill helper above the
+  // free-text address field. They're kept in local state (not persisted
+  // to sessionStorage / offerte payload) — the canonical address that
+  // ships with the offerte stays `customerAddress`, which the user can
+  // edit after autofill (e.g., to add an appartement-nummer).
+  const [postcode, setPostcode] = useState("");
+  const [huisnummer, setHuisnummer] = useState("");
+  const [addressLookupState, setAddressLookupState] = useState<
+    "idle" | "loading" | "ok" | "notfound" | "error"
+  >("idle");
   const [calcDate, setCalcDate] = useState<string>("");
   const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -1090,6 +1100,45 @@ export default function GevelCalcPage() {
   function fmtMoney(amount: number) {
     const value = showInclVat ? round2(amount * VAT) : amount;
     return `€${value.toFixed(2)}`;
+  }
+
+  // Resolve a NL postcode + huisnummer to street + city via the PDOK
+  // locatieserver — Dutch government, free, no API key required, CORS
+  // enabled. The endpoint accepts free-text queries and ranks results;
+  // we ask for one. On success we set the canonical customerAddress
+  // string in the format that NL invoices/letters use, leaving the
+  // user free to edit afterwards (e.g., add an appartement-nummer).
+  async function lookupAddress() {
+    const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
+    const cleanNumber = huisnummer.trim();
+    if (!/^\d{4}[A-Z]{2}$/.test(cleanPostcode) || !cleanNumber) {
+      setAddressLookupState("notfound");
+      return;
+    }
+    setAddressLookupState("loading");
+    try {
+      const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${encodeURIComponent(
+        `postcode:${cleanPostcode} and huisnummer:${cleanNumber}`,
+      )}&rows=1&fl=straatnaam,woonplaatsnaam,huisnummer,postcode`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        setAddressLookupState("error");
+        return;
+      }
+      const data = await res.json();
+      const doc = data?.response?.docs?.[0];
+      if (!doc?.straatnaam || !doc?.woonplaatsnaam) {
+        setAddressLookupState("notfound");
+        return;
+      }
+      const formattedPostcode = `${cleanPostcode.slice(0, 4)} ${cleanPostcode.slice(4)}`;
+      setCustomerAddress(
+        `${doc.straatnaam} ${cleanNumber}, ${formattedPostcode} ${doc.woonplaatsnaam}`,
+      );
+      setAddressLookupState("ok");
+    } catch {
+      setAddressLookupState("error");
+    }
   }
 
   function validateForExport(): string | null {
@@ -1994,6 +2043,70 @@ export default function GevelCalcPage() {
                   />
                 </div>
               </div>
+              {/* Postcode + huisnummer autofill — optional helper that
+                  pre-fills the canonical address textarea below via PDOK
+                  locatieserver. The user can still type the address by
+                  hand, or edit after autofill (e.g., add a unit number). */}
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,7rem)_minmax(0,5rem)_auto]">
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                    Postcode
+                  </label>
+                  <input
+                    className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink uppercase"
+                    value={postcode}
+                    onChange={(e) => {
+                      setPostcode(e.target.value);
+                      setAddressLookupState("idle");
+                    }}
+                    placeholder="1234 AB"
+                    autoComplete="postal-code"
+                    inputMode="text"
+                    maxLength={7}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                    Nr.
+                  </label>
+                  <input
+                    className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
+                    value={huisnummer}
+                    onChange={(e) => {
+                      setHuisnummer(e.target.value);
+                      setAddressLookupState("idle");
+                    }}
+                    placeholder="12"
+                    autoComplete="address-line2"
+                    inputMode="numeric"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={lookupAddress}
+                    disabled={addressLookupState === "loading"}
+                    className="w-full sm:w-auto border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink hover:bg-ink hover:text-paper disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addressLookupState === "loading" ? "Zoeken…" : "Vul adres in"}
+                  </button>
+                </div>
+              </div>
+              {addressLookupState === "notfound" && (
+                <p className="text-[11px] leading-snug text-red-700">
+                  Geen adres gevonden voor deze postcode + huisnummer. Controleer of beide kloppen, of vul het adres handmatig in hieronder.
+                </p>
+              )}
+              {addressLookupState === "error" && (
+                <p className="text-[11px] leading-snug text-red-700">
+                  Adres opzoeken lukte niet (netwerk?). Vul het hieronder handmatig in.
+                </p>
+              )}
+              {addressLookupState === "ok" && (
+                <p className="text-[11px] leading-snug text-emerald-700">
+                  Adres ingevuld — pas hieronder aan als er bv. een appartementnummer bij hoort.
+                </p>
+              )}
               <div>
                 <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
                   {t("gc.customerAddress")} <span className="text-red-600">*</span>
