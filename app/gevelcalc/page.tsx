@@ -2751,7 +2751,7 @@ export default function GevelCalcPage() {
         </div>
 
         <div
-          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-ink bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-ink bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] print:hidden"
         >
           <div className="mx-auto max-w-[1400px]">
             {/* Mobile: 2-col grid with primaries side-by-side, Reset
