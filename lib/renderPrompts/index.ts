@@ -137,7 +137,15 @@ function buildStylePrompt(opts: ResolvePromptOpts): string {
   } else if (opts.shape === "spanish_tile") {
     surfaceDescriptor = "the printed Spanish roof-tile-look panels shown in the reference image — overlapping curved terracotta-style tiles in warm orange-red, ochre or weathered grey tones with shadowed grooves between rows. Match the reference image's exact colour palette and tile shape. NOT brick, NOT flat masonry — these are curved roof-tile shapes printed on flat wall panels.";
   } else {
-    surfaceDescriptor = "the printed wood-look panels shown in the reference image — wood-plank appearance with the exact tones, grain pattern and surface texture from the reference. Flat panels with very slight relief from the print, NOT truly grooved planks. Match the reference image's exact tones and pattern.";
+    // Wood prompt is shared by Spanl PBW (printed-wood SKUs) and the
+    // entire Keralit catalog (routed here because no SKU/RAL/hex is
+    // available — the per-color thumbnail swatch is the only ground
+    // truth). The earlier "match the reference image's exact tones"
+    // phrasing was too soft — klein-9b ignored grey-brown / weathered
+    // swatches and defaulted to generic honey/pine wood. Stronger
+    // wording here pins both COLOUR and surface character to the
+    // swatch and explicitly forbids the honey-brown drift.
+    surfaceDescriptor = "cladding panels matching the reference image (image 2) EXACTLY in colour, tone, and surface character. The reference image is the AUTHORITATIVE colour source — if the reference shows grey wood-grain, render grey wood-grain panels; if it shows weathered grey-brown wood, render weathered grey-brown wood; if it shows dark brown or black wood, render dark brown or black wood; if it shows oak grain, render oak; if it shows a smooth solid colour, render smooth solid panels with that exact colour. Do NOT default to a generic light honey-brown or pine wood colour, do NOT shift toward warm tones unless the reference itself is warm. Flat panels with very slight surface relief from the print, NOT truly grooved planks.";
   }
 
   return `Reclad the wall surfaces of this building with ${surfaceDescriptor}
