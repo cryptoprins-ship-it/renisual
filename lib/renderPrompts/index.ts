@@ -125,15 +125,16 @@ function buildRalPrompt(opts: ResolvePromptOpts): string {
   }
 
   // Keralit Classic met houtnerf — printed wood-grain on PVC panels.
-  // Different wording from linenTexture (linen weave) because Keralit
-  // ships a printed planken-with-wood-grain surface, not a Spanl-style
-  // weave. Mutually exclusive with linenTexture in practice (Spanl
-  // products never set keralitWoodGrain and vice versa).
+  // FULL REPLACEMENT of wallDesc (not appendix) because Spanl Mono Flat's
+  // base text says "smooth painted metal" + "very faint hairline 37cm
+  // seams" — both wrong for Keralit (PVC, visible 25cm panel-edge
+  // grooves). Adding a wood-grain appendix on top creates contradictions
+  // klein-9b muddles. Single coherent description here covers material,
+  // panel-edge seams, AND wood-grain surface in one block.
   if (opts.keralitWoodGrain) {
-    wallDesc = wallDesc.replace(
-      /\.$/,
-      ", with a printed wood-grain surface texture — fine parallel grain lines running along the panel length plus subtle wood-fibre detail catching the light, visibly textured panel face (NOT smooth, NOT glossy). The wood-grain is a printed pattern on the panel surface; the colour stays exactly as specified by the RAL hex above.",
-    );
+    const seamAxisKeralit =
+      opts.orientation === "vertical" ? "vertical" : "horizontal";
+    wallDesc = `matt PVC cladding panels in ${colorPhraseFor(opts)}, with a printed wood-grain surface texture — fine parallel grain lines along the panel length plus subtle wood-fibre detail catching the light, visibly textured panel face (NOT smooth, NOT glossy). Adjacent panels meet at clearly visible recessed shadow seams every 25cm — distinct ${seamAxisKeralit} channels marking each panel edge, NOT hairline-faint. The wood-grain is a printed pattern on the surface; the colour stays exactly as specified by the RAL hex above.`;
   }
 
   const tone = TONE_PHRASES[opts.toneNudge ?? 0] ?? "";
