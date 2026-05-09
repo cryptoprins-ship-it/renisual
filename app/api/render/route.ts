@@ -1153,6 +1153,14 @@ export async function POST(request: Request) {
         skuUpper.startsWith("YMPB") ||
         skuUpper.startsWith("YPMB") ||
         skuUpper.startsWith("YMSG");
+      // Keralit-with-RAL inflated through the legacy free-text path:
+      // no SKU, but product.name starts with "Keralit" and ral_code is
+      // set. All 16 RAL-mapped Keralit colours in the catalog are
+      // Classic met houtnerf, so wood-grain is the right surface.
+      const keralitWoodGrain =
+        !product.sku &&
+        !!product.ral_code &&
+        (product.name ?? "").toLowerCase().startsWith("keralit");
 
       // Server-side swatch → hex extraction. For style/wood (Keralit
       // and Spanl PBW) the catalog often ships no hex value, so the
@@ -1223,6 +1231,7 @@ export async function POST(request: Request) {
           : undefined,
         toneNudge: body.toneNudge,
         linenTexture,
+        keralitWoodGrain,
       });
       console.log("[render] bfl prompt:", bflPrompt);
       console.log("[render] bfl swatchHex:", swatchHex ?? "(none)", "family:", family, "shape:", shape);

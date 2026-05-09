@@ -44,6 +44,12 @@ export type ResolvePromptOpts = {
   // RAL wall description so klein-9b actually renders the texture
   // instead of a smooth panel identical to the non-Y SKU.
   linenTexture?: boolean;
+  // Keralit Classic met houtnerf — printed wood-grain on PVC. Appends
+  // a Keralit-specific texture sentence to the RAL wall block so RAL-
+  // routed Keralit colours render with their characteristic wood-grain
+  // instead of the smooth Spanl Mono Flat finish. Different wording
+  // from linenTexture (which is Spanl-specific weave language).
+  keralitWoodGrain?: boolean;
   // User-driven nudge from variant picker. 0 = exact RAL.
   toneNudge?: ToneNudge;
 };
@@ -115,6 +121,18 @@ function buildRalPrompt(opts: ResolvePromptOpts): string {
     wallDesc = wallDesc.replace(
       /\.$/,
       ", with a fine embossed linen wood-grain texture pressed into the paint — subtle horizontal weave-like fabric pattern catching the light, visibly textured surface (NOT smooth, NOT glossy).",
+    );
+  }
+
+  // Keralit Classic met houtnerf — printed wood-grain on PVC panels.
+  // Different wording from linenTexture (linen weave) because Keralit
+  // ships a printed planken-with-wood-grain surface, not a Spanl-style
+  // weave. Mutually exclusive with linenTexture in practice (Spanl
+  // products never set keralitWoodGrain and vice versa).
+  if (opts.keralitWoodGrain) {
+    wallDesc = wallDesc.replace(
+      /\.$/,
+      ", with a printed wood-grain surface texture — fine parallel grain lines running along the panel length plus subtle wood-fibre detail catching the light, visibly textured panel face (NOT smooth, NOT glossy). The wood-grain is a printed pattern on the panel surface; the colour stays exactly as specified by the RAL hex above.",
     );
   }
 
