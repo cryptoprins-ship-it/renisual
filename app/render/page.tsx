@@ -1338,6 +1338,7 @@ export default function RenderPage() {
                 </label>
                 {(["classic-houtnerf", "pure-mat", "modern-eiken"] as const).map((finish) => {
                   const colors = KERALIT_COLORS.filter((c) => c.finish === finish);
+                  if (colors.length === 0) return null;
                   return (
                     <div key={finish} className="mb-4">
                       <p className="mb-2 text-xs font-semibold text-gray-600">
