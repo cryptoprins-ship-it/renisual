@@ -1867,10 +1867,15 @@ export default function RenderPage() {
                 className="col-span-2 border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40 md:col-auto"
               >
                 {(() => {
+                  // Spanl SKUs (e.g. PB7038A) already encode the colour, so
+                  // showing the SKU is informative on its own. For Keralit
+                  // the panel name (Gevelpaneel 250mm) is identical across
+                  // all colours — show the picked colour instead so the
+                  // button differentiates after each colour change.
                   const productLabel =
                     brand === "spanl"
                       ? selectedPanel?.sku
-                      : selectedKeralitProduct?.name;
+                      : selectedKeralitColor?.name;
                   return productLabel ? `Genereer (${productLabel})` : "Genereer";
                 })()}
               </button>
