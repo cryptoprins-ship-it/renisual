@@ -1141,6 +1141,22 @@ export default function GevelCalcPage() {
     }
   }
 
+  // Auto-fire lookupAddress when both fields parse correctly. Debounced
+  // 400ms so typing "12" → "12A" doesn't fire twice. Skips if a lookup
+  // is already in flight or already resolved — onChange handlers reset
+  // state to "idle" on edit, which re-arms the trigger.
+  useEffect(() => {
+    if (addressLookupState !== "idle") return;
+    const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
+    const cleanNumber = huisnummer.trim();
+    if (!/^\d{4}[A-Z]{2}$/.test(cleanPostcode) || !cleanNumber) return;
+    const id = setTimeout(() => {
+      lookupAddress();
+    }, 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postcode, huisnummer, addressLookupState]);
+
   function validateForExport(): string | null {
     if (mode === "quick" && quickAreaToM2(quickTotalArea, unit) <= 0) return t("gc.error.fillArea");
     if (mode === "advanced" && activeSides.length === 0) return t("gc.error.fillSide");
@@ -2047,7 +2063,7 @@ export default function GevelCalcPage() {
                   pre-fills the canonical address textarea below via PDOK
                   locatieserver. The user can still type the address by
                   hand, or edit after autofill (e.g., add a unit number). */}
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,7rem)_minmax(0,5rem)_auto]">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,7rem)_minmax(0,5rem)]">
                 <div>
                   <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
                     Postcode
@@ -2081,17 +2097,10 @@ export default function GevelCalcPage() {
                     inputMode="numeric"
                   />
                 </div>
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={lookupAddress}
-                    disabled={addressLookupState === "loading"}
-                    className="w-full sm:w-auto border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink hover:bg-ink hover:text-paper disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {addressLookupState === "loading" ? "Zoeken…" : "Vul adres in"}
-                  </button>
-                </div>
               </div>
+              {addressLookupState === "loading" && (
+                <p className="text-[11px] leading-snug text-stone-500">Adres opzoeken…</p>
+              )}
               {addressLookupState === "notfound" && (
                 <p className="text-[11px] leading-snug text-red-700">
                   Geen adres gevonden voor deze postcode + huisnummer. Controleer of beide kloppen, of vul het adres handmatig in hieronder.
