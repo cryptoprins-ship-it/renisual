@@ -1258,7 +1258,7 @@ export default function RenderPage() {
 
           {sidesWithPhoto.length > 0 && (
             <div className="mt-3">
-              <p className="mb-2 text-xs text-gray-500">{t("render.fromCalc")}</p>
+              <p className="mb-2 text-xs text-stone-500">{t("render.fromCalc")}</p>
               <div className="flex flex-wrap gap-2">
                 {sidesWithPhoto.map((s) => (
                   <button
@@ -1289,7 +1289,7 @@ export default function RenderPage() {
             />
           </div>
 
-          <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/15 p-3 text-xs text-warning">
             <span aria-hidden className="text-base leading-none">⚠</span>
             <p>
               {locale === "nl"
@@ -1336,7 +1336,7 @@ export default function RenderPage() {
                       key={s.file}
                       type="button"
                       onClick={() => loadSamplePhoto(sampleTab, s.file)}
-                      className="overflow-hidden rounded-xl border border-ink bg-white text-left hover:bg-neutral-50"
+                      className="overflow-hidden rounded-xl border border-ink bg-white text-left hover:bg-stone-50"
                     >
                       <img
                         src={`/samples/${sampleTab}/${s.file}`}
@@ -1449,7 +1449,7 @@ export default function RenderPage() {
                   if (colors.length === 0) return null;
                   return (
                     <div key={finish} className="mb-4">
-                      <p className="mb-2 text-xs font-semibold text-gray-600">
+                      <p className="mb-2 text-xs font-semibold text-stone-600">
                         {KERALIT_FINISH_LABEL_NL[finish]} ({colors.length})
                       </p>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
@@ -1461,14 +1461,14 @@ export default function RenderPage() {
                             className={`overflow-hidden rounded-lg border-2 text-left transition ${
                               selectedKeralitColorNumber === c.number
                                 ? "border-ink ring-2 ring-ink"
-                                : "border-gray-200 hover:border-gray-400"
+                                : "border-stone-200 hover:border-stone-400"
                             }`}
                             title={`${c.number} ${c.name}`}
                           >
                             <img src={c.thumbnailUrl} alt={c.name} className="block aspect-square w-full object-cover" />
                             <div className="p-1 text-[10px] leading-tight">
                               <div className="font-semibold">{c.number}</div>
-                              <div className="truncate text-gray-600">{c.name}</div>
+                              <div className="truncate text-stone-600">{c.name}</div>
                             </div>
                           </button>
                         ))}
@@ -1508,7 +1508,7 @@ export default function RenderPage() {
                     {t("render.spanlPanel")} ({panels.length})
                   </label>
                   {panels.every((p) => !p.imageUrl) && (
-                    <p className="mb-3 text-xs text-amber-700">
+                    <p className="mb-3 text-xs text-warning">
                       {t("render.panelIndexHint", {
                         cmd: "node scripts/build-spanl-index.js",
                       })}
@@ -1519,7 +1519,7 @@ export default function RenderPage() {
                     if (group.length === 0) return null;
                     return (
                       <div key={finish} className="mb-4">
-                        <p className="mb-2 text-xs font-semibold text-gray-600">
+                        <p className="mb-2 text-xs font-semibold text-stone-600">
                           {t(`finish.${finish}`)} ({group.length})
                         </p>
                         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
@@ -1533,7 +1533,7 @@ export default function RenderPage() {
                                 className={`overflow-hidden rounded-lg border-2 text-left transition ${
                                   selectedSku === p.sku
                                     ? "border-ink ring-2 ring-ink"
-                                    : "border-gray-200 hover:border-gray-400"
+                                    : "border-stone-200 hover:border-stone-400"
                                 }`}
                                 title={`${p.sku} — ${t(p.colorKey)}${ral}`}
                               >
@@ -1545,13 +1545,13 @@ export default function RenderPage() {
                                     className="block aspect-square w-full object-cover"
                                   />
                                 ) : (
-                                  <div className="flex aspect-square w-full items-center justify-center bg-neutral-100 text-[9px] text-gray-400">
+                                  <div className="flex aspect-square w-full items-center justify-center bg-stone-100 text-[9px] text-stone-400">
                                     {t("render.noReference")}
                                   </div>
                                 )}
                                 <div className="p-1 text-[10px] leading-tight">
                                   <div className="font-semibold">{p.sku}</div>
-                                  <div className="truncate text-gray-600">
+                                  <div className="truncate text-stone-600">
                                     {t(p.colorKey)}
                                     {p.ral ? ` · ${p.ral}` : ""}
                                   </div>
@@ -1630,7 +1630,7 @@ export default function RenderPage() {
 
         </div>
 
-        <aside ref={rendersSectionRef} className="flex scroll-mt-20 flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+        <aside ref={rendersSectionRef} className="flex scroll-mt-20 flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto">
           <header>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
               04 — {t("render.section.renders")}
@@ -1655,7 +1655,7 @@ export default function RenderPage() {
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
               {t("render.section.renders")}
             </p>
-            <span className="text-xs font-medium text-gray-500">
+            <span className="text-xs font-medium text-stone-500">
               {visibleVariants.length > 0 ? `${visibleVariants.length}/${MAX_VARIANTS}` : ""}
             </span>
           </div>
@@ -1735,7 +1735,7 @@ export default function RenderPage() {
           )}
 
           {batchStartedAt === null && visibleVariants.length === 0 && !errorMsg && (
-            <p className="mt-3 text-sm text-gray-500">{t("rendering_empty_state")}</p>
+            <p className="mt-3 text-sm text-stone-500">{t("rendering_empty_state")}</p>
           )}
 
           {/* Selectie-banner — verschijnt zodra er meerdere varianten
@@ -1870,10 +1870,10 @@ export default function RenderPage() {
                       <span
                         className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${
                           v.colorCheck.verdict === "good"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-success/15 text-success"
                             : v.colorCheck.verdict === "off"
-                            ? "bg-amber-100 text-amber-900"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-warning/15 text-warning"
+                            : "bg-error/15 text-error"
                         }`}
                         title={`sampled ${v.colorCheck.sampledHex} vs target ${v.colorCheck.targetHex}, ΔE76 = ${v.colorCheck.deltaE}`}
                       >
@@ -1895,9 +1895,9 @@ export default function RenderPage() {
                       <span
                         className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono ${
                           v.engine === "bfl-protected"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-success/15 text-success"
                             : v.engine === "bfl-raw"
-                            ? "bg-amber-100 text-amber-900"
+                            ? "bg-warning/15 text-warning"
                             : "bg-stone-200 text-stone-700"
                         }`}
                         title="Engine that produced this render"
@@ -1906,13 +1906,13 @@ export default function RenderPage() {
                       </span>
                     )}
                     <span className="font-semibold">{v.panelLabel}</span>
-                    <span className="text-gray-500">
+                    <span className="text-stone-500">
                       {" · "}
                       {v.orientation === "horizontal" ? t("render.horizontal") : t("render.vertical")}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-400">{new Date(v.createdAt).toLocaleString(localeForDate)}</span>
+                    <span className="text-stone-400">{new Date(v.createdAt).toLocaleString(localeForDate)}</span>
                     <button
                       type="button"
                       onClick={() =>
@@ -1942,13 +1942,13 @@ export default function RenderPage() {
           )}
 
           {errorMsg && (
-            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-error/30 bg-error/15 p-3 text-sm text-error">
               <span className="flex-1">{errorMsg}</span>
               <button
                 type="button"
                 onClick={handleGenerate}
                 disabled={isGenerating || !sourcePhoto}
-                className="rounded-lg border border-red-400 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                className="rounded-lg border border-error/30 bg-white px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/15 disabled:opacity-50"
               >
                 {t("rendering_retry_button")}
               </button>
@@ -1960,7 +1960,7 @@ export default function RenderPage() {
       </div>
 
       {toast && (
-        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-amber-400 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 shadow-md">
+        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border border-warning/30 bg-warning/15 px-4 py-2 text-sm font-medium text-warning shadow-md">
           {toast}
         </div>
       )}

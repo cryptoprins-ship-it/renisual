@@ -22,7 +22,7 @@ export default function HomeButton() {
     <Link
       href="/"
       aria-label="Home"
-      className="fixed left-3 top-3 z-40 inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur hover:bg-zinc-100 print:hidden"
+      className="fixed left-3 top-3 z-40 inline-flex items-center gap-1 rounded-xl border border-stone-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm backdrop-blur hover:bg-stone-100 print:hidden"
     >
       <span aria-hidden>←</span>
       <span>Home</span>

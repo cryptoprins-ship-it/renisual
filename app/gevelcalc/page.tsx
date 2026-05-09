@@ -292,14 +292,14 @@ function InputWithSuffix({
   return (
     <div className="relative">
       <input
-        className={`w-full rounded-xl border border-ink p-3 pr-14 disabled:bg-neutral-100 ${className ?? ""}`}
+        className={`w-full rounded-xl border border-ink p-3 pr-14 disabled:bg-stone-100 ${className ?? ""}`}
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
       />
       {suffix && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none select-none print:hidden">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-stone-400 pointer-events-none select-none print:hidden">
           {suffix}
         </span>
       )}
@@ -379,7 +379,7 @@ function KeralitColorPicker({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Keralit kleur</h3>
         {selected && (
-          <span className="text-xs text-gray-600">
+          <span className="text-xs text-stone-600">
             {selected.name} · {selected.number} · {KERALIT_FINISH_LABEL_NL[selected.finish]}
           </span>
         )}
@@ -406,7 +406,7 @@ function KeralitColorPicker({
             onClick={() => onSelect(c.number)}
             title={`${c.name} (${c.number})`}
             className={`group flex flex-col items-center gap-1 rounded-lg border p-1 ${
-              selectedNumber === c.number ? "border-ink ring-2 ring-ink" : "border-neutral-300"
+              selectedNumber === c.number ? "border-ink ring-2 ring-ink" : "border-stone-300"
             }`}
           >
             <img
@@ -708,7 +708,7 @@ function Toast({
     <div
       role={type === "error" ? "alert" : "status"}
       className={`fixed top-4 right-4 z-50 flex max-w-md items-start gap-2 rounded-xl border px-4 py-3 text-sm font-medium shadow-md print:hidden ${
-        type === "ok" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800"
+        type === "ok" ? "border-success/30 bg-success/15 text-success" : "border-error/30 bg-error/15 text-error"
       }`}
     >
       <span className="flex-1 whitespace-pre-line break-words">{message}</span>
@@ -1892,7 +1892,7 @@ export default function GevelCalcPage() {
             counts (especially Hoek + Verbinding) under-estimate the real
             need. Per-zijde mode bin-packs each side individually. */}
         {mode === "quick" && (
-          <div className="-mt-1 mb-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-[11px] leading-snug text-amber-900">
+          <div className="-mt-1 mb-1 rounded-md border border-warning/30 bg-warning/15 px-2 py-1.5 text-[11px] leading-snug text-warning">
             {t("gc.modeAccuracyDisclaimer")}
           </div>
         )}
@@ -2019,8 +2019,8 @@ export default function GevelCalcPage() {
           <div className="hidden print:block mb-4">
             <h1 className="text-2xl font-bold">{t("gc.title")}</h1>
             {projectName && <p className="text-base font-medium mt-1">{projectName}</p>}
-            {calcDate && <p className="text-sm text-gray-500 mt-1">{t("gc.dateLabel", { date: formatDate(calcDate, locale) })}</p>}
-            <p className="text-sm italic text-gray-600 mt-1">
+            {calcDate && <p className="text-sm text-stone-500 mt-1">{t("gc.dateLabel", { date: formatDate(calcDate, locale) })}</p>}
+            <p className="text-sm italic text-stone-600 mt-1">
               {mode === "quick" ? t("gc.pdfModeQuick") : t("gc.pdfModeAdvanced")}
             </p>
           </div>
@@ -2042,7 +2042,7 @@ export default function GevelCalcPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
-                    {t("gc.customerLastName")} <span className="text-red-600">*</span>
+                    {t("gc.customerLastName")} <span className="text-error">*</span>
                   </label>
                   <input
                     required
@@ -2055,7 +2055,7 @@ export default function GevelCalcPage() {
                 </div>
                 <div>
                   <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
-                    {t("gc.customerEmail")} <span className="text-red-600">*</span>
+                    {t("gc.customerEmail")} <span className="text-error">*</span>
                   </label>
                   <input
                     type="email"
@@ -2112,23 +2112,23 @@ export default function GevelCalcPage() {
                 <p className="text-[11px] leading-snug text-stone-500">Adres opzoeken…</p>
               )}
               {addressLookupState === "notfound" && (
-                <p className="text-[11px] leading-snug text-red-700">
+                <p className="text-[11px] leading-snug text-error">
                   Geen adres gevonden voor deze postcode + huisnummer. Controleer of beide kloppen, of vul het adres handmatig in hieronder.
                 </p>
               )}
               {addressLookupState === "error" && (
-                <p className="text-[11px] leading-snug text-red-700">
+                <p className="text-[11px] leading-snug text-error">
                   Adres opzoeken lukte niet (netwerk?). Vul het hieronder handmatig in.
                 </p>
               )}
               {addressLookupState === "ok" && (
-                <p className="text-[11px] leading-snug text-emerald-700">
+                <p className="text-[11px] leading-snug text-success">
                   Adres ingevuld — pas hieronder aan als er bv. een appartementnummer bij hoort.
                 </p>
               )}
               <div>
                 <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
-                  {t("gc.customerAddress")} <span className="text-red-600">*</span>
+                  {t("gc.customerAddress")} <span className="text-error">*</span>
                 </label>
                 <input
                   required
@@ -2214,7 +2214,7 @@ export default function GevelCalcPage() {
                     placeholder="0"
                     inputMode="numeric"
                   />
-                  <p className="mt-1 text-xs text-gray-500">{t("gc.quick.avgHint", { avg: QUICK_WINDOW_M2 })}</p>
+                  <p className="mt-1 text-xs text-stone-500">{t("gc.quick.avgHint", { avg: QUICK_WINDOW_M2 })}</p>
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("gc.quick.doorCount")}</label>
@@ -2225,7 +2225,7 @@ export default function GevelCalcPage() {
                     placeholder="0"
                     inputMode="numeric"
                   />
-                  <p className="mt-1 text-xs text-gray-500">{t("gc.quick.avgHint", { avg: QUICK_DOOR_M2 })}</p>
+                  <p className="mt-1 text-xs text-stone-500">{t("gc.quick.avgHint", { avg: QUICK_DOOR_M2 })}</p>
                 </div>
               </div>
 
@@ -2238,7 +2238,7 @@ export default function GevelCalcPage() {
               )}
               {uploadError && uploadErrorSideId === QUICK_SIDE_ID && (
                 <div className="mt-2 print-hidden">
-                  <p className="text-sm text-red-600">{uploadError}</p>
+                  <p className="text-sm text-error">{uploadError}</p>
                   <button
                     type="button"
                     onClick={() => clearPhotoState(QUICK_SIDE_ID)}
@@ -2266,26 +2266,26 @@ export default function GevelCalcPage() {
 
               <div className="metrics-row mt-5 grid grid-cols-3 gap-2">
                 <div className="rounded-xl border border-ink p-3">
-                  <div className="text-xs text-gray-500">{t("gc.gross")}</div>
+                  <div className="text-xs text-stone-500">{t("gc.gross")}</div>
                   <div className="text-base font-semibold">
                     {m2ToUnit(quickTotalAreaM2, unit).toFixed(2)} {unitLabel}
                   </div>
                 </div>
                 <div className="rounded-xl border border-ink p-3">
-                  <div className="text-xs text-gray-500">{t("gc.openings")}</div>
+                  <div className="text-xs text-stone-500">{t("gc.openings")}</div>
                   <div className="text-base font-semibold">
                     {m2ToUnit(quickOpeningsM2, unit).toFixed(2)} {unitLabel}
                   </div>
                 </div>
                 <div className="rounded-xl border border-ink p-3">
-                  <div className="text-xs text-gray-500">{t("gc.quick.netEstimate")}</div>
+                  <div className="text-xs text-stone-500">{t("gc.quick.netEstimate")}</div>
                   <div className="text-base font-semibold">
                     {quickNetDisplay} {unitLabel}
                   </div>
                 </div>
               </div>
 
-              <p className="mt-3 text-xs text-gray-500 print-hidden">{t("gc.quick.profileNote")}</p>
+              <p className="mt-3 text-xs text-stone-500 print-hidden">{t("gc.quick.profileNote")}</p>
             </section>
           )}
 
@@ -2302,7 +2302,7 @@ export default function GevelCalcPage() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h2 className="text-xl font-semibold">{side.name}</h2>
-                      {isLinked && <p className="text-sm text-gray-500">{t("gc.linkedNote")}</p>}
+                      {isLinked && <p className="text-sm text-stone-500">{t("gc.linkedNote")}</p>}
                     </div>
                     {sides.length > 1 && (
                       <button
@@ -2348,7 +2348,7 @@ export default function GevelCalcPage() {
 
                   {uploadError && uploadErrorSideId === side.id && (
                     <div className="mt-2 print-hidden">
-                      <p className="text-sm text-red-600">{uploadError}</p>
+                      <p className="text-sm text-error">{uploadError}</p>
                       <button
                         type="button"
                         onClick={() => clearPhotoState(side.id)}
@@ -2390,7 +2390,7 @@ export default function GevelCalcPage() {
                               {t("gc.remove")}
                             </button>
                           </div>
-                          <p className="opening-print-label hidden text-sm text-gray-600 mt-1">
+                          <p className="opening-print-label hidden text-sm text-stone-600 mt-1">
                             {t("gc.printedOpening", {
                               w: opening.width || "—",
                               h: opening.height || "—",
@@ -2435,15 +2435,15 @@ export default function GevelCalcPage() {
 
                   <div className="metrics-row mt-5 grid grid-cols-3 gap-2">
                     <div className="rounded-xl border border-ink p-3">
-                      <div className="text-xs text-gray-500">{t("gc.gross")}</div>
+                      <div className="text-xs text-stone-500">{t("gc.gross")}</div>
                       <div className="text-base font-semibold">{calculateSideGrossM2(resolved).toFixed(2)} m²</div>
                     </div>
                     <div className="rounded-xl border border-ink p-3">
-                      <div className="text-xs text-gray-500">{t("gc.openings")}</div>
+                      <div className="text-xs text-stone-500">{t("gc.openings")}</div>
                       <div className="text-base font-semibold">{calculateSideOpeningsM2(side).toFixed(2)} m²</div>
                     </div>
                     <div className="rounded-xl border border-ink p-3">
-                      <div className="text-xs text-gray-500">{t("gc.net")}</div>
+                      <div className="text-xs text-stone-500">{t("gc.net")}</div>
                       <div className="text-base font-semibold">{calculateSideNetM2(resolved).toFixed(2)} m²</div>
                     </div>
                   </div>
@@ -2707,7 +2707,7 @@ export default function GevelCalcPage() {
                   <p className="mt-2 text-sm">{t("gc.pricePerM2", { price: selectedProduct.pricePerM2ExVat.toFixed(2) })}</p>
                 )}
                 <p className="mt-1 text-sm">{t("gc.wasteFactor", { percent: selectedProduct.wasteFactor })}</p>
-                <p className="mt-3 text-xs text-gray-400 border-t border-gray-200 pt-3">
+                <p className="mt-3 text-xs text-stone-400 border-t border-stone-200 pt-3">
                   {t("gc.priceDisclaimer")}
                 </p>
                 </div>
@@ -2722,13 +2722,13 @@ export default function GevelCalcPage() {
             )}
 
             {selectedProduct?.insulationValue && locale === "nl" && (
-              <div className="mt-4 rounded-xl border-2 border-amber-400 bg-amber-50 p-3 text-sm print-hidden">
-                <p className="font-semibold text-amber-900">
+              <div className="mt-4 rounded-xl border-2 border-warning/30 bg-warning/15 p-3 text-sm print-hidden">
+                <p className="font-semibold text-warning">
                   💡 Subsidie beschikbaar voor isolatie via ISDE
                 </p>
                 <a
                   href="/subsidie"
-                  className="mt-1 inline-block text-xs font-semibold text-amber-900 underline underline-offset-2"
+                  className="mt-1 inline-block text-xs font-semibold text-warning underline underline-offset-2"
                 >
                   Bekijk regelingen →
                 </a>
@@ -2811,14 +2811,14 @@ export default function GevelCalcPage() {
               <button
                 type="button"
                 onClick={resetData}
-                className="col-span-2 rounded-xl border border-red-600 px-3 py-2 text-sm text-red-600 md:col-auto"
+                className="col-span-2 rounded-xl border border-error/30 px-3 py-2 text-sm text-error md:col-auto"
               >
                 {t("gc.btnReset")}
               </button>
             </div>
           </div>
           </div>
-          <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto print-hidden">
+          <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto print-hidden">
             <header>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
                 04 — {t("gc.totalsOverview")}

@@ -158,13 +158,13 @@ export default function WachtenClient() {
           <div className="flex gap-2">
             <Link
               href="/leaderboard"
-              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-stone-50"
             >
               Leaderboard →
             </Link>
             <Link
               href="/render"
-              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-stone-50"
             >
               Terug naar render
             </Link>
@@ -172,12 +172,12 @@ export default function WachtenClient() {
         </div>
       </nav>
 
-      <div className="border-b border-ink bg-amber-50 px-4 py-2 text-center">
-        <p className="text-sm font-medium text-amber-900">
-          Je render wordt gegenereerd... <span className="text-amber-700">(±20 sec)</span>
+      <div className="border-b border-ink bg-warning/15 px-4 py-2 text-center">
+        <p className="text-sm font-medium text-warning">
+          Je render wordt gegenereerd... <span className="text-warning">(±20 sec)</span>
         </p>
-        <div className="mx-auto mt-1 h-1 max-w-md overflow-hidden rounded-full bg-amber-200">
-          <div className="h-full w-full origin-left animate-[wachten-progress_20s_linear_infinite] bg-amber-700" />
+        <div className="mx-auto mt-1 h-1 max-w-md overflow-hidden rounded-full bg-warning/15">
+          <div className="h-full w-full origin-left animate-[wachten-progress_20s_linear_infinite] bg-warning/15" />
         </div>
         <style>{`
           @keyframes wachten-progress {
@@ -189,28 +189,28 @@ export default function WachtenClient() {
 
       <section className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl font-bold">Wachtkamer — 2048</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-stone-600">
           Speel 2048 met Spanl & Keralit RAL-kleuren als tegels. Pijltjestoetsen of
           WASD op desktop, swipe op mobiel.
         </p>
 
         <div className="mt-6 grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-ink bg-white p-3 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-gray-500">Score</p>
+            <p className="text-[10px] uppercase tracking-wide text-stone-500">Score</p>
             <p className="text-2xl font-bold">{score}</p>
           </div>
           <div className="rounded-xl border border-ink bg-white p-3 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-gray-500">Best</p>
+            <p className="text-[10px] uppercase tracking-wide text-stone-500">Best</p>
             <p className="text-2xl font-bold">{personalBest}</p>
           </div>
           <div className="rounded-xl border border-ink bg-white p-3 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-gray-500">Max tile</p>
+            <p className="text-[10px] uppercase tracking-wide text-stone-500">Max tile</p>
             <p className="text-2xl font-bold">{max}</p>
           </div>
         </div>
 
         <div
-          className="mt-4 select-none touch-none rounded-2xl border border-ink bg-neutral-300 p-2 sm:p-3"
+          className="mt-4 select-none touch-none rounded-2xl border border-ink bg-stone-300 p-2 sm:p-3"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -247,7 +247,7 @@ export default function WachtenClient() {
           >
             Nieuw spel
           </button>
-          <div className="hidden text-xs text-gray-500 sm:block">
+          <div className="hidden text-xs text-stone-500 sm:block">
             Pijltjes / WASD om te bewegen.
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function WachtenClient() {
         {over && (
           <div className="mt-6 rounded-2xl border-2 border-ink bg-white p-5">
             <h2 className="text-xl font-bold">Game over</h2>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-stone-600">
               Eindscore: <span className="font-semibold">{score}</span> · Hoogste tegel:{" "}
               <span className="font-semibold">{max}</span>
             </p>
@@ -280,14 +280,14 @@ export default function WachtenClient() {
               </form>
             ) : (
               <div className="mt-4 space-y-1 text-sm">
-                <p className="font-medium text-green-700">
+                <p className="font-medium text-success">
                   ✓ Score opgeslagen op dit apparaat.
                 </p>
                 {submitState === "ok" && (
-                  <p className="text-green-700">✓ Ook ingediend bij de globale leaderboard.</p>
+                  <p className="text-success">✓ Ook ingediend bij de globale leaderboard.</p>
                 )}
                 {submitState === "error" && (
-                  <p className="text-amber-700">
+                  <p className="text-warning">
                     Globale leaderboard niet bereikbaar — score staat alleen lokaal.
                   </p>
                 )}
@@ -309,7 +309,7 @@ export default function WachtenClient() {
           </div>
         )}
 
-        <p className="mt-8 text-xs text-gray-500">
+        <p className="mt-8 text-xs text-stone-500">
           Tegelnummers verwijzen naar Spanl en Keralit kleurcodes (bv. 9006 =
           witaluminium). Lokale scores in localStorage; globale scores via
           /api/leaderboard (resetten bij server-restart in dev).

@@ -51,21 +51,21 @@ export default function RenderingLoader({ attempt, aspect = "16/10", compact = f
 
   return (
     <div
-      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-200 via-neutral-100 to-neutral-200"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-stone-200 via-stone-100 to-stone-200"
       style={!compact && aspect ? { aspectRatio: aspect } : undefined}
       role="status"
       aria-live="polite"
     >
       <div className={`flex flex-col items-center justify-center gap-3 ${containerPadding}`}>
         <div className={`relative ${spinnerSize}`}>
-          <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
+          <div className="absolute inset-0 rounded-full border-4 border-stone-200" />
           <div className="absolute inset-0 animate-spin rounded-full border-4 border-ink border-t-transparent" />
         </div>
-        <p className={`animate-pulse text-center font-medium text-neutral-800 ${messageClass}`}>
+        <p className={`animate-pulse text-center font-medium text-stone-800 ${messageClass}`}>
           {message}
         </p>
         {attemptText && (
-          <p className="text-[10px] text-neutral-500">{attemptText}</p>
+          <p className="text-[10px] text-stone-500">{attemptText}</p>
         )}
       </div>
     </div>

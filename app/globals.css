@@ -8,11 +8,23 @@
   --color-stone-50:  #F5F4F0;
   --color-stone-100: #E8E6DF;
   --color-stone-200: #D4D1C7;
+  --color-stone-300: #B8B4A8;
   --color-stone-400: #9C9789;
+  --color-stone-500: #7C786C;
   --color-stone-600: #5C584F;
+  --color-stone-700: #45413A;
   --color-stone-800: #2E2C26;
+  --color-stone-900: #1A1916;
 
   --color-accent: #B8593A;        /* burnt sienna */
+
+  /* Status palette — warm-stemmed to match the stone neutrals.
+     Use bg-{status}/15 for light washes, text-{status} for saturated
+     text/icons, border-{status}/30 for subtle borders. */
+  --color-success: #4A6B3D;       /* warm forest green */
+  --color-warning: #C8893A;       /* warm honey amber */
+  --color-error:   #9B3F2A;       /* warm brick red, distinct from accent */
+  --color-info:    #4D6373;       /* warm slate blue */
 
   /* Type stack — display serif, body sans, technical mono */
   --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;

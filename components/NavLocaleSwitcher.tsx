@@ -37,7 +37,7 @@ export default function NavLocaleSwitcher({ className, compact }: Props) {
       aria-label="Language"
       className={[
         "flex items-center gap-1 print:hidden",
-        compact ? "" : "rounded-xl border border-zinc-200 bg-white/90 p-1 shadow-sm backdrop-blur",
+        compact ? "" : "rounded-xl border border-stone-200 bg-white/90 p-1 shadow-sm backdrop-blur",
         className ?? "",
       ]
         .filter(Boolean)
@@ -57,7 +57,7 @@ export default function NavLocaleSwitcher({ className, compact }: Props) {
               "flex items-center justify-center rounded-lg p-1.5 transition",
               active
                 ? "bg-ink ring-2 ring-ink"
-                : "hover:bg-zinc-100",
+                : "hover:bg-stone-100",
             ].join(" ")}
           >
             <FlagIcon locale={l} />

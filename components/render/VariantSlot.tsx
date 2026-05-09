@@ -39,15 +39,15 @@ export default function VariantSlot({ state, toneLabel, onRetry }: Props) {
         />
       )}
       {state.kind === "failed" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-red-50 p-4 text-center">
-          <p className="text-sm text-red-900">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-error/15 p-4 text-center">
+          <p className="text-sm text-error">
             {t("render.slot.failed") || "Renderen mislukt"}
           </p>
           {onRetry && (
             <button
               type="button"
               onClick={onRetry}
-              className="border border-red-900 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-red-900 hover:bg-red-900 hover:text-paper"
+              className="border border-error/30 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-error hover:bg-error/15 hover:text-paper"
             >
               {t("render.slot.retry") || "Probeer opnieuw"}
             </button>

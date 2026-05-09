@@ -9,11 +9,11 @@ import { Logo } from "@/components/Logo";
 import { useLocale } from "@/lib/i18n";
 
 const ROI_BARS: Array<{ labelKey: string; adviceKey: string; roi: number; color: string }> = [
-  { labelKey: "home.roi.bar.dak.label", adviceKey: "home.roi.bar.dak.advice", roi: 90, color: "bg-green-700" },
-  { labelKey: "home.roi.bar.gevelIso.label", adviceKey: "home.roi.bar.gevelIso.advice", roi: 85, color: "bg-green-600" },
-  { labelKey: "home.roi.bar.cladding.label", adviceKey: "home.roi.bar.cladding.advice", roi: 70, color: "bg-green-500" },
-  { labelKey: "home.roi.bar.frames.label", adviceKey: "home.roi.bar.frames.advice", roi: 60, color: "bg-green-400" },
-  { labelKey: "home.roi.bar.kitchen.label", adviceKey: "home.roi.bar.kitchen.advice", roi: 40, color: "bg-amber-400" },
+  { labelKey: "home.roi.bar.dak.label", adviceKey: "home.roi.bar.dak.advice", roi: 90, color: "bg-success/15" },
+  { labelKey: "home.roi.bar.gevelIso.label", adviceKey: "home.roi.bar.gevelIso.advice", roi: 85, color: "bg-success/15" },
+  { labelKey: "home.roi.bar.cladding.label", adviceKey: "home.roi.bar.cladding.advice", roi: 70, color: "bg-success/15" },
+  { labelKey: "home.roi.bar.frames.label", adviceKey: "home.roi.bar.frames.advice", roi: 60, color: "bg-success/15" },
+  { labelKey: "home.roi.bar.kitchen.label", adviceKey: "home.roi.bar.kitchen.advice", roi: 40, color: "bg-warning/15" },
 ];
 
 const HOW_STEPS: Array<{ step: string; titleKey: string; descKey: string; href: string; ctaKey: string }> = [
@@ -203,9 +203,9 @@ export default function HomeClient() {
           <div className="grid gap-6 md:grid-cols-3">
             {HOW_STEPS.map((item) => (
               <div key={item.step} className="rounded-2xl border border-ink bg-white p-6">
-                <div className="text-5xl font-bold text-gray-100">{item.step}</div>
+                <div className="text-5xl font-bold text-stone-100">{item.step}</div>
                 <h3 className="mt-2 text-xl font-bold">{t(item.titleKey)}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">{t(item.descKey)}</p>
+                <p className="mt-3 text-sm leading-relaxed text-stone-600">{t(item.descKey)}</p>
                 <Link href={item.href} className="mt-4 inline-block text-sm font-semibold underline underline-offset-4">
                   {t(item.ctaKey)}
                 </Link>
@@ -217,7 +217,7 @@ export default function HomeClient() {
 
       <section className="border-b border-ink bg-white px-4 py-12">
         <div className="mx-auto max-w-[1400px]">
-          <p className="mb-8 text-center text-sm font-medium text-gray-500">
+          <p className="mb-8 text-center text-sm font-medium text-stone-500">
             {t("home.brands.heading")}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -230,7 +230,7 @@ export default function HomeClient() {
               </div>
             ))}
           </div>
-          <p className="mt-4 text-center text-xs text-gray-400">
+          <p className="mt-4 text-center text-xs text-stone-400">
             {t("home.brands.more")}
           </p>
         </div>
@@ -244,7 +244,7 @@ export default function HomeClient() {
               <div key={f.titleKey} className="rounded-2xl border border-ink bg-white p-5">
                 <div className="mb-3 text-2xl">{f.icon}</div>
                 <h3 className="font-bold">{t(f.titleKey)}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{t(f.descKey)}</p>
+                <p className="mt-2 text-sm leading-relaxed text-stone-600">{t(f.descKey)}</p>
               </div>
             ))}
           </div>
@@ -256,10 +256,10 @@ export default function HomeClient() {
           <div className="grid gap-8 md:grid-cols-2 md:items-center">
             <div>
               <h2 className="text-3xl font-bold">{t("home.roi.heading")}</h2>
-              <p className="mt-4 leading-relaxed text-gray-600">
+              <p className="mt-4 leading-relaxed text-stone-600">
                 {t("home.roi.intro1")}
               </p>
-              <p className="mt-3 leading-relaxed text-gray-600">
+              <p className="mt-3 leading-relaxed text-stone-600">
                 {t("home.roi.intro2")}
               </p>
             </div>
@@ -270,27 +270,27 @@ export default function HomeClient() {
                     <span className="text-sm font-semibold">{t(item.labelKey)}</span>
                     <span className="text-sm font-bold">{item.roi}% ROI*</span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-200">
+                  <div className="h-2 rounded-full bg-stone-200">
                     <div className={`h-2 rounded-full ${item.color}`} style={{ width: `${item.roi}%` }} />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">{t(item.adviceKey)}</p>
+                  <p className="mt-1 text-xs text-stone-500">{t(item.adviceKey)}</p>
                 </div>
               ))}
-              <p className="text-xs italic text-gray-500">
+              <p className="text-xs italic text-stone-500">
                 {t("home.roi.disclaimer")}
               </p>
             </div>
           </div>
 
           {showSubsidies && (
-            <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
-              <p className="text-sm text-green-800">
+            <div className="mt-4 rounded-xl border border-success/30 bg-success/15 p-4">
+              <p className="text-sm text-success">
                 💡 Combineer gevelbekleding met isolatie en profiteer van ISDE subsidie
                 tot €30/m²
               </p>
               <Link
                 href="/subsidie"
-                className="mt-2 inline-block text-sm font-semibold text-green-800 underline underline-offset-4"
+                className="mt-2 inline-block text-sm font-semibold text-success underline underline-offset-4"
               >
                 Bekijk alle subsidies →
               </Link>
@@ -303,7 +303,7 @@ export default function HomeClient() {
         <div className="mx-auto max-w-[1400px]">
           <div className="rounded-2xl border border-ink bg-white p-6">
             <h3 className="text-xl font-bold">{t("home.waitlist.heading")}</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-stone-600">
               {t("home.waitlist.subtitle")}
             </p>
             <form
@@ -327,7 +327,7 @@ export default function HomeClient() {
                 value={waitEmail}
                 onChange={(e) => setWaitEmail(e.target.value)}
                 disabled={waitState === "loading" || waitState === "ok"}
-                className="min-h-[48px] flex-1 rounded-xl border border-ink px-3 text-base disabled:bg-neutral-100"
+                className="min-h-[48px] flex-1 rounded-xl border border-ink px-3 text-base disabled:bg-stone-100"
                 suppressHydrationWarning
               />
               <button
@@ -343,12 +343,12 @@ export default function HomeClient() {
               </button>
             </form>
             {waitState === "ok" && (
-              <p className="mt-3 text-sm font-medium text-green-700">
+              <p className="mt-3 text-sm font-medium text-success">
                 {t("home.waitlist.success")}
               </p>
             )}
             {waitState === "error" && (
-              <p className="mt-3 text-sm font-medium text-red-700">
+              <p className="mt-3 text-sm font-medium text-error">
                 {waitError || t("home.waitlist.errorGeneric")}
               </p>
             )}
@@ -360,7 +360,7 @@ export default function HomeClient() {
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
-            <p className="mt-1 text-xs text-gray-400">{t("home.footer.tagline")}</p>
+            <p className="mt-1 text-xs text-stone-400">{t("home.footer.tagline")}</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
             <Link href="/render" className="hover:underline">{t("home.nav.render")}</Link>
@@ -368,7 +368,7 @@ export default function HomeClient() {
             <a href="#roi" className="hover:underline">{t("home.nav.roi")}</a>
             {showSubsidies && <Link href="/subsidie" className="hover:underline">{t("home.nav.subsidies")}</Link>}
           </div>
-          <p className="text-xs text-gray-400">© 2026 Renisual</p>
+          <p className="text-xs text-stone-400">© 2026 Renisual</p>
         </div>
       </footer>
     </main>

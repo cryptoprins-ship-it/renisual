@@ -28,7 +28,7 @@ const SUBSIDIES = [
     id: "isde",
     title: "ISDE — Investeringssubsidie Duurzame Energie",
     badge: "Tot €38/m²",
-    badgeColor: "bg-green-100 text-green-800 border-green-300",
+    badgeColor: "bg-success/15 text-success border-success/30",
     description:
       "Subsidie voor spouwmuurisolatie, vloerisolatie, bodemisolatie, dakisolatie en gevelisolatie. Ook voor warmtepompen en zonneboilers.",
     link: "https://www.rvo.nl/subsidies-financiering/isde",
@@ -38,7 +38,7 @@ const SUBSIDIES = [
     id: "svn",
     title: "Energiebespaarlening (SVn)",
     badge: "Lage rente",
-    badgeColor: "bg-blue-100 text-blue-800 border-blue-300",
+    badgeColor: "bg-info/15 text-info border-info/30",
     description:
       "Lening met lage rente speciaal voor isolatie en verduurzamingsmaatregelen. Bedragen van €2.500 tot €65.000.",
     link: "https://www.svn.nl/energiebespaarlening",
@@ -58,7 +58,7 @@ const SUBSIDIES = [
     id: "warmtefonds",
     title: "Nationaal Warmtefonds",
     badge: "0% rente",
-    badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
+    badgeColor: "bg-warning/15 text-warning border-warning/30",
     description:
       "0%-lening voor mensen met een lager inkomen. Geen rente over de leensom, terugbetaling vanuit besparing op de energierekening.",
     link: "https://www.nationaalwarmtefonds.nl",
@@ -86,13 +86,13 @@ export default function SubsidieClient() {
       <header className="border-b border-ink bg-white px-4 py-12 md:py-16">
         <div className="mx-auto max-w-4xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-ink px-3 py-1 text-xs font-medium">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span className="h-2 w-2 rounded-full bg-success/15" />
             Bijgewerkt voor 2026
           </div>
           <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
             Subsidies 2026
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-stone-600">
             Voor isolatie &amp; renovatie. Bespaar duizenden euro&apos;s met deze regelingen.
           </p>
         </div>
@@ -108,7 +108,7 @@ export default function SubsidieClient() {
                   {s.badge}
                 </span>
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-gray-600">{s.description}</p>
+              <p className="mt-3 text-sm leading-relaxed text-stone-600">{s.description}</p>
               <a
                 href={s.link}
                 target="_blank"
@@ -124,7 +124,7 @@ export default function SubsidieClient() {
             <h2 className="text-xl font-bold mb-2">
               Gemeentelijke subsidies &amp; toewijzingen
             </h2>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+            <p className="text-sm text-stone-600 leading-relaxed mb-4">
               Naast de landelijke ISDE subsidie hebben veel gemeenten eigen
               subsidieregelingen voor isolatie en gevelrenovatie. Een
               gemeentelijke toewijzing is een officiële goedkeuring waarbij je
@@ -135,7 +135,7 @@ export default function SubsidieClient() {
             <div className="grid gap-4 md:grid-cols-2 mb-6">
               <div className="rounded-xl border border-ink bg-[#f6f4ef] p-4">
                 <h3 className="font-semibold mb-2">Voorbeelden per gemeente</h3>
-                <ul className="text-sm space-y-1 text-gray-700">
+                <ul className="text-sm space-y-1 text-stone-700">
                   <li>🏙️ Amsterdam — tot €1.500 spouwmuurisolatie</li>
                   <li>🏙️ Rotterdam — gratis energieadvies + subsidie</li>
                   <li>🏙️ Den Haag — buurtaanpak hele straten</li>
@@ -145,7 +145,7 @@ export default function SubsidieClient() {
               </div>
               <div className="rounded-xl border border-ink bg-[#f6f4ef] p-4">
                 <h3 className="font-semibold mb-2">Hoe werkt een toewijzing?</h3>
-                <ol className="text-sm space-y-1 text-gray-700 list-decimal list-inside">
+                <ol className="text-sm space-y-1 text-stone-700 list-decimal list-inside">
                   <li>Aanvraag indienen bij je gemeente</li>
                   <li>Gemeente keurt je woning goed</li>
                   <li>Je ontvangt een toewijzingsbrief</li>
@@ -158,7 +158,7 @@ export default function SubsidieClient() {
             <div className="rounded-xl border-2 border-ink bg-ink text-paper p-5 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="font-semibold">Controleer subsidies in je gemeente</p>
-                <p className="text-sm text-gray-300 mt-1">
+                <p className="text-sm text-stone-300 mt-1">
                   Vul je postcode in op verbeterjehuis.nl en zie direct welke
                   regelingen beschikbaar zijn.
                 </p>
@@ -167,13 +167,13 @@ export default function SubsidieClient() {
                 href="https://www.verbeterjehuis.nl/subsidies"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-xl bg-white text-black px-5 py-2.5 text-sm font-semibold hover:bg-gray-100 transition-colors flex-shrink-0"
+                className="rounded-xl bg-white text-black px-5 py-2.5 text-sm font-semibold hover:bg-stone-100 transition-colors flex-shrink-0"
               >
                 Check je gemeente →
               </a>
             </div>
 
-            <p className="mt-4 text-xs text-gray-400">
+            <p className="mt-4 text-xs text-stone-400">
               Renisual helpt je bij het samenstellen van je aanvraagdossier.
               Gemeentelijk beleid wijzigt regelmatig — controleer altijd de
               actuele informatie via je gemeente of verbeterjehuis.nl.
@@ -186,7 +186,7 @@ export default function SubsidieClient() {
       <section className="border-b border-ink bg-white px-4 py-16">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-3xl font-bold">Bereken je subsidie</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-stone-600">
             Indicatieve berekening op basis van ISDE-tarieven 2026. Definitieve
             bedragen worden bepaald door RVO bij de aanvraag.
           </p>
@@ -220,7 +220,7 @@ export default function SubsidieClient() {
           </div>
 
           <div className="mt-6 rounded-2xl border-2 border-ink bg-[#f6f4ef] p-6">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Geschatte ISDE-subsidie</p>
+            <p className="text-xs uppercase tracking-wide text-stone-500">Geschatte ISDE-subsidie</p>
             <p className="mt-1 text-3xl font-bold">
               {result && result.amount > 0
                 ? new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
@@ -229,7 +229,7 @@ export default function SubsidieClient() {
                 : "—"}
             </p>
             {result && result.amount > 0 && (
-              <p className="mt-2 text-xs text-gray-600">
+              <p className="mt-2 text-xs text-stone-600">
                 Op basis van {result.kind.label.toLowerCase()} × €{result.kind.ratePerM2}/m².
               </p>
             )}
@@ -246,7 +246,7 @@ export default function SubsidieClient() {
               href="https://www.rvo.nl/subsidies-financiering/isde"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-2xl border-2 border-ink bg-white px-6 py-3 text-base font-semibold hover:bg-gray-50"
+              className="rounded-2xl border-2 border-ink bg-white px-6 py-3 text-base font-semibold hover:bg-stone-50"
             >
               ISDE-tarieven bij RVO ↗
             </a>
@@ -270,7 +270,7 @@ export default function SubsidieClient() {
               <div className="rounded-2xl border border-ink bg-[#f6f4ef] p-5">
                 <div className="text-2xl">📋</div>
                 <h3 className="mt-2 font-bold">Compleet pakket</h3>
-                <p className="mt-2 text-sm text-gray-700">
+                <p className="mt-2 text-sm text-stone-700">
                   Wij vullen alle formulieren in en leveren een kant-en-klaar
                   aanvraagpakket.
                 </p>
@@ -278,7 +278,7 @@ export default function SubsidieClient() {
               <div className="rounded-2xl border border-ink bg-[#f6f4ef] p-5">
                 <div className="text-2xl">⚡</div>
                 <h3 className="mt-2 font-bold">Je dient zelf in</h3>
-                <p className="mt-2 text-sm text-gray-700">
+                <p className="mt-2 text-sm text-stone-700">
                   Met je DigiD via rvo.nl — duurt slechts 5 minuten.
                   Stap-voor-stap begeleiding inbegrepen.
                 </p>
@@ -286,7 +286,7 @@ export default function SubsidieClient() {
               <div className="rounded-2xl border border-ink bg-[#f6f4ef] p-5">
                 <div className="text-2xl">💶</div>
                 <h3 className="mt-2 font-bold">€25 vaste prijs</h3>
-                <p className="mt-2 text-sm text-gray-700">
+                <p className="mt-2 text-sm text-stone-700">
                   Eenmalig €25 voor het complete aanvraagpakket. Niet
                   tevreden = geld terug.
                 </p>
@@ -324,7 +324,7 @@ export default function SubsidieClient() {
               </Link>
             </div>
 
-            <p className="mt-6 text-xs text-gray-500">
+            <p className="mt-6 text-xs text-stone-500">
               Renisual stelt het aanvraagpakket op en begeleidt je bij de
               indiening. De aanvraag wordt door jou persoonlijk ingediend via
               DigiD op rvo.nl. Renisual is niet verantwoordelijk voor de
@@ -338,7 +338,7 @@ export default function SubsidieClient() {
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
-            <p className="mt-1 text-xs text-gray-400">Het complete renovatieplatform voor Nederland.</p>
+            <p className="mt-1 text-xs text-stone-400">Het complete renovatieplatform voor Nederland.</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
             <Link href="/render" className="hover:underline">Gevelvisualisatie</Link>
