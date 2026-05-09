@@ -1994,7 +1994,10 @@ export default function GevelCalcPage() {
               <span aria-hidden>←</span>
               <span>Home</span>
             </Link>
-            <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
+            <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
+              Renisual
+            </p>
+            <h1 className="mt-1 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
               {t("gc.title")}
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-stone-600">{t("gc.subtitle")}</p>
