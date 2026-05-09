@@ -1097,6 +1097,7 @@ export async function POST(request: Request) {
       const { family, shape } = detectFamilyAndShape({
         sku: product.sku,
         ral_code: product.ral_code,
+        name: product.name,
       });
       const skuUpper = (product.sku ?? "").toUpperCase();
       const linenTexture =

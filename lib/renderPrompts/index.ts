@@ -167,6 +167,7 @@ export function resolveBflPrompt(opts: ResolvePromptOpts): string {
 export function detectFamilyAndShape(product: {
   sku?: string | null;
   ral_code?: string | null;
+  name?: string | null;
 }): { family: ProductFamily; shape: RalShape | StyleShape } {
   const sku = (product.sku ?? "").toUpperCase();
   if (sku.startsWith("CZS70")) {
@@ -186,6 +187,18 @@ export function detectFamilyAndShape(product: {
   }
   if (sku.startsWith("PB") || sku.startsWith("YMPB")) {
     return { family: "ral", shape: "mono_flat" };
+  }
+  // Keralit panels reach here with no SKU / no RAL — the legacy free-text
+  // path in the render route. They are PVC cladding sold as wood-look
+  // (Classic met houtnerf, Modern eiken) or smooth-mat (Pure mat effen).
+  // Routing them to style/wood means the BFL prompt instructs the model
+  // to "match the reference image's exact tones and pattern" — and the
+  // reference IS the per-color Keralit swatch thumbnail, which is the
+  // only ground truth we have for these colors (no hex in the catalog).
+  // Without this branch they fell through to style/brick and rendered
+  // as cream-tan brick pattern regardless of the chosen Keralit color.
+  if ((product.name ?? "").toLowerCase().startsWith("keralit")) {
+    return { family: "style", shape: "wood" };
   }
   // Fallback — RAL Mono Flat is the safest default for unknown SKUs that
   // still ship with a ral_code, since most of the catalog is Mono Flat.
