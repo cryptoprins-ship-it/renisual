@@ -347,7 +347,7 @@ export default function RenderPage() {
   const [batchAbort, setBatchAbort] = useState<AbortController | null>(null);
   const [failedTones, setFailedTones] = useState<ReadonlySet<ToneNudge>>(new Set());
   const [batchTones, setBatchTones] = useState<readonly ToneNudge[]>([]);
-  const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
+  const [brand, setBrand] = useState<"spanl" | "keralit" | null>(null);
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
   // Sample categories: each has its own folder under /public/samples/<key>/
@@ -706,6 +706,7 @@ export default function RenderPage() {
         effKeralitColor = undefined;
       }
     } else {
+      if (!brand) return;
       effBrand = brand;
       effSpanlPanel = selectedPanel;
       effKeralitProduct = selectedKeralitProduct;
@@ -839,7 +840,7 @@ export default function RenderPage() {
                   win.plausible?.("render", {
                     props: {
                       engine: engineTag ?? "unknown",
-                      brand,
+                      brand: brand ?? "unknown",
                       toneNudge,
                     },
                   });
@@ -1156,8 +1157,8 @@ export default function RenderPage() {
                     }}
                     className={`rounded-xl border px-4 py-2 text-sm ${
                       s.id === selectedSideId && !photoOverride
-                        ? "border-black bg-black text-white"
-                        : "border-black bg-white"
+                        ? "border-ink bg-ink text-paper"
+                        : "border-ink bg-white"
                     }`}
                   >
                     {s.name}
@@ -1222,7 +1223,7 @@ export default function RenderPage() {
                       key={s.file}
                       type="button"
                       onClick={() => loadSamplePhoto(sampleTab, s.file)}
-                      className="overflow-hidden rounded-xl border border-black bg-white text-left hover:bg-neutral-50"
+                      className="overflow-hidden rounded-xl border border-ink bg-white text-left hover:bg-neutral-50"
                     >
                       <img
                         src={`/samples/${sampleTab}/${s.file}`}
@@ -1251,7 +1252,7 @@ export default function RenderPage() {
 
         <section ref={panelSectionRef} className="scroll-mt-20">
           <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
-            02 — {t("render.section.panel")}
+            02 — {t("render.section.supplier")}
           </p>
 
           <div className="mb-4 flex gap-2">
@@ -1259,7 +1260,7 @@ export default function RenderPage() {
               type="button"
               onClick={() => setBrand("spanl")}
               className={`rounded-xl border px-4 py-2 text-sm ${
-                brand === "spanl" ? "border-black bg-black text-white" : "border-black bg-white"
+                brand === "spanl" ? "border-ink bg-ink text-paper" : "border-ink bg-white"
               }`}
             >
               Spanl
@@ -1268,51 +1269,65 @@ export default function RenderPage() {
               type="button"
               onClick={() => setBrand("keralit")}
               className={`rounded-xl border px-4 py-2 text-sm ${
-                brand === "keralit" ? "border-black bg-black text-white" : "border-black bg-white"
+                brand === "keralit" ? "border-ink bg-ink text-paper" : "border-ink bg-white"
               }`}
             >
               Keralit
             </button>
           </div>
 
-          {brand === "keralit" ? (
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Keralit paneel</label>
-                  <select
-                    className="w-full rounded-xl border border-black p-3"
-                    value={selectedKeralitProductId}
-                    onChange={(e) => setSelectedKeralitProductId(e.target.value)}
-                  >
-                    <option value="">{t("render.choosePanel")}</option>
-                    {keralitProducts.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.panelWorkSize} mm)
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {brand === null && (
+            <p className="mt-4 text-sm leading-relaxed text-stone-600">
+              {t("render.supplierEmptyHint")}
+            </p>
+          )}
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
-                  <select
-                    className="w-full rounded-xl border border-black p-3 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
-                    value={orientation}
-                    onChange={(e) => setOrientation(e.target.value as Orientation)}
-                    disabled={allowedOrientations.length <= 1}
-                  >
-                    <option value="horizontal" disabled={!allowedOrientations.includes("horizontal")}>
-                      {t("render.horizontal")}
-                    </option>
-                    <option value="vertical" disabled={!allowedOrientations.includes("vertical")}>
-                      {t("render.vertical")}
-                    </option>
-                  </select>
+          {brand === "keralit" && (
+            <div className="mt-8 space-y-8">
+              <div>
+                <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+                  02a — {t("render.section.widthKeralit")}
+                </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">Keralit paneel</label>
+                    <select
+                      className="w-full rounded-xl border border-ink p-3"
+                      value={selectedKeralitProductId}
+                      onChange={(e) => setSelectedKeralitProductId(e.target.value)}
+                    >
+                      <option value="">{t("render.choosePanel")}</option>
+                      {keralitProducts.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.panelWorkSize} mm)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
+                    <select
+                      className="w-full rounded-xl border border-ink p-3 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
+                      value={orientation}
+                      onChange={(e) => setOrientation(e.target.value as Orientation)}
+                      disabled={allowedOrientations.length <= 1}
+                    >
+                      <option value="horizontal" disabled={!allowedOrientations.includes("horizontal")}>
+                        {t("render.horizontal")}
+                      </option>
+                      <option value="vertical" disabled={!allowedOrientations.includes("vertical")}>
+                        {t("render.vertical")}
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <div>
+                <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+                  02b — {t("render.section.color")}
+                </p>
                 <label className="mb-2 block text-sm font-medium">
                   Kleur ({KERALIT_COLORS.length} kleuren)
                 </label>
@@ -1331,7 +1346,7 @@ export default function RenderPage() {
                             onClick={() => setSelectedKeralitColorNumber(c.number)}
                             className={`overflow-hidden rounded-lg border-2 text-left transition ${
                               selectedKeralitColorNumber === c.number
-                                ? "border-black ring-2 ring-black"
+                                ? "border-ink ring-2 ring-ink"
                                 : "border-gray-200 hover:border-gray-400"
                             }`}
                             title={`${c.number} ${c.name}`}
@@ -1349,87 +1364,94 @@ export default function RenderPage() {
                 })}
               </div>
             </div>
-          ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
-              <select
-                className="w-full rounded-xl border border-black p-3 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
-                value={orientation}
-                onChange={(e) => setOrientation(e.target.value as Orientation)}
-                disabled={allowedOrientations.length <= 1}
-              >
-                <option value="horizontal" disabled={!allowedOrientations.includes("horizontal")}>
-                  {t("render.horizontal")}
-                </option>
-                <option value="vertical" disabled={!allowedOrientations.includes("vertical")}>
-                  {t("render.vertical")}
-                </option>
-              </select>
-            </div>
+          )}
 
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                {t("render.spanlPanel")} ({panels.length})
-              </label>
-              {panels.every((p) => !p.imageUrl) && (
-                <p className="mb-3 text-xs text-amber-700">
-                  {t("render.panelIndexHint", {
-                    cmd: "node scripts/build-spanl-index.js",
-                  })}
-                </p>
-              )}
-              {(["monoFlat", "monoGroove", "strip", "brick", "spanishTile", "wood"] as const).map((finish) => {
-                const group = panels.filter((p) => p.finish === finish);
-                if (group.length === 0) return null;
-                return (
-                  <div key={finish} className="mb-4">
-                    <p className="mb-2 text-xs font-semibold text-gray-600">
-                      {t(`finish.${finish}`)} ({group.length})
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
-                      {group.map((p) => {
-                        const ral = p.ral ? ` (RAL ${p.ral})` : "";
-                        return (
-                          <button
-                            key={p.sku}
-                            type="button"
-                            onClick={() => setSelectedSku(p.sku)}
-                            className={`overflow-hidden rounded-lg border-2 text-left transition ${
-                              selectedSku === p.sku
-                                ? "border-black ring-2 ring-black"
-                                : "border-gray-200 hover:border-gray-400"
-                            }`}
-                            title={`${p.sku} — ${t(p.colorKey)}${ral}`}
-                          >
-                            {p.imageUrl ? (
-                              <img
-                                src={p.imageUrl}
-                                alt={p.sku}
-                                loading="lazy"
-                                className="block aspect-square w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex aspect-square w-full items-center justify-center bg-neutral-100 text-[9px] text-gray-400">
-                                {t("render.noReference")}
-                              </div>
-                            )}
-                            <div className="p-1 text-[10px] leading-tight">
-                              <div className="font-semibold">{p.sku}</div>
-                              <div className="truncate text-gray-600">
-                                {t(p.colorKey)}
-                                {p.ral ? ` · ${p.ral}` : ""}
-                              </div>
-                            </div>
-                          </button>
-                        );
+          {brand === "spanl" && (
+            <div className="mt-8">
+              <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+                02a — {t("render.section.panelSpanl")}
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
+                  <select
+                    className="w-full rounded-xl border border-ink p-3 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
+                    value={orientation}
+                    onChange={(e) => setOrientation(e.target.value as Orientation)}
+                    disabled={allowedOrientations.length <= 1}
+                  >
+                    <option value="horizontal" disabled={!allowedOrientations.includes("horizontal")}>
+                      {t("render.horizontal")}
+                    </option>
+                    <option value="vertical" disabled={!allowedOrientations.includes("vertical")}>
+                      {t("render.vertical")}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    {t("render.spanlPanel")} ({panels.length})
+                  </label>
+                  {panels.every((p) => !p.imageUrl) && (
+                    <p className="mb-3 text-xs text-amber-700">
+                      {t("render.panelIndexHint", {
+                        cmd: "node scripts/build-spanl-index.js",
                       })}
-                    </div>
-                  </div>
-                );
-              })}
+                    </p>
+                  )}
+                  {(["monoFlat", "monoGroove", "strip", "brick", "spanishTile", "wood"] as const).map((finish) => {
+                    const group = panels.filter((p) => p.finish === finish);
+                    if (group.length === 0) return null;
+                    return (
+                      <div key={finish} className="mb-4">
+                        <p className="mb-2 text-xs font-semibold text-gray-600">
+                          {t(`finish.${finish}`)} ({group.length})
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+                          {group.map((p) => {
+                            const ral = p.ral ? ` (RAL ${p.ral})` : "";
+                            return (
+                              <button
+                                key={p.sku}
+                                type="button"
+                                onClick={() => setSelectedSku(p.sku)}
+                                className={`overflow-hidden rounded-lg border-2 text-left transition ${
+                                  selectedSku === p.sku
+                                    ? "border-ink ring-2 ring-ink"
+                                    : "border-gray-200 hover:border-gray-400"
+                                }`}
+                                title={`${p.sku} — ${t(p.colorKey)}${ral}`}
+                              >
+                                {p.imageUrl ? (
+                                  <img
+                                    src={p.imageUrl}
+                                    alt={p.sku}
+                                    loading="lazy"
+                                    className="block aspect-square w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex aspect-square w-full items-center justify-center bg-neutral-100 text-[9px] text-gray-400">
+                                    {t("render.noReference")}
+                                  </div>
+                                )}
+                                <div className="p-1 text-[10px] leading-tight">
+                                  <div className="font-semibold">{p.sku}</div>
+                                  <div className="truncate text-gray-600">
+                                    {t(p.colorKey)}
+                                    {p.ral ? ` · ${p.ral}` : ""}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
           )}
         </section>
 
@@ -1611,7 +1633,7 @@ export default function RenderPage() {
                 className={`relative overflow-hidden rounded-xl border-2 transition-colors ${
                   selectedForOfferteIds.includes(v.id)
                     ? "border-ink ring-2 ring-ink/30"
-                    : "border-black"
+                    : "border-ink"
                 }`}
               >
                 {selectedForOfferteIds.includes(v.id) && (
@@ -1628,7 +1650,7 @@ export default function RenderPage() {
                   onClick={() => setVariants((prev) => prev.filter((x) => x.id !== v.id))}
                   aria-label={t("render.delete")}
                   title={t("render.delete")}
-                  className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-black bg-white/90 text-base leading-none text-ink shadow-sm hover:bg-white"
+                  className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-ink bg-white/90 text-base leading-none text-ink shadow-sm hover:bg-white"
                 >
                   ×
                 </button>
@@ -1652,7 +1674,7 @@ export default function RenderPage() {
                   const cls =
                     "rounded-md border border-stone-300 bg-stone-50 px-2 py-1.5 text-center text-[11px] font-medium text-ink transition-colors hover:border-ink hover:bg-stone-100";
                   return (
-                    <div className="grid grid-cols-2 gap-1.5 border-t border-black p-2">
+                    <div className="grid grid-cols-2 gap-1.5 border-t border-ink p-2">
                       {!hasNudgeForThis(1) && (
                         <button
                           type="button"
@@ -1693,7 +1715,7 @@ export default function RenderPage() {
                   );
                 })()}
 
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black p-3 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink p-3 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     {v.toneNudge !== undefined && (
                       <span
@@ -1719,13 +1741,13 @@ export default function RenderPage() {
                       >
                         <span
                           aria-hidden
-                          className="inline-block h-2.5 w-2.5 rounded-full border border-black/20"
+                          className="inline-block h-2.5 w-2.5 rounded-full border border-ink/20"
                           style={{ background: v.colorCheck.sampledHex }}
                         />
                         →
                         <span
                           aria-hidden
-                          className="inline-block h-2.5 w-2.5 rounded-full border border-black/20"
+                          className="inline-block h-2.5 w-2.5 rounded-full border border-ink/20"
                           style={{ background: v.colorCheck.targetHex }}
                         />
                         ΔE {v.colorCheck.deltaE}
@@ -1761,7 +1783,7 @@ export default function RenderPage() {
                       className={`rounded-lg border px-2 py-1 transition-colors ${
                         selectedForOfferteIds.includes(v.id)
                           ? "border-ink bg-ink text-paper"
-                          : "border-black bg-white text-ink hover:bg-stone-100"
+                          : "border-ink bg-white text-ink hover:bg-stone-100"
                       }`}
                       aria-pressed={selectedForOfferteIds.includes(v.id)}
                     >
@@ -1770,7 +1792,7 @@ export default function RenderPage() {
                     <button
                       type="button"
                       onClick={() => downloadVariant(v)}
-                      className="rounded-lg border border-black px-2 py-1"
+                      className="rounded-lg border border-ink px-2 py-1"
                     >
                       {t("render.download")}
                     </button>
