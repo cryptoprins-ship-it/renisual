@@ -98,7 +98,7 @@ export default async function Image() {
           }}
         >
           <div>renisual.com</div>
-          <div>Gevelrendering · Calculator · Offerte</div>
+          <div>Gevelvisualisatie · Calculator · Offerte</div>
         </div>
       </div>
     ),

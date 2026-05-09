@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import { Logo } from "@/components/Logo";
+import SiteNav from "@/components/SiteNav";
 
 type IsdeIsolationKind = {
   id: string;
@@ -80,21 +81,7 @@ export default function SubsidieClient() {
   return (
     <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="subsidie" />
-      <nav className="border-b border-black bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4">
-          <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
-            <Logo variant="horizontal" />
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/render" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
-              Gevelrendering
-            </Link>
-            <Link href="/gevelcalc" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
-              Calculator
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       <header className="border-b border-black bg-white px-4 py-12 md:py-16">
         <div className="mx-auto max-w-4xl">
@@ -354,7 +341,7 @@ export default function SubsidieClient() {
             <p className="mt-1 text-xs text-gray-400">Het complete renovatieplatform voor Nederland.</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link href="/render" className="hover:underline">Gevelrendering</Link>
+            <Link href="/render" className="hover:underline">Gevelvisualisatie</Link>
             <Link href="/gevelcalc" className="hover:underline">Calculator</Link>
             <Link href="/subsidie" className="hover:underline">Subsidies</Link>
           </div>
