@@ -42,10 +42,24 @@ function readEnvCaseInsensitive(name: string): string | undefined {
 }
 
 function smtpConfig() {
-  const host = readEnvCaseInsensitive("Hostinger_SMTP_Host") ?? "smtp.hostinger.com";
-  const portRaw = readEnvCaseInsensitive("Hostinger_SMTP_Port") ?? "465";
-  const user = readEnvCaseInsensitive("Hostinger_SMTP_User");
-  const pass = readEnvCaseInsensitive("Hostinger_SMTP_Password");
+  // Accept both the Hostinger-prefixed names and the generic SMTP_* names
+  // (which is what the README documents and what most setups have in
+  // .env.local). Hostinger-prefixed wins if both are set.
+  const host =
+    readEnvCaseInsensitive("Hostinger_SMTP_Host") ??
+    readEnvCaseInsensitive("SMTP_HOST") ??
+    "smtp.hostinger.com";
+  const portRaw =
+    readEnvCaseInsensitive("Hostinger_SMTP_Port") ??
+    readEnvCaseInsensitive("SMTP_PORT") ??
+    "465";
+  const user =
+    readEnvCaseInsensitive("Hostinger_SMTP_User") ??
+    readEnvCaseInsensitive("SMTP_USER");
+  const pass =
+    readEnvCaseInsensitive("Hostinger_SMTP_Password") ??
+    readEnvCaseInsensitive("SMTP_PASS") ??
+    readEnvCaseInsensitive("SMTP_PASSWORD");
   const port = Number(portRaw) || 465;
   return { host, port, secure: port === 465, user, pass };
 }
@@ -137,7 +151,7 @@ export async function POST(request: Request) {
   if (photoBuf) attachments.push({ filename: `${row.ref}-foto.jpg`, content: photoBuf, contentType: "image/jpeg" });
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `Renisual <${cfg.user}>`,
       to: TO_ADDRESS,
       replyTo: row.customer_email ?? undefined,
@@ -145,6 +159,17 @@ export async function POST(request: Request) {
       text: bodyLines.join("\n"),
       attachments,
     });
+    logger.info(
+      {
+        ref: parsed.ref,
+        messageId: info.messageId,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response,
+        envelope: info.envelope,
+      },
+      "offerte_send_smtp_ok",
+    );
   } catch (err) {
     logger.error({ err, ref: parsed.ref }, "offerte_send_smtp_failed");
     return NextResponse.json({ error: "send_failed" }, { status: 502 });

@@ -42,3 +42,12 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--color-accent);
   color: var(--color-paper);
 }
+
+@keyframes slideDown {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

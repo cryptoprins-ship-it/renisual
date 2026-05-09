@@ -124,8 +124,8 @@ export default function HomeClient() {
       <DynamicMetadata page="home" />
 
       {/* Slim architectural header */}
-      <nav className="sticky top-0 z-30 h-16 border-b border-stone-200 bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
+      <nav className="sticky top-0 z-30 border-b border-stone-200 bg-paper/80 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
           <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
             <Logo variant="horizontal" />
           </Link>
@@ -181,6 +181,14 @@ export default function HomeClient() {
             <p className="font-mono text-[11px] tracking-[0.05em] text-paper/70">
               {t("home.hero.ctaHint")}
             </p>
+            {/* Secondary path for users who only want a quick m² + price
+                estimate without going through the render flow first. */}
+            <Link
+              href="/gevelcalc?modus=snel"
+              className="mt-1 font-mono text-[11px] uppercase tracking-[0.15em] text-paper/80 underline underline-offset-4 transition-colors hover:text-paper"
+            >
+              {t("home.hero.ctaCalc")} →
+            </Link>
           </div>
         </div>
       </section>

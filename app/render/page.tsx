@@ -17,9 +17,10 @@ import { useProjectStore } from "@/lib/projectStore";
 import { getPhotoUrl } from "@/lib/photoStorage";
 import { checkRenderColor, deltaE76, hexToRgb, rgbToHex, verdictFromDeltaE, type ColorCheck } from "@/lib/colorCheck";
 import DynamicMetadata from "@/components/DynamicMetadata";
-import RenderingLoader from "@/components/RenderingLoader";
 import SiteNav from "@/components/SiteNav";
 import PhotoUploader from "@/components/PhotoUploader";
+import BatchStatusBand from "@/components/render/BatchStatusBand";
+import VariantSlot, { type VariantSlotState } from "@/components/render/VariantSlot";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 // One render click now produces five tiles: the exact RAL baseline plus
@@ -314,30 +315,15 @@ export default function RenderPage() {
   // than what's already selected, we surface a toast and ignore the
   // click. They have to clear the existing selection first.
   function toggleSelectedForOfferte(variant: RenderVariant) {
-    const isKeralit = (sku: string) => sku.startsWith("keralit-");
-    const variantBrand: "spanl" | "keralit" = isKeralit(variant.panelSku) ? "keralit" : "spanl";
-
-    setSelectedForOfferteIds((prev) => {
-      // Already in selection → remove (always allowed).
-      if (prev.includes(variant.id)) {
-        return prev.filter((id) => id !== variant.id);
-      }
-      // Adding — check brand consistency against currently selected
-      // variants. Mixed brands get blocked with a toast.
-      const conflictsWithBrand = prev.some((id) => {
-        const v = variants.find((x) => x.id === id);
-        if (!v) return false;
-        const otherBrand: "spanl" | "keralit" = isKeralit(v.panelSku) ? "keralit" : "spanl";
-        return otherBrand !== variantBrand;
-      });
-      if (conflictsWithBrand) {
-        setToast(
-          "Per offerte één merk — verschillende merken gaan altijd naar verschillende leveranciers. Verwijder eerst de andere selectie.",
-        );
-        return prev;
-      }
-      return [...prev, variant.id];
-    });
+    // Single-select: the offerte handoff (goToCalc, ~line 1004) only
+    // ships ONE render image to the PDF + email — see the "fase 1"
+    // comment there. Letting the user mark multiple variants in the UI
+    // suggested they'd get all of them in the offerte, which silently
+    // wasn't true. Enforce single-select here so the UI matches the
+    // backend until phase 2 lands proper multi-render in the offerte.
+    setSelectedForOfferteIds((prev) =>
+      prev.includes(variant.id) ? [] : [variant.id],
+    );
   }
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -356,7 +342,11 @@ export default function RenderPage() {
     const id = window.setTimeout(() => setToast(null), 3500);
     return () => window.clearTimeout(id);
   }, [toast]);
-  const [attemptCount, setAttemptCount] = useState(0);
+  const [attemptByTone, setAttemptByTone] = useState<Record<number, number>>({});
+  const [batchStartedAt, setBatchStartedAt] = useState<number | null>(null);
+  const [batchAbort, setBatchAbort] = useState<AbortController | null>(null);
+  const [failedTones, setFailedTones] = useState<ReadonlySet<ToneNudge>>(new Set());
+  const [batchTones, setBatchTones] = useState<readonly ToneNudge[]>([]);
   const [brand, setBrand] = useState<"spanl" | "keralit">("spanl");
   const [selectedKeralitProductId, setSelectedKeralitProductId] = useState<string>("");
   const [selectedKeralitColorNumber, setSelectedKeralitColorNumber] = useState<number | null>(null);
@@ -566,7 +556,10 @@ export default function RenderPage() {
   // Variants visible in the current photo scope. Legacy variants
   // without a sourcePhotoKey are shown everywhere (treated as untagged).
   const visibleVariants = useMemo(
-    () => variants.filter((v) => !v.sourcePhotoKey || v.sourcePhotoKey === sourcePhotoKey),
+    () =>
+      sourcePhotoKey
+        ? variants.filter((v) => v.sourcePhotoKey === sourcePhotoKey)
+        : [],
     [variants, sourcePhotoKey],
   );
 
@@ -603,6 +596,16 @@ export default function RenderPage() {
     if (!window.matchMedia("(max-width: 1023px)").matches) return;
     rendersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [isReadyToRender]);
+
+  // Scroll to the renders section every time a batch starts — keeps the
+  // slot grid in view from second one whether the user is on mobile or
+  // desktop. Triggers on batchStartedAt flip from null → number; clears
+  // back to null on batch end and re-arms for the next click.
+  useEffect(() => {
+    if (batchStartedAt === null) return;
+    if (typeof window === "undefined") return;
+    rendersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [batchStartedAt]);
 
   // Mirror /render's product selection into the cross-page project store
   // so /gevelcalc can hydrate with the same product when the user clicks
@@ -715,7 +718,7 @@ export default function RenderPage() {
 
     setIsGenerating(true);
     setErrorMsg("");
-    setAttemptCount(0);
+    setAttemptByTone({});
     try {
       const refUrls: string[] = [];
       if (effBrand === "spanl" && effSpanlPanel) {
@@ -793,74 +796,85 @@ export default function RenderPage() {
 
       // Per-call render. Returns the friendly error key on failure so the
       // batch caller can surface a single message for an all-fail outcome.
-      async function runOne(toneNudge: ToneNudge): Promise<{ ok: true } | { ok: false; errorKey: string }> {
+      async function runOne(
+  toneNudge: ToneNudge,
+  signal: AbortSignal,
+): Promise<{ ok: true } | { ok: false; errorKey: string }> {
         const payload = { ...basePayload, toneNudge };
         const MAX_ATTEMPTS = 3;
         let renderDataUrl: string | null = null;
         let lastErrorKey: string = "render.error.retry";
         let engineTag: string | undefined;
         let wallMean: { r: number; g: number; b: number } | undefined;
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-          setAttemptCount(attempt);
-          const res = await fetch("/api/render", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const bodyText = await res.text();
-          if (res.ok) {
-            let data: { renderDataUrl?: string; engine?: string; wallMean?: { r: number; g: number; b: number } };
-            try {
-              data = JSON.parse(bodyText);
-            } catch (parseErr) {
-              console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
-              lastErrorKey = "render.error.server";
-              break;
-            }
-            if (data.renderDataUrl) {
-              renderDataUrl = data.renderDataUrl;
-              engineTag = data.engine;
-              wallMean = data.wallMean;
-              // Fire a Plausible custom event so the team can see how
-              // many renders the platform served. Engine + brand are
-              // attached as props for filterable views in the dashboard.
-              if (typeof window !== "undefined") {
-                const win = window as unknown as {
-                  plausible?: (event: string, opts?: { props?: Record<string, string | number> }) => void;
-                };
-                win.plausible?.("render", {
-                  props: {
-                    engine: engineTag ?? "unknown",
-                    brand,
-                    toneNudge,
-                  },
-                });
+        try {
+          for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            setAttemptByTone((prev) => ({ ...prev, [toneNudge]: attempt }));
+            const res = await fetch("/api/render", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(payload),
+              signal,
+            });
+            const bodyText = await res.text();
+            if (res.ok) {
+              let data: { renderDataUrl?: string; engine?: string; wallMean?: { r: number; g: number; b: number } };
+              try {
+                data = JSON.parse(bodyText);
+              } catch (parseErr) {
+                console.error("[render] non-JSON success body", { status: res.status, bodyText, parseErr });
+                lastErrorKey = "render.error.server";
+                break;
               }
-              break;
+              if (data.renderDataUrl) {
+                renderDataUrl = data.renderDataUrl;
+                engineTag = data.engine;
+                wallMean = data.wallMean;
+                // Fire a Plausible custom event so the team can see how
+                // many renders the platform served. Engine + brand are
+                // attached as props for filterable views in the dashboard.
+                if (typeof window !== "undefined") {
+                  const win = window as unknown as {
+                    plausible?: (event: string, opts?: { props?: Record<string, string | number> }) => void;
+                  };
+                  win.plausible?.("render", {
+                    props: {
+                      engine: engineTag ?? "unknown",
+                      brand,
+                      toneNudge,
+                    },
+                  });
+                }
+                break;
+              }
+              lastErrorKey = "render.error.retry";
+              continue;
             }
+            console.error("[render] HTTP error", { status: res.status, bodyText, toneNudge });
+            let upstreamErrorText = "";
+            try {
+              const parsed = JSON.parse(bodyText) as { error?: string };
+              upstreamErrorText = String(parsed.error ?? "");
+            } catch {
+              upstreamErrorText = bodyText;
+            }
+            if (res.status === 401 || res.status === 403) { lastErrorKey = "render.error.auth"; break; }
+            if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
+              lastErrorKey = "render.error.rateLimit";
+              if (attempt >= MAX_ATTEMPTS) break;
+              const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
+              const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
+              await new Promise((r) => setTimeout(r, delaySec * 1000));
+              continue;
+            }
+            if (res.status >= 500) { lastErrorKey = "render.error.server"; break; }
             lastErrorKey = "render.error.retry";
-            continue;
+            break;
           }
-          console.error("[render] HTTP error", { status: res.status, bodyText, toneNudge });
-          let upstreamErrorText = "";
-          try {
-            const parsed = JSON.parse(bodyText) as { error?: string };
-            upstreamErrorText = String(parsed.error ?? "");
-          } catch {
-            upstreamErrorText = bodyText;
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") {
+            return { ok: false, errorKey: "render.error.aborted" };
           }
-          if (res.status === 401 || res.status === 403) { lastErrorKey = "render.error.auth"; break; }
-          if (res.status === 429 || /quota|rate.?limit|exhausted|too many/i.test(upstreamErrorText)) {
-            lastErrorKey = "render.error.rateLimit";
-            if (attempt >= MAX_ATTEMPTS) break;
-            const m = upstreamErrorText.match(/"retryDelay":\s*"(\d+)s"/);
-            const delaySec = m ? Math.min(45, Number(m[1]) + 2) : 30;
-            await new Promise((r) => setTimeout(r, delaySec * 1000));
-            continue;
-          }
-          if (res.status >= 500) { lastErrorKey = "render.error.server"; break; }
-          lastErrorKey = "render.error.retry";
-          break;
+          throw err;
         }
         if (!renderDataUrl) return { ok: false, errorKey: lastErrorKey };
 
@@ -908,7 +922,20 @@ export default function RenderPage() {
         return { ok: true };
       }
 
-      const results = await Promise.allSettled(toneNudges.map((tn) => runOne(tn)));
+      // Abort any prior batch that's still in flight (clicking Render again
+      // while a batch is running clears variants — also clear the old fetches).
+      batchAbort?.abort();
+      const controller = new AbortController();
+      setBatchAbort(controller);
+      // eslint-disable-next-line react-hooks/purity
+      setBatchStartedAt(Date.now());
+      setFailedTones(new Set());
+      setAttemptByTone({});
+      setBatchTones(toneNudges);
+
+      const results = await Promise.allSettled(
+        toneNudges.map((tn) => runOne(tn, controller.signal)),
+      );
       const successCount = results.filter((r) => r.status === "fulfilled" && r.value.ok).length;
       if (successCount === 0) {
         const firstFailure = results.find(
@@ -922,10 +949,20 @@ export default function RenderPage() {
       } else if (successCount < toneNudges.length) {
         setToast(`${successCount} van ${toneNudges.length} varianten gerenderd — sommige nudges zijn mislukt`);
       }
+      const failed = new Set<ToneNudge>();
+      results.forEach((r, i) => {
+        if (r.status === "fulfilled" && !r.value.ok) {
+          failed.add(toneNudges[i]);
+        }
+      });
+      setFailedTones(failed);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : t("render.error.generic"));
     } finally {
       setIsGenerating(false);
+      setBatchAbort(null);
+      setBatchStartedAt(null);
+      setBatchTones([]);
     }
   }
 
@@ -1492,20 +1529,59 @@ export default function RenderPage() {
             <p>{t("render.disclaimer")}</p>
           </div>
 
-          {isGenerating && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-black">
-              <RenderingLoader attempt={attemptCount} />
+          {batchStartedAt !== null && (
+            <BatchStatusBand
+              startedAt={batchStartedAt}
+              completed={batchTones.filter((t) => visibleVariants.some((v) => v.toneNudge === t)).length}
+              total={batchTones.length}
+              onCancel={() => batchAbort?.abort()}
+            />
+          )}
+
+          {batchStartedAt !== null && batchTones.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {batchTones.map((tone) => {
+                const variant = visibleVariants.find((v) => v.toneNudge === tone);
+                const failed = failedTones.has(tone);
+                let state: VariantSlotState;
+                if (variant) {
+                  state = { kind: "success", dataUrl: variant.dataUrl, alt: variant.panelLabel };
+                } else if (failed) {
+                  state = { kind: "failed" };
+                } else {
+                  state = { kind: "pending", attempt: attemptByTone[tone] ?? 1 };
+                }
+                return (
+                  <VariantSlot
+                    key={tone}
+                    state={state}
+                    toneLabel={TONE_LABEL_NL[tone]}
+                    onRetry={
+                      state.kind === "failed"
+                        ? () => {
+                            setFailedTones((prev) => {
+                              const next = new Set(prev);
+                              next.delete(tone);
+                              return next;
+                            });
+                            void runRenderBatch([tone], false);
+                          }
+                        : undefined
+                    }
+                  />
+                );
+              })}
             </div>
           )}
 
-          {!isGenerating && visibleVariants.length === 0 && !errorMsg && (
+          {batchStartedAt === null && visibleVariants.length === 0 && !errorMsg && (
             <p className="mt-3 text-sm text-gray-500">{t("rendering_empty_state")}</p>
           )}
 
           {/* Selectie-banner — verschijnt zodra er meerdere varianten
               zijn. Geen banner bij maar één render (dan is de keuze
               impliciet). */}
-          {!isGenerating && visibleVariants.length > 1 && (
+          {batchStartedAt === null && visibleVariants.length > 1 && (
             <div className="mt-4 rounded-md border border-ink bg-stone-50 p-3 text-sm text-ink">
               <p className="font-display">Bent u klaar?</p>
               <p className="mt-0.5 text-[12px] text-stone-700">
@@ -1527,6 +1603,7 @@ export default function RenderPage() {
             </div>
           )}
 
+          {batchStartedAt === null && (
           <div className="mt-4 space-y-4">
             {visibleVariants.map((v) => (
               <article
@@ -1702,6 +1779,7 @@ export default function RenderPage() {
               </article>
             ))}
           </div>
+          )}
 
           {errorMsg && (
             <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">

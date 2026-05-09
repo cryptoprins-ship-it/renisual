@@ -307,7 +307,15 @@ function InputWithSuffix({
   );
 }
 
-function SpanlThumb({ productId, productName }: { productId: string; productName: string }) {
+function SpanlThumb({
+  productId,
+  productName,
+  compact = false,
+}: {
+  productId: string;
+  productName: string;
+  compact?: boolean;
+}) {
   const sku = productId.replace(/^spanl-/, "");
   const src = useSpanlImage(sku, productName);
   if (!src) return null;
@@ -315,7 +323,11 @@ function SpanlThumb({ productId, productName }: { productId: string; productName
     <img
       src={src}
       alt={productName}
-      className="block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      className={
+        compact
+          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      }
     />
   );
 }
@@ -323,9 +335,11 @@ function SpanlThumb({ productId, productName }: { productId: string; productName
 function KeralitThumb({
   productName,
   selectedNumber,
+  compact = false,
 }: {
   productName: string;
   selectedNumber: number | null;
+  compact?: boolean;
 }) {
   // Prefer the user's currently picked colour; otherwise show a representative
   // sample so the product card doesn't look empty before they pick a colour.
@@ -339,7 +353,11 @@ function KeralitThumb({
       src={color.thumbnailUrl}
       alt={`${productName} — ${color.name}`}
       loading="lazy"
-      className="block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      className={
+        compact
+          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+      }
     />
   );
 }
@@ -736,16 +754,21 @@ export default function GevelCalcPage() {
 
   // Hydrate the product picker from the cross-page project store so a
   // user landing here from /render's "Bereken materiaal" arrives with
-  // their chosen panel already selected. Runs once at mount; later
-  // selections on this page stomp the store via the existing
-  // setProduct call so the two stay consistent.
+  // their chosen panel already selected AND the picker collapsed so
+  // the compact "Geselecteerd product" chip is the first thing on the
+  // page. Subscribe via the hook (not getState) so a late zustand
+  // persist hydration still triggers — same gotcha as renderStoragePath
+  // below. The `productHydrated` guard makes this run once.
+  const storedProductSubscribed = useProjectStore((s) => s.selectedProduct);
+  const [productHydrated, setProductHydrated] = useState(false);
   useEffect(() => {
-    const stored = useProjectStore.getState().selectedProduct;
-    if (!stored) return;
-    if (products.find((p) => p.id === stored.id)) {
-      setSelectedProductId(stored.id);
-    }
-  }, []);
+    if (productHydrated) return;
+    if (!storedProductSubscribed) return;
+    if (!products.find((p) => p.id === storedProductSubscribed.id)) return;
+    setSelectedProductId(storedProductSubscribed.id);
+    setShowProductPicker(false);
+    setProductHydrated(true);
+  }, [storedProductSubscribed, products, productHydrated]);
 
   // Resolve the render-storage path from the project store into a
   // signed URL so the right-column overview can preview the AI-render
@@ -809,6 +832,28 @@ export default function GevelCalcPage() {
     }
   }, [mode, modeHydrated]);
 
+  // Restore the full calc form from sessionStorage on mount. Pairs
+  // with the auto-save effect below that keeps sessionStorage current
+  // on every form change — together they survive any navigation away
+  // (SiteNav links, hamburger sheet, browser back from /render).
+  // Run once after `mode` settles so the URL ?modus= can't re-overwrite
+  // the restored mode.
+  const [calcRestored, setCalcRestored] = useState(false);
+  useEffect(() => {
+    if (!modeHydrated || calcRestored) return;
+    setCalcRestored(true);
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.sides)) {
+        restoreFromData(data);
+      }
+    } catch {
+      /* ignore — corrupt payload, treat as fresh start */
+    }
+  }, [modeHydrated, calcRestored]);
+
   // Display preference for the product picker: "foto" shows reference
   // images, "tekst" shows a text-only list. Session-only — re-derived
   // from `mode` whenever the mode changes (and on first hydration).
@@ -832,6 +877,11 @@ export default function GevelCalcPage() {
   const [productCategory, setProductCategory] = useState<ProductCategory>("gevelbekleding");
   const [orientation, setOrientation] = useState<Orientation>("horizontal");
   const [showAlternateOrientation, setShowAlternateOrientation] = useState(false);
+  // Number of inside corners (binnenhoeken) — L-shape, U-shape, or
+  // gevel-uitbouw. Default 0 since most rectangular houses have none.
+  // Stored as string so the input field accepts "" while editing;
+  // calc engine coerces with toNumber().
+  const [insideCornerCount, setInsideCornerCount] = useState<string>("0");
   // Collapse the long product-picker section once a product is selected
   // (typically carried over from /render). The user can still expand
   // via "Paneel wijzigen" if they want to switch panels here.
@@ -844,6 +894,16 @@ export default function GevelCalcPage() {
   const [customerLastName, setCustomerLastName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
+  // Postcode + huisnummer drive the optional autofill helper above the
+  // free-text address field. They're kept in local state (not persisted
+  // to sessionStorage / offerte payload) — the canonical address that
+  // ships with the offerte stays `customerAddress`, which the user can
+  // edit after autofill (e.g., to add an appartement-nummer).
+  const [postcode, setPostcode] = useState("");
+  const [huisnummer, setHuisnummer] = useState("");
+  const [addressLookupState, setAddressLookupState] = useState<
+    "idle" | "loading" | "ok" | "notfound" | "error"
+  >("idle");
   const [calcDate, setCalcDate] = useState<string>("");
   const [toast, setToast] = useState<{ message: string; type: "ok" | "error" } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -921,8 +981,6 @@ export default function GevelCalcPage() {
   //      fresh rather than reusing whatever React reconciled.
   const [inputResetKey, setInputResetKey] = useState(0);
 
-  const hasPhotos = Object.keys(photos).length > 0;
-
   // Initialise sides with translated names once locale is known
   useEffect(() => {
     setSides((prev) =>
@@ -987,6 +1045,11 @@ export default function GevelCalcPage() {
     [effectiveSides]
   );
 
+  const insideCornerCountNum = useMemo(() => {
+    const n = toNumber(insideCornerCount);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  }, [insideCornerCount]);
+
   const materialResult = useMemo(() => {
     if (!selectedProduct) return null;
     return calculateMaterialResult({
@@ -994,8 +1057,9 @@ export default function GevelCalcPage() {
       product: selectedProduct,
       orientation,
       profiles: DEFAULT_SPANL_PROFILES,
+      insideCornerCount: insideCornerCountNum,
     });
-  }, [selectedProduct, orientation, activeSides]);
+  }, [selectedProduct, orientation, activeSides, insideCornerCountNum]);
 
   // The opposite orientation for the comparison card. Only computed when
   // the selected product physically supports both (Spanl Mono Flat/Groove
@@ -1009,8 +1073,9 @@ export default function GevelCalcPage() {
       product: selectedProduct,
       orientation: alternateOrientation,
       profiles: DEFAULT_SPANL_PROFILES,
+      insideCornerCount: insideCornerCountNum,
     });
-  }, [selectedProduct, alternateOrientation, activeSides]);
+  }, [selectedProduct, alternateOrientation, activeSides, insideCornerCountNum]);
 
   const totals = materialResult?.totals ?? { gross: 0, openings: 0, net: 0 };
   const adviesPrijs = materialResult?.totalExVat ?? 0;
@@ -1035,6 +1100,45 @@ export default function GevelCalcPage() {
   function fmtMoney(amount: number) {
     const value = showInclVat ? round2(amount * VAT) : amount;
     return `€${value.toFixed(2)}`;
+  }
+
+  // Resolve a NL postcode + huisnummer to street + city via the PDOK
+  // locatieserver — Dutch government, free, no API key required, CORS
+  // enabled. The endpoint accepts free-text queries and ranks results;
+  // we ask for one. On success we set the canonical customerAddress
+  // string in the format that NL invoices/letters use, leaving the
+  // user free to edit afterwards (e.g., add an appartement-nummer).
+  async function lookupAddress() {
+    const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
+    const cleanNumber = huisnummer.trim();
+    if (!/^\d{4}[A-Z]{2}$/.test(cleanPostcode) || !cleanNumber) {
+      setAddressLookupState("notfound");
+      return;
+    }
+    setAddressLookupState("loading");
+    try {
+      const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${encodeURIComponent(
+        `postcode:${cleanPostcode} and huisnummer:${cleanNumber}`,
+      )}&rows=1&fl=straatnaam,woonplaatsnaam,huisnummer,postcode`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        setAddressLookupState("error");
+        return;
+      }
+      const data = await res.json();
+      const doc = data?.response?.docs?.[0];
+      if (!doc?.straatnaam || !doc?.woonplaatsnaam) {
+        setAddressLookupState("notfound");
+        return;
+      }
+      const formattedPostcode = `${cleanPostcode.slice(0, 4)} ${cleanPostcode.slice(4)}`;
+      setCustomerAddress(
+        `${doc.straatnaam} ${cleanNumber}, ${formattedPostcode} ${doc.woonplaatsnaam}`,
+      );
+      setAddressLookupState("ok");
+    } catch {
+      setAddressLookupState("error");
+    }
   }
 
   function validateForExport(): string | null {
@@ -1276,6 +1380,44 @@ export default function GevelCalcPage() {
     }
   }
 
+  // Auto-save the calc form to sessionStorage on change so any
+  // navigation away — SiteNav, hamburger sheet, browser back from
+  // /render — preserves state for the on-mount restore. Debounced so
+  // we don't thrash storage on every keystroke. Gated on calcRestored
+  // so the empty pre-restore state can't overwrite a freshly-loaded
+  // payload. Photos excluded — they're in IndexedDB and would
+  // otherwise blow the ~5MB sessionStorage cap.
+  useEffect(() => {
+    if (!calcRestored) return;
+    const handle = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false)));
+      } catch {
+        /* quota / serialise failure — photos are in IndexedDB so a
+           skip just means re-typing dimensions if the next
+           navigation happens before the next attempt */
+      }
+    }, 600);
+    return () => window.clearTimeout(handle);
+    // buildSaveData is a non-stable closure but only reads the listed
+    // state, so the deps here are exhaustive in practice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    calcRestored,
+    projectName,
+    mode,
+    unit,
+    quickTotalArea,
+    quickWindowCount,
+    quickDoorCount,
+    sides,
+    frontBackSame,
+    leftRightSame,
+    selectedProductId,
+    keralitColorNumber,
+    orientation,
+  ]);
+
   async function exportConfig() {
     const data = buildSaveData(true);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1337,6 +1479,14 @@ export default function GevelCalcPage() {
   async function resetData() {
     if (!confirm(t("gc.confirmReset"))) return;
     localStorage.removeItem(STORAGE_KEY);
+    // Also wipe the sessionStorage payload that the auto-save effect
+    // writes — otherwise the on-mount restore would revert this reset
+    // the next time the user returns to /gevelcalc in the same tab.
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
     await clearAllPhotos().catch(() => {});
     // Also wipe the cross-page projectStore (photo + product handed off
     // from /render). Without this, hitting Reset cleared the gevelcalc
@@ -1389,9 +1539,11 @@ export default function GevelCalcPage() {
     const alternateCalcOutput = alt
       ? {
           panelCount: alt.panelCount,
+          profileStartCount: findCount("Beginprofiel", alt),
           profileEndCount: findCount("Eindprofiel", alt),
           profileMiddleCount: findCount("Verbindingsprofiel", alt),
           profileCornerCount: findCount("Hoekprofiel", alt),
+          profileInsideCornerCount: findCount("Binnenhoekprofiel", alt),
           subtotalExclBtw: round2Money(alt.totalExVat),
           totalInclBtw: round2Money(alt.totalExVat * VAT),
         }
@@ -1431,16 +1583,20 @@ export default function GevelCalcPage() {
         pricePerPanel:
           selectedProduct.pricePerPanelExVat ??
           selectedProduct.panelAreaM2 * selectedProduct.pricePerM2ExVat,
+        pricePerStartProfile: DEFAULT_SPANL_PROFILES.startProfile.priceEachExVat,
         pricePerEndProfile: DEFAULT_SPANL_PROFILES.endProfile.priceEachExVat,
         pricePerMiddleProfile: DEFAULT_SPANL_PROFILES.connectionProfile.priceEachExVat,
         pricePerCornerProfile: DEFAULT_SPANL_PROFILES.cornerProfile.priceEachExVat,
+        pricePerInsideCornerProfile: DEFAULT_SPANL_PROFILES.insideCornerProfile.priceEachExVat,
         fastenerEstimateExBtw: 0,
       },
       calcOutput: {
         panelCount: materialResult.panelCount,
+        profileStartCount: findCount("Beginprofiel"),
         profileEndCount: findCount("Eindprofiel"),
         profileMiddleCount: findCount("Verbindingsprofiel"),
         profileCornerCount: findCount("Hoekprofiel"),
+        profileInsideCornerCount: findCount("Binnenhoekprofiel"),
         subtotalExclBtw: subtotal,
         totalInclBtw: total,
       },
@@ -1560,6 +1716,7 @@ export default function GevelCalcPage() {
       // hanging with no toast and no inbox delivery. The await adds
       // 1-3s but the user sees the offerteSubmitting spinner the whole
       // time so it doesn't read as "stuck".
+      let sendOk = false;
       try {
         const sendRes = await fetch("/api/offertes/send", {
           method: "POST",
@@ -1567,7 +1724,7 @@ export default function GevelCalcPage() {
           body: JSON.stringify({ ref: data.ref }),
         });
         if (sendRes.ok) {
-          showToast("Offerte verstuurd naar Renisual ✓");
+          sendOk = true;
         } else {
           let detail = `HTTP ${sendRes.status}`;
           try {
@@ -1577,6 +1734,9 @@ export default function GevelCalcPage() {
             /* non-JSON */
           }
           console.warn("[offerte] send to info@renisual.com failed", detail);
+          // Persistent error toast — no auto-dismiss, no overwrite by
+          // the downstream linkCopied OK toast (gated below) so the
+          // diagnostic code stays visible until the user reads it.
           showToast(
             `Verzending naar Renisual mislukt (${detail}) — uw PDF is wel opgeslagen, deel zelf de link of mail naar info@renisual.com.`,
             "error",
@@ -1631,9 +1791,15 @@ export default function GevelCalcPage() {
       }
       // Best-effort copy of the public offerte URL — most browsers
       // grant clipboard inside a click handler without prompting.
+      // Only surface the success toast when the send to info@ also
+      // succeeded; otherwise an OK toast here would overwrite the
+      // persistent error toast set above and make the diagnostic
+      // code disappear before the user can read it.
       try {
         await navigator.clipboard.writeText(data.offerteUrl);
-        showToast(t("gc.offerte.linkCopied"));
+        if (sendOk) {
+          showToast(`Offerte verstuurd naar Renisual ✓ — ${t("gc.offerte.linkCopied")}`);
+        }
       } catch {
         /* clipboard blocked — link is still in the success block */
       }
@@ -1663,52 +1829,6 @@ export default function GevelCalcPage() {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
-  async function goToRender() {
-    // No photos yet, no calculation to hand off — just go to /render and let
-    // the user upload a fresh photo there. Otherwise /render would treat the
-    // empty config as "missing photo" and show a confusing error.
-    const anyPhoto = Object.values(photos).some(Boolean);
-    if (!anyPhoto) {
-      try {
-        sessionStorage.removeItem(STORAGE_KEY);
-      } catch {}
-      window.location.href = "/render";
-      return;
-    }
-
-    // 1. Make sure every photo currently in component state is also persisted
-    //    to IndexedDB. After importing a config file the writes were fire-and-forget,
-    //    so navigating before they completed left /render with no photo.
-    const sidesToSync = mode === "quick" ? [quickSide] : sides;
-    const sideIds = sidesToSync.map((s) => s.id);
-    try {
-      await Promise.all(
-        sideIds
-          .filter((id) => photos[id])
-          .map((id) => savePhoto(id, photos[id]))
-      );
-    } catch {
-      showToast(t("gc.toast.handoffFailed"), "error");
-      return;
-    }
-
-    // 2. Hand off the config plus an inline photo map. /render prefers IndexedDB
-    //    but falls back to this map if a side photo is missing there. Photos can
-    //    be large; if sessionStorage rejects the payload, retry without them.
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(true)));
-    } catch {
-      try {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false)));
-      } catch {
-        showToast(t("gc.toast.handoffFailed"), "error");
-        return;
-      }
-    }
-
-    window.location.href = "/render";
-  }
-
   const unitLabel = unit === "ft2" ? "ft²" : "m²";
   const totalAreaPlaceholder = unit === "ft2" ? "e.g. 700" : t("gc.quick.totalAreaPlaceholder");
 
@@ -1733,14 +1853,24 @@ export default function GevelCalcPage() {
     o === "horizontal" ? t("render.horizontal") : t("render.vertical");
   const bomBlock = (result: NonNullable<typeof materialResult>, label?: string) => {
     if (!selectedProduct) return null;
+    const startProfile = result.profileItems.find((p) => p.label === "Beginprofiel");
     const endProfile = result.profileItems.find((p) => p.label === "Eindprofiel");
     const connProfile = result.profileItems.find((p) => p.label === "Verbindingsprofiel");
     const cornerProfile = result.profileItems.find((p) => p.label === "Hoekprofiel");
+    const insideCornerProfile = result.profileItems.find((p) => p.label === "Binnenhoekprofiel");
     return (
       <div className="border border-stone-200 bg-paper p-4 space-y-2 text-sm">
         {label && (
           <div className="-mt-1 mb-1 border-b border-stone-100 pb-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
             {label}
+          </div>
+        )}
+        {/* Snel mode treats the project as ONE virtual side, so profile
+            counts (especially Hoek + Verbinding) under-estimate the real
+            need. Per-zijde mode bin-packs each side individually. */}
+        {mode === "quick" && (
+          <div className="-mt-1 mb-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-[11px] leading-snug text-amber-900">
+            {t("gc.modeAccuracyDisclaimer")}
           </div>
         )}
         <div className="flex justify-between">
@@ -1751,6 +1881,12 @@ export default function GevelCalcPage() {
           <div className="flex justify-between">
             <span className="text-stone-600">{t("gc.panelsNeeded")}</span>
             <span className="font-semibold text-ink">{result.panelCount}</span>
+          </div>
+        )}
+        {startProfile && startProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.startProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{startProfile.count}</span>
           </div>
         )}
         {endProfile && endProfile.count > 0 && (
@@ -1769,6 +1905,12 @@ export default function GevelCalcPage() {
           <div className="flex justify-between">
             <span className="text-stone-600">{t("gc.cornerProfilesNeeded")}</span>
             <span className="font-semibold text-ink">{cornerProfile.count}</span>
+          </div>
+        )}
+        {insideCornerProfile && insideCornerProfile.count > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-600">{t("gc.insideCornerProfilesNeeded")}</span>
+            <span className="font-semibold text-ink">{insideCornerProfile.count}</span>
           </div>
         )}
         <div className="flex justify-between">
@@ -1901,6 +2043,70 @@ export default function GevelCalcPage() {
                   />
                 </div>
               </div>
+              {/* Postcode + huisnummer autofill — optional helper that
+                  pre-fills the canonical address textarea below via PDOK
+                  locatieserver. The user can still type the address by
+                  hand, or edit after autofill (e.g., add a unit number). */}
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,7rem)_minmax(0,5rem)_auto]">
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                    Postcode
+                  </label>
+                  <input
+                    className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink uppercase"
+                    value={postcode}
+                    onChange={(e) => {
+                      setPostcode(e.target.value);
+                      setAddressLookupState("idle");
+                    }}
+                    placeholder="1234 AB"
+                    autoComplete="postal-code"
+                    inputMode="text"
+                    maxLength={7}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                    Nr.
+                  </label>
+                  <input
+                    className="w-full border border-stone-200 bg-paper p-3 text-sm text-ink"
+                    value={huisnummer}
+                    onChange={(e) => {
+                      setHuisnummer(e.target.value);
+                      setAddressLookupState("idle");
+                    }}
+                    placeholder="12"
+                    autoComplete="address-line2"
+                    inputMode="numeric"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={lookupAddress}
+                    disabled={addressLookupState === "loading"}
+                    className="w-full sm:w-auto border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink hover:bg-ink hover:text-paper disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addressLookupState === "loading" ? "Zoeken…" : "Vul adres in"}
+                  </button>
+                </div>
+              </div>
+              {addressLookupState === "notfound" && (
+                <p className="text-[11px] leading-snug text-red-700">
+                  Geen adres gevonden voor deze postcode + huisnummer. Controleer of beide kloppen, of vul het adres handmatig in hieronder.
+                </p>
+              )}
+              {addressLookupState === "error" && (
+                <p className="text-[11px] leading-snug text-red-700">
+                  Adres opzoeken lukte niet (netwerk?). Vul het hieronder handmatig in.
+                </p>
+              )}
+              {addressLookupState === "ok" && (
+                <p className="text-[11px] leading-snug text-emerald-700">
+                  Adres ingevuld — pas hieronder aan als er bv. een appartementnummer bij hoort.
+                </p>
+              )}
               <div>
                 <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
                   {t("gc.customerAddress")} <span className="text-red-600">*</span>
@@ -2239,9 +2445,9 @@ export default function GevelCalcPage() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {selectedProduct.brand === "Spanl" ? (
-                    <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
+                    <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} compact />
                   ) : selectedProduct.brand === "Keralit" ? (
-                    <KeralitThumb productName={selectedProduct.name} selectedNumber={keralitColorNumber} />
+                    <KeralitThumb productName={selectedProduct.name} selectedNumber={keralitColorNumber} compact />
                   ) : null}
                   <div className="min-w-0">
                     <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
@@ -2428,6 +2634,26 @@ export default function GevelCalcPage() {
                   </select>
                 </div>
               )}
+              {selectedProduct && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    {t("gc.insideCornerCount")}
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    value={insideCornerCount}
+                    onChange={(e) => setInsideCornerCount(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-xl border border-black p-3"
+                  />
+                  <p className="mt-1 text-xs text-stone-500">
+                    {t("gc.insideCornerHint")}
+                  </p>
+                </div>
+              )}
             </div>
             {selectedProduct && (
               <div className="mt-4 flex flex-col gap-4 rounded-xl border border-black p-4 sm:flex-row">
@@ -2497,7 +2723,7 @@ export default function GevelCalcPage() {
         </div>
 
         <div
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] print:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
         >
           <div className="mx-auto max-w-6xl">
             {/* Mobile: 2-col grid with primaries side-by-side, Reset
@@ -2735,46 +2961,12 @@ export default function GevelCalcPage() {
               </div>
             )}
 
-            {/* Product preview + CTA when selected */}
-            {selectedProduct ? (
-              <div className="border border-stone-200 bg-paper p-4">
-                <div className="flex items-center gap-3">
-                  {overviewThumbSrc ? (
-                    <img
-                      src={overviewThumbSrc}
-                      alt={selectedProduct.name}
-                      loading="lazy"
-                      className="block h-16 w-16 flex-shrink-0 border border-stone-200 object-cover"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 flex-shrink-0 border border-stone-200 bg-stone-100" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-stone-500">
-                      {t("gc.selectedProduct")}
-                    </p>
-                    <p className="truncate font-display text-sm text-ink">{selectedProduct.name}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={goToRender}
-                  className="mt-4 flex w-full items-center justify-center gap-2 bg-ink px-7 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
-                >
-                  <span>{t("gc.goToRendering")}</span>
-                  <span aria-hidden>→</span>
-                </button>
-                {!hasPhotos && (
-                  <p className="mt-2 text-[11px] text-stone-500">{t("gc.uploadHint")}</p>
-                )}
-              </div>
-            ) : (
-              <div className="border border-dashed border-stone-300 p-6 text-center">
-                <p className="text-xs text-stone-500">
-                  {t("overview.select_panel_hint")}
-                </p>
-              </div>
-            )}
+            {/* "Geselecteerd product + Naar de rendering" card removed
+                — it duplicated the compact picker chip at the top of
+                the form (selected product display) and the bottom-bar
+                "Bekijk de rendering" link (navigation). The collapsed
+                chip + the calc-state-preserving auto-save effect cover
+                both functions without a redundant aside section. */}
           </aside>
         </div>
       </main>

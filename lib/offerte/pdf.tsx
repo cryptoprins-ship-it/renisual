@@ -296,12 +296,21 @@ export type OfferteDocumentProps = {
   includePrices?: boolean;
   panelCount: number;
   pricePerPanel: number;
+  // Beginprofiel (start rail) — was missing from the PDF schema even
+  // though calc engine and UI display it. Optional for backward compat
+  // with older payloads in flight.
+  profileStartCount?: number;
   profileEndCount: number;
   profileMiddleCount: number;
   profileCornerCount: number;
+  // YJDZ binnenhoek — only meaningful for L-shape / U-shape facades.
+  // Defaults to 0 / undefined for typical rectangular installs.
+  profileInsideCornerCount?: number;
+  pricePerStartProfile?: number;
   pricePerEndProfile: number;
   pricePerMiddleProfile: number;
   pricePerCornerProfile: number;
+  pricePerInsideCornerProfile?: number;
   fastenerEstimateExBtw: number;
   // Derived totals already computed by the calc engine — we re-display
   // them rather than recomputing to keep one source of truth.
@@ -331,9 +340,11 @@ export type OfferteDocumentProps = {
   alternate?: {
     orientation: "horizontal" | "vertical";
     panelCount: number;
+    profileStartCount?: number;
     profileEndCount: number;
     profileMiddleCount: number;
     profileCornerCount: number;
+    profileInsideCornerCount?: number;
     subtotalExBtw: number;
     totalInclBtw: number;
   };
@@ -359,25 +370,39 @@ type LineRow = { desc: string; qty: number; unit: number; total: number };
 function buildLineRows(
   counts: {
     panelCount: number;
+    profileStartCount?: number;
     profileEndCount: number;
     profileMiddleCount: number;
     profileCornerCount: number;
+    profileInsideCornerCount?: number;
     fastenerEstimateExBtw: number;
   },
   prices: {
     pricePerPanel: number;
+    pricePerStartProfile?: number;
     pricePerEndProfile: number;
     pricePerMiddleProfile: number;
     pricePerCornerProfile: number;
+    pricePerInsideCornerProfile?: number;
   },
   VAT: number,
 ): LineRow[] {
+  const startCount = counts.profileStartCount ?? 0;
+  const startPrice = prices.pricePerStartProfile ?? 0;
+  const insideCornerCount = counts.profileInsideCornerCount ?? 0;
+  const insideCornerPrice = prices.pricePerInsideCornerProfile ?? 0;
   return [
     {
       desc: "Gevelpaneel",
       qty: counts.panelCount,
       unit: prices.pricePerPanel * VAT,
       total: counts.panelCount * prices.pricePerPanel * VAT,
+    },
+    {
+      desc: "Beginprofiel",
+      qty: startCount,
+      unit: startPrice * VAT,
+      total: startCount * startPrice * VAT,
     },
     {
       desc: "Eindprofiel",
@@ -392,10 +417,16 @@ function buildLineRows(
       total: counts.profileMiddleCount * prices.pricePerMiddleProfile * VAT,
     },
     {
-      desc: "Hoekprofiel",
+      desc: "Hoekprofiel (buiten)",
       qty: counts.profileCornerCount,
       unit: prices.pricePerCornerProfile * VAT,
       total: counts.profileCornerCount * prices.pricePerCornerProfile * VAT,
+    },
+    {
+      desc: "Hoekprofiel (binnen)",
+      qty: insideCornerCount,
+      unit: insideCornerPrice * VAT,
+      total: insideCornerCount * insideCornerPrice * VAT,
     },
     // Bevestigingsmateriaal regel verwijderd — qty=1 met onbekende
     // prijs gaf een hardcoded 1 zonder context die nergens op sloeg.
@@ -413,9 +444,11 @@ export function OfferteDocument(props: OfferteDocumentProps) {
 
   const prices = {
     pricePerPanel: props.pricePerPanel,
+    pricePerStartProfile: props.pricePerStartProfile,
     pricePerEndProfile: props.pricePerEndProfile,
     pricePerMiddleProfile: props.pricePerMiddleProfile,
     pricePerCornerProfile: props.pricePerCornerProfile,
+    pricePerInsideCornerProfile: props.pricePerInsideCornerProfile,
   };
 
   // When prices are shown, all unit/total values are presented INCLUSIEF
@@ -424,9 +457,11 @@ export function OfferteDocument(props: OfferteDocumentProps) {
   const lineRows = buildLineRows(
     {
       panelCount: props.panelCount,
+      profileStartCount: props.profileStartCount,
       profileEndCount: props.profileEndCount,
       profileMiddleCount: props.profileMiddleCount,
       profileCornerCount: props.profileCornerCount,
+      profileInsideCornerCount: props.profileInsideCornerCount,
       fastenerEstimateExBtw: props.fastenerEstimateExBtw,
     },
     prices,
@@ -441,9 +476,11 @@ export function OfferteDocument(props: OfferteDocumentProps) {
     ? buildLineRows(
         {
           panelCount: props.alternate.panelCount,
+          profileStartCount: props.alternate.profileStartCount,
           profileEndCount: props.alternate.profileEndCount,
           profileMiddleCount: props.alternate.profileMiddleCount,
           profileCornerCount: props.alternate.profileCornerCount,
+          profileInsideCornerCount: props.alternate.profileInsideCornerCount,
           fastenerEstimateExBtw: props.fastenerEstimateExBtw,
         },
         prices,

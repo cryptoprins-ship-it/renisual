@@ -8,6 +8,8 @@ type Props = {
   attempt?: number;
   /** Aspect ratio for the placeholder; defaults to 16:10. Pass null for full-bleed. */
   aspect?: string | null;
+  /** Smaller layout for use inside a single render slot. Default false. */
+  compact?: boolean;
 };
 
 const ATTEMPT_LABEL: Record<string, (n: number) => string> = {
@@ -18,7 +20,7 @@ const ATTEMPT_LABEL: Record<string, (n: number) => string> = {
   es: (n) => `Intento ${n}/3`,
 };
 
-export default function RenderingLoader({ attempt, aspect = "16/10" }: Props) {
+export default function RenderingLoader({ attempt, aspect = "16/10", compact = false }: Props) {
   const { locale, t } = useLocale();
   const [stage, setStage] = useState<"initial" | "slow" | "almost">("initial");
 
@@ -43,23 +45,27 @@ export default function RenderingLoader({ attempt, aspect = "16/10" }: Props) {
       ? (ATTEMPT_LABEL[locale] ?? ATTEMPT_LABEL.en)(attempt)
       : null;
 
+  const spinnerSize = compact ? "h-8 w-8" : "h-16 w-16";
+  const messageClass = compact ? "text-xs" : "text-sm";
+  const containerPadding = compact ? "p-3" : "p-6";
+
   return (
     <div
       className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-200 via-neutral-100 to-neutral-200"
-      style={aspect ? { aspectRatio: aspect } : undefined}
+      style={!compact && aspect ? { aspectRatio: aspect } : undefined}
       role="status"
       aria-live="polite"
     >
-      <div className="flex flex-col items-center justify-center gap-4 p-6">
-        <div className="relative h-16 w-16">
+      <div className={`flex flex-col items-center justify-center gap-3 ${containerPadding}`}>
+        <div className={`relative ${spinnerSize}`}>
           <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
           <div className="absolute inset-0 animate-spin rounded-full border-4 border-black border-t-transparent" />
         </div>
-        <p className="animate-pulse text-center text-sm font-medium text-neutral-800">
+        <p className={`animate-pulse text-center font-medium text-neutral-800 ${messageClass}`}>
           {message}
         </p>
         {attemptText && (
-          <p className="text-xs text-neutral-500">{attemptText}</p>
+          <p className="text-[10px] text-neutral-500">{attemptText}</p>
         )}
       </div>
     </div>

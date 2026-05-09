@@ -41,6 +41,7 @@ export type ProfileSet = {
   endProfile: ProfileItem;
   connectionProfile: ProfileItem;
   cornerProfile: ProfileItem;
+  insideCornerProfile: ProfileItem;
 };
 
 export const DEFAULT_SPANL_PROFILES: ProfileSet = {
@@ -50,9 +51,13 @@ export const DEFAULT_SPANL_PROFILES: ProfileSet = {
     priceEachExVat: 7.95,
   },
   endProfile: {
-    name: "SBT J Channel eindprofiel wit",
-    lengthMm: 3000,
-    priceEachExVat: 12.95,
+    // 3,8 m sticks (not 3 m as previously stored). Price corrected per
+    // Spanl catalog. The same SKU also serves as the BOTTOM rail for
+    // vertical installs (mounted upside down with drainage holes
+    // drilled every 1 m + primer-coated interior — see install notes).
+    name: "SBT J Channel eindprofiel",
+    lengthMm: 3800,
+    priceEachExVat: 14.95,
   },
   connectionProfile: {
     name: "PJ01 verbindingsprofiel",
@@ -60,9 +65,21 @@ export const DEFAULT_SPANL_PROFILES: ProfileSet = {
     priceEachExVat: 12.95,
   },
   cornerProfile: {
-    name: "YJ03 outside corner buitenhoek",
+    // YJ01 is the white outside-corner profile per Spanl's catalog.
+    // Earlier code referenced "YJ03 buitenhoek €19.95" which was wrong
+    // on both SKU and price.
+    name: "YJ01 hoekprofiel buitenhoek wit",
     lengthMm: 3000,
-    priceEachExVat: 19.95,
+    priceEachExVat: 12.95,
+  },
+  insideCornerProfile: {
+    // YJDZ — aluminium binnenhoek, used wherever the facade folds
+    // INWARD (L-shape, U-shape, gevel-uitbouw). Default zero usage;
+    // count is driven by an explicit user input on /gevelcalc since
+    // it can't be derived from per-side dimensions alone.
+    name: "YJDZ hoekprofiel binnenhoek aluminium",
+    lengthMm: 3000,
+    priceEachExVat: 15.95,
   },
 };
 
@@ -114,19 +131,63 @@ export function calculateTotals(sides: CalcSide[]) {
 function calculateProfile(
   label: string,
   profile: ProfileItem,
-  neededMeters: number
+  neededMeters: number,
+  // Caller supplies the actual stick count derived from the cutting
+  // strategy (bin-packing for horizontal rails, per-edge ceiling for
+  // corners). The profile object only knows length + price.
+  explicitCount: number,
 ): ProfileCalculation {
   const lengthMeters = profile.lengthMm / 1000;
-  const count = neededMeters > 0 ? Math.ceil(neededMeters / lengthMeters) : 0;
   return {
     label,
     name: profile.name,
     neededMeters: round2(neededMeters),
     lengthMeters,
-    count,
+    count: explicitCount,
     priceEachExVat: profile.priceEachExVat,
-    totalExVat: round2(count * profile.priceEachExVat),
+    totalExVat: round2(explicitCount * profile.priceEachExVat),
   };
+}
+
+/**
+ * Bin-packing first-fit-decreasing for stick allocation.
+ *
+ * Each segment must fit into a single stick (with butt-joins WITHIN
+ * a stick allowed for segments longer than stickLen — those produce
+ * one or more "full" closed sticks plus a remainder). Smaller leftover
+ * pieces from one stick can be used by other segments — that's how
+ * a long side's offcut can cover a short side's extension.
+ *
+ * For 4 sides x 2.5m on 3.8m sticks: 4 sticks (each 2.5m piece doesn't
+ * fit in another's 1.3m offcut).
+ * For [13.5, 13.5, 5, 5] on 3.8m sticks: 10 sticks (offcuts pool
+ * neatly to cover the short-side extensions).
+ */
+function packSticks(segmentsM: number[], stickLenM: number): number {
+  if (stickLenM <= 0) return 0;
+  const sorted = segmentsM
+    .filter((s) => s > 0)
+    .sort((a, b) => b - a);
+  const remaining: number[] = []; // remaining capacity per opened stick
+  for (const seg of sorted) {
+    let toPlace = seg;
+    // Segments longer than one stick: split into N full sticks + a
+    // remainder. Each full stick is closed (no usable offcut, since
+    // the segment occupies the whole length).
+    while (toPlace > stickLenM) {
+      remaining.push(0);
+      toPlace -= stickLenM;
+    }
+    if (toPlace <= 0) continue;
+    // Try to fit the remainder into an already-opened stick.
+    const slot = remaining.findIndex((rem) => rem >= toPlace);
+    if (slot >= 0) {
+      remaining[slot] -= toPlace;
+    } else {
+      remaining.push(stickLenM - toPlace);
+    }
+  }
+  return remaining.length;
 }
 
 export function calculateMaterialResult({
@@ -134,11 +195,17 @@ export function calculateMaterialResult({
   product,
   orientation,
   profiles = DEFAULT_SPANL_PROFILES,
+  insideCornerCount = 0,
 }: {
   sides: CalcSide[];
   product: Product;
   orientation: Orientation;
   profiles?: ProfileSet;
+  // Number of inwardly-folding corners (L-shape, U-shape,
+  // gevel-uitbouw). Cannot be derived from per-side widths +
+  // heights alone — has to come from the user. Each inside corner
+  // gets a YJDZ binnenhoek profile spanning the max facade height.
+  insideCornerCount?: number;
 }) {
   const totals = calculateTotals(sides);
 
@@ -160,43 +227,115 @@ export function calculateMaterialResult({
     materialPriceExVat = round2(netWithWaste * product.pricePerM2ExVat);
   }
 
+  // Cutting model: bin-packing FFD for EVERY profile type. Installer
+  // pools offcuts — a long side's leftover supplies a short side's
+  // extension, a tall corner's leftover supplies the next corner's
+  // extension. Per-edge / per-side ceiling would over-order with
+  // huge offcut waste; the user confirmed pooling is mandatory.
+  // Vertical orientation uses only the BOTTOM rail (SBT-J Eindprofiel
+  // with drainage holes); no top rail per Spanl docs.
+  const startSegments: number[] = [];
+  const endSegments: number[] = [];
+  const connectionSegments: number[] = [];
+  const cornerSegments: number[] = [];
   let startMeters = 0;
   let endMeters = 0;
   let connectionMeters = 0;
   let cornerMeters = 0;
 
+  const startLen = profiles.startProfile.lengthMm / 1000;
+  const endLen = profiles.endProfile.lengthMm / 1000;
+  const connectionLen = profiles.connectionProfile.lengthMm / 1000;
+  const cornerLen = profiles.cornerProfile.lengthMm / 1000;
+  const insideCornerLen = profiles.insideCornerProfile.lengthMm / 1000;
+
   const panelLengthCm = product.panelLength / 10;
   const panelWorkCm = product.panelWorkSize / 10;
+
+  // Inside corners run the full vertical edge of the building. We use
+  // the max side height as a proxy — slight overestimate when facades
+  // vary, but inside corners are uncommon (L-shape, U-shape) so the
+  // approximation is acceptable until we get per-corner heights.
+  const maxHeightM = Math.max(
+    0,
+    ...sides
+      .map((s) => toNumber(s.height) / 100)
+      .filter((h) => Number.isFinite(h) && h > 0),
+  );
+  const insideCornerMeters = Math.max(0, insideCornerCount) * maxHeightM;
+  // Inside-corner segments: one per inside corner, all equal to maxHeight.
+  const insideCornerSegments: number[] = [];
+  if (maxHeightM > 0) {
+    for (let i = 0; i < Math.max(0, insideCornerCount); i++) {
+      insideCornerSegments.push(maxHeightM);
+    }
+  }
 
   sides.forEach((side) => {
     const widthCm = toNumber(side.width);
     const heightCm = toNumber(side.height);
     if (widthCm <= 0 || heightCm <= 0) return;
 
-    startMeters += widthCm / 100;
-    cornerMeters += 2 * (heightCm / 100);
+    const widthM = widthCm / 100;
+    const heightM = heightCm / 100;
+
+    // Outside corner: each side contributes ONE vertical corner edge.
+    // Bin-packing pools offcuts across corners (4 corners @ 3.55m on
+    // 3m sticks: 4 main 3m pieces + 1 shared 3m stick cut into 4x
+    // 0.55m extensions = 5 sticks).
+    cornerMeters += heightM;
+    cornerSegments.push(heightM);
 
     if (orientation === "horizontal") {
-      endMeters += widthCm / 100;
+      // Bottom: Beginprofiel (QBJ).  Top: Eindprofiel (SBT-J).
+      startMeters += widthM;
+      startSegments.push(widthM);
+      endMeters += widthM;
+      endSegments.push(widthM);
+      // PJ01 verbindingsprofiel between panels in the same row when
+      // facade is wider than one panel length. Each row is its own
+      // continuous segment for bin-packing.
       if (panelWorkCm > 0 && panelLengthCm > 0) {
         const rows = Math.ceil(heightCm / panelWorkCm);
         const panelsPerRow = Math.ceil(widthCm / panelLengthCm);
-        connectionMeters += Math.max(0, panelsPerRow - 1) * rows * (panelWorkCm / 100);
+        const connectionsPerRow = Math.max(0, panelsPerRow - 1);
+        const meterPerRow = connectionsPerRow * (panelWorkCm / 100);
+        if (meterPerRow > 0) {
+          for (let r = 0; r < rows; r++) connectionSegments.push(meterPerRow);
+          connectionMeters += rows * meterPerRow;
+        }
       }
+    } else {
+      // Vertical: only the BOTTOM rail uses SBT-J Eindprofiel (with
+      // drainage holes drilled). No top rail per Spanl docs. No QBJ
+      // start profile, no PJ01 verbindingsprofiel (built-in interlock).
+      endMeters += widthM;
+      endSegments.push(widthM);
     }
   });
+
+  const startSticks = packSticks(startSegments, startLen);
+  const endSticks = packSticks(endSegments, endLen);
+  const connectionSticks = packSticks(connectionSegments, connectionLen);
+  const cornerSticks = packSticks(cornerSegments, cornerLen);
+  const insideCornerSticks = packSticks(insideCornerSegments, insideCornerLen);
 
   const rules = product.profileRules[orientation];
   const profileItems: ProfileCalculation[] = [];
 
   if (rules.needsStartProfile)
-    profileItems.push(calculateProfile("Beginprofiel", profiles.startProfile, startMeters));
+    profileItems.push(calculateProfile("Beginprofiel", profiles.startProfile, startMeters, startSticks));
   if (rules.needsEndProfile)
-    profileItems.push(calculateProfile("Eindprofiel", profiles.endProfile, endMeters));
+    profileItems.push(calculateProfile("Eindprofiel", profiles.endProfile, endMeters, endSticks));
   if (rules.needsConnectionProfile)
-    profileItems.push(calculateProfile("Verbindingsprofiel", profiles.connectionProfile, connectionMeters));
+    profileItems.push(calculateProfile("Verbindingsprofiel", profiles.connectionProfile, connectionMeters, connectionSticks));
   if (rules.needsCornerProfile)
-    profileItems.push(calculateProfile("Hoekprofiel", profiles.cornerProfile, cornerMeters));
+    profileItems.push(calculateProfile("Hoekprofiel", profiles.cornerProfile, cornerMeters, cornerSticks));
+  // Inside corner profile is gated by user-supplied count rather than a
+  // product-level rule. If the user didn't enter any binnenhoeken the
+  // line is skipped.
+  if (insideCornerSticks > 0)
+    profileItems.push(calculateProfile("Binnenhoekprofiel", profiles.insideCornerProfile, insideCornerMeters, insideCornerSticks));
 
   const profilePriceExVat = round2(
     profileItems.reduce((sum, item) => sum + item.totalExVat, 0)
