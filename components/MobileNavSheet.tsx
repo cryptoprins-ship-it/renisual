@@ -53,7 +53,7 @@ export default function MobileNavSheet({ open, onClose }: Props) {
         type="button"
         aria-label={t("nav.menu.close") || "Menu sluiten"}
         onClick={onClose}
-        className="fixed inset-0 z-30 bg-black/30 motion-safe:animate-[fadeIn_120ms_ease-out] md:hidden"
+        className="fixed inset-0 z-30 bg-ink/30 motion-safe:animate-[fadeIn_120ms_ease-out] md:hidden"
       />
       {/* Sheet */}
       <nav

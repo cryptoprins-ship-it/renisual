@@ -221,11 +221,11 @@ function ToggleSwitch({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between rounded-xl border border-black bg-white px-4 py-3 text-left"
+      className="flex w-full items-center justify-between rounded-xl border border-ink bg-white px-4 py-3 text-left"
     >
       <span className="text-sm font-medium">{label}</span>
-      <span className={`relative h-6 w-11 rounded-full border border-black transition-colors ${checked ? "bg-black" : "bg-white"}`}>
-        <span className={`absolute top-1 h-4 w-4 rounded-full transition-all ${checked ? "left-6 bg-white" : "left-1 bg-black"}`} />
+      <span className={`relative h-6 w-11 rounded-full border border-ink transition-colors ${checked ? "bg-ink" : "bg-white"}`}>
+        <span className={`absolute top-1 h-4 w-4 rounded-full transition-all ${checked ? "left-6 bg-white" : "left-1 bg-ink"}`} />
       </span>
     </button>
   );
@@ -292,7 +292,7 @@ function InputWithSuffix({
   return (
     <div className="relative">
       <input
-        className={`w-full rounded-xl border border-black p-3 pr-14 disabled:bg-neutral-100 ${className ?? ""}`}
+        className={`w-full rounded-xl border border-ink p-3 pr-14 disabled:bg-neutral-100 ${className ?? ""}`}
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
@@ -325,8 +325,8 @@ function SpanlThumb({
       alt={productName}
       className={
         compact
-          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
-          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+          ? "block h-12 w-12 shrink-0 rounded-md border border-ink object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-ink object-cover sm:w-40"
       }
     />
   );
@@ -355,8 +355,8 @@ function KeralitThumb({
       loading="lazy"
       className={
         compact
-          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
-          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+          ? "block h-12 w-12 shrink-0 rounded-md border border-ink object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-ink object-cover sm:w-40"
       }
     />
   );
@@ -375,7 +375,7 @@ function KeralitColorPicker({
   const selected = selectedNumber != null ? KERALIT_COLORS.find((c) => c.number === selectedNumber) : null;
 
   return (
-    <div className="mt-4 rounded-xl border border-black p-4 print-hidden">
+    <div className="mt-4 rounded-xl border border-ink p-4 print-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Keralit kleur</h3>
         {selected && (
@@ -391,7 +391,7 @@ function KeralitColorPicker({
             type="button"
             onClick={() => setActiveFinish(f)}
             className={`rounded-lg border px-3 py-1 text-xs ${
-              activeFinish === f ? "border-black bg-black text-white" : "border-black bg-white"
+              activeFinish === f ? "border-ink bg-ink text-paper" : "border-ink bg-white"
             }`}
           >
             {KERALIT_FINISH_LABEL_NL[f]}
@@ -406,7 +406,7 @@ function KeralitColorPicker({
             onClick={() => onSelect(c.number)}
             title={`${c.name} (${c.number})`}
             className={`group flex flex-col items-center gap-1 rounded-lg border p-1 ${
-              selectedNumber === c.number ? "border-black ring-2 ring-black" : "border-neutral-300"
+              selectedNumber === c.number ? "border-ink ring-2 ring-ink" : "border-neutral-300"
             }`}
           >
             <img
@@ -1102,12 +1102,11 @@ export default function GevelCalcPage() {
     return `€${value.toFixed(2)}`;
   }
 
-  // Resolve a NL postcode + huisnummer to street + city via the PDOK
-  // locatieserver — Dutch government, free, no API key required, CORS
-  // enabled. The endpoint accepts free-text queries and ranks results;
-  // we ask for one. On success we set the canonical customerAddress
-  // string in the format that NL invoices/letters use, leaving the
-  // user free to edit afterwards (e.g., add an appartement-nummer).
+  // Resolve a NL postcode + huisnummer to street + city via our
+  // /api/postcode-lookup proxy. The proxy fronts PDOK locatieserver
+  // server-side so the browser only talks same-origin — sidesteps
+  // ad-blocker false-positives, corporate proxies, and mobile-carrier
+  // DNS filters that occasionally block api.pdok.nl directly.
   async function lookupAddress() {
     const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
     const cleanNumber = huisnummer.trim();
@@ -1117,29 +1116,46 @@ export default function GevelCalcPage() {
     }
     setAddressLookupState("loading");
     try {
-      const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${encodeURIComponent(
-        `postcode:${cleanPostcode} and huisnummer:${cleanNumber}`,
-      )}&rows=1&fl=straatnaam,woonplaatsnaam,huisnummer,postcode`;
+      const url = `/api/postcode-lookup?postcode=${cleanPostcode}&huisnummer=${encodeURIComponent(cleanNumber)}`;
       const res = await fetch(url);
+      if (res.status === 404) {
+        setAddressLookupState("notfound");
+        return;
+      }
       if (!res.ok) {
         setAddressLookupState("error");
         return;
       }
-      const data = await res.json();
-      const doc = data?.response?.docs?.[0];
-      if (!doc?.straatnaam || !doc?.woonplaatsnaam) {
+      const data = (await res.json()) as { straat?: string; woonplaats?: string };
+      if (!data?.straat || !data?.woonplaats) {
         setAddressLookupState("notfound");
         return;
       }
       const formattedPostcode = `${cleanPostcode.slice(0, 4)} ${cleanPostcode.slice(4)}`;
       setCustomerAddress(
-        `${doc.straatnaam} ${cleanNumber}, ${formattedPostcode} ${doc.woonplaatsnaam}`,
+        `${data.straat} ${cleanNumber}, ${formattedPostcode} ${data.woonplaats}`,
       );
       setAddressLookupState("ok");
     } catch {
       setAddressLookupState("error");
     }
   }
+
+  // Auto-fire lookupAddress when both fields parse correctly. Debounced
+  // 400ms so typing "12" → "12A" doesn't fire twice. Skips if a lookup
+  // is already in flight or already resolved — onChange handlers reset
+  // state to "idle" on edit, which re-arms the trigger.
+  useEffect(() => {
+    if (addressLookupState !== "idle") return;
+    const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
+    const cleanNumber = huisnummer.trim();
+    if (!/^\d{4}[A-Z]{2}$/.test(cleanPostcode) || !cleanNumber) return;
+    const id = setTimeout(() => {
+      lookupAddress();
+    }, 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postcode, huisnummer, addressLookupState]);
 
   function validateForExport(): string | null {
     if (mode === "quick" && quickAreaToM2(quickTotalArea, unit) <= 0) return t("gc.error.fillArea");
@@ -2047,7 +2063,7 @@ export default function GevelCalcPage() {
                   pre-fills the canonical address textarea below via PDOK
                   locatieserver. The user can still type the address by
                   hand, or edit after autofill (e.g., add a unit number). */}
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,7rem)_minmax(0,5rem)_auto]">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,7rem)_minmax(0,5rem)]">
                 <div>
                   <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
                     Postcode
@@ -2081,17 +2097,10 @@ export default function GevelCalcPage() {
                     inputMode="numeric"
                   />
                 </div>
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={lookupAddress}
-                    disabled={addressLookupState === "loading"}
-                    className="w-full sm:w-auto border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink hover:bg-ink hover:text-paper disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {addressLookupState === "loading" ? "Zoeken…" : "Vul adres in"}
-                  </button>
-                </div>
               </div>
+              {addressLookupState === "loading" && (
+                <p className="text-[11px] leading-snug text-stone-500">Adres opzoeken…</p>
+              )}
               {addressLookupState === "notfound" && (
                 <p className="text-[11px] leading-snug text-red-700">
                   Geen adres gevonden voor deze postcode + huisnummer. Controleer of beide kloppen, of vul het adres handmatig in hieronder.
@@ -2134,7 +2143,7 @@ export default function GevelCalcPage() {
           </section>
 
           {mode === "quick" && (
-            <section className="rounded-2xl border border-black bg-white p-4 md:p-6">
+            <section className="rounded-2xl border border-ink bg-white p-4 md:p-6">
               <p className="mb-4 text-xs leading-relaxed text-stone-500 print-hidden">
                 {t("gc.modeAssumptionsBefore")}
                 <button
@@ -2148,7 +2157,7 @@ export default function GevelCalcPage() {
               </p>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl font-semibold">{t("gc.mode.quick")}</h2>
-                <div className="inline-flex rounded-xl border border-black p-1 print-hidden">
+                <div className="inline-flex rounded-xl border border-ink p-1 print-hidden">
                   <button
                     type="button"
                     onClick={() => {
@@ -2156,7 +2165,7 @@ export default function GevelCalcPage() {
                       setUnitTouched(true);
                     }}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      unit === "m2" ? "bg-black text-white" : "bg-white text-black"
+                      unit === "m2" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     m²
@@ -2168,7 +2177,7 @@ export default function GevelCalcPage() {
                       setUnitTouched(true);
                     }}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      unit === "ft2" ? "bg-black text-white" : "bg-white text-black"
+                      unit === "ft2" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     ft²
@@ -2189,7 +2198,7 @@ export default function GevelCalcPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("gc.quick.windowCount")}</label>
                   <input
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                     value={quickWindowCount}
                     onChange={(e) => setQuickWindowCount(e.target.value)}
                     placeholder="0"
@@ -2200,7 +2209,7 @@ export default function GevelCalcPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("gc.quick.doorCount")}</label>
                   <input
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                     value={quickDoorCount}
                     onChange={(e) => setQuickDoorCount(e.target.value)}
                     placeholder="0"
@@ -2223,7 +2232,7 @@ export default function GevelCalcPage() {
                   <button
                     type="button"
                     onClick={() => clearPhotoState(QUICK_SIDE_ID)}
-                    className="mt-2 rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+                    className="mt-2 rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
                   >
                     {t("upload_remove_retry")}
                   </button>
@@ -2246,19 +2255,19 @@ export default function GevelCalcPage() {
               )}
 
               <div className="metrics-row mt-5 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-black p-3">
+                <div className="rounded-xl border border-ink p-3">
                   <div className="text-xs text-gray-500">{t("gc.gross")}</div>
                   <div className="text-base font-semibold">
                     {m2ToUnit(quickTotalAreaM2, unit).toFixed(2)} {unitLabel}
                   </div>
                 </div>
-                <div className="rounded-xl border border-black p-3">
+                <div className="rounded-xl border border-ink p-3">
                   <div className="text-xs text-gray-500">{t("gc.openings")}</div>
                   <div className="text-base font-semibold">
                     {m2ToUnit(quickOpeningsM2, unit).toFixed(2)} {unitLabel}
                   </div>
                 </div>
-                <div className="rounded-xl border border-black p-3">
+                <div className="rounded-xl border border-ink p-3">
                   <div className="text-xs text-gray-500">{t("gc.quick.netEstimate")}</div>
                   <div className="text-base font-semibold">
                     {quickNetDisplay} {unitLabel}
@@ -2279,7 +2288,7 @@ export default function GevelCalcPage() {
               const photo = photos[side.id];
 
               return (
-                <section key={side.id} className="rounded-2xl border border-black bg-white p-4 md:p-6">
+                <section key={side.id} className="rounded-2xl border border-ink bg-white p-4 md:p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h2 className="text-xl font-semibold">{side.name}</h2>
@@ -2333,7 +2342,7 @@ export default function GevelCalcPage() {
                       <button
                         type="button"
                         onClick={() => clearPhotoState(side.id)}
-                        className="mt-2 rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+                        className="mt-2 rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
                       >
                         {t("upload_remove_retry")}
                       </button>
@@ -2361,10 +2370,10 @@ export default function GevelCalcPage() {
                   </div>
 
                   {side.openings.length > 0 && (
-                    <div className="mt-5 space-y-4 rounded-2xl border border-black p-4">
+                    <div className="mt-5 space-y-4 rounded-2xl border border-ink p-4">
                       <h3 className="font-semibold">{t("gc.openings")}</h3>
                       {side.openings.map((opening) => (
-                        <div key={opening.id} className="rounded-xl border border-black p-4">
+                        <div key={opening.id} className="rounded-xl border border-ink p-4">
                           <div className="flex justify-between gap-4">
                             <h4 className="font-semibold">{t(`gc.opening.${opening.type}`)}</h4>
                             <button type="button" onClick={() => removeOpening(side.id, opening.id)} className="text-sm underline print-hidden">
@@ -2392,7 +2401,7 @@ export default function GevelCalcPage() {
                               suffix="cm"
                             />
                             <input
-                              className="rounded-xl border border-black p-3"
+                              className="rounded-xl border border-ink p-3"
                               placeholder={t("gc.countPlaceholder")}
                               value={opening.count}
                               onChange={(e) => updateOpening(side.id, opening.id, "count", e.target.value)}
@@ -2401,13 +2410,13 @@ export default function GevelCalcPage() {
                         </div>
                       ))}
                       <div className="flex flex-wrap gap-3 print-hidden">
-                        <button type="button" onClick={() => addOpening(side.id, "window")} className="rounded-xl border border-black px-4 py-2">
+                        <button type="button" onClick={() => addOpening(side.id, "window")} className="rounded-xl border border-ink px-4 py-2">
                           {t("gc.addWindow")}
                         </button>
-                        <button type="button" onClick={() => addOpening(side.id, "door")} className="rounded-xl border border-black px-4 py-2">
+                        <button type="button" onClick={() => addOpening(side.id, "door")} className="rounded-xl border border-ink px-4 py-2">
                           {t("gc.addDoor")}
                         </button>
-                        <button type="button" onClick={() => addOpening(side.id, "other")} className="rounded-xl border border-black px-4 py-2">
+                        <button type="button" onClick={() => addOpening(side.id, "other")} className="rounded-xl border border-ink px-4 py-2">
                           {t("gc.addOther")}
                         </button>
                       </div>
@@ -2415,15 +2424,15 @@ export default function GevelCalcPage() {
                   )}
 
                   <div className="metrics-row mt-5 grid grid-cols-3 gap-2">
-                    <div className="rounded-xl border border-black p-3">
+                    <div className="rounded-xl border border-ink p-3">
                       <div className="text-xs text-gray-500">{t("gc.gross")}</div>
                       <div className="text-base font-semibold">{calculateSideGrossM2(resolved).toFixed(2)} m²</div>
                     </div>
-                    <div className="rounded-xl border border-black p-3">
+                    <div className="rounded-xl border border-ink p-3">
                       <div className="text-xs text-gray-500">{t("gc.openings")}</div>
                       <div className="text-base font-semibold">{calculateSideOpeningsM2(side).toFixed(2)} m²</div>
                     </div>
-                    <div className="rounded-xl border border-black p-3">
+                    <div className="rounded-xl border border-ink p-3">
                       <div className="text-xs text-gray-500">{t("gc.net")}</div>
                       <div className="text-base font-semibold">{calculateSideNetM2(resolved).toFixed(2)} m²</div>
                     </div>
@@ -2466,7 +2475,7 @@ export default function GevelCalcPage() {
           )}
 
           {showProductPicker && (
-          <section className="rounded-2xl border border-black bg-white p-4 page-break-before">
+          <section className="rounded-2xl border border-ink bg-white p-4 page-break-before">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-semibold">{t("gc.productChoice")}</h2>
               {selectedProduct && (
@@ -2479,12 +2488,12 @@ export default function GevelCalcPage() {
                 </button>
               )}
             </div>
-            <div className="mt-3 inline-flex rounded-xl border border-black p-1 print-hidden">
+            <div className="mt-3 inline-flex rounded-xl border border-ink p-1 print-hidden">
               <button
                 type="button"
                 onClick={() => setProductCategory("gevelbekleding")}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  productCategory === "gevelbekleding" ? "bg-black text-white" : "bg-white text-black"
+                  productCategory === "gevelbekleding" ? "bg-ink text-paper" : "bg-white text-black"
                 }`}
               >
                 {t("gevelbekleding")}
@@ -2503,7 +2512,7 @@ export default function GevelCalcPage() {
                 <div
                   role="radiogroup"
                   aria-label={t("gc.display")}
-                  className="inline-flex rounded-xl border border-black p-1"
+                  className="inline-flex rounded-xl border border-ink p-1"
                 >
                   <button
                     type="button"
@@ -2511,7 +2520,7 @@ export default function GevelCalcPage() {
                     aria-checked={displayMode === "foto"}
                     onClick={() => setDisplayMode("foto")}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      displayMode === "foto" ? "bg-black text-white" : "bg-white text-black"
+                      displayMode === "foto" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     {t("gc.display.photo")}
@@ -2522,7 +2531,7 @@ export default function GevelCalcPage() {
                     aria-checked={displayMode === "tekst"}
                     onClick={() => setDisplayMode("tekst")}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      displayMode === "tekst" ? "bg-black text-white" : "bg-white text-black"
+                      displayMode === "tekst" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     {t("gc.display.text")}
@@ -2622,7 +2631,7 @@ export default function GevelCalcPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
                   <select
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                     value={orientation}
                     onChange={(e) => setOrientation(e.target.value as Orientation)}
                   >
@@ -2647,7 +2656,7 @@ export default function GevelCalcPage() {
                     value={insideCornerCount}
                     onChange={(e) => setInsideCornerCount(e.target.value)}
                     placeholder="0"
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                   />
                   <p className="mt-1 text-xs text-stone-500">
                     {t("gc.insideCornerHint")}
@@ -2656,7 +2665,7 @@ export default function GevelCalcPage() {
               )}
             </div>
             {selectedProduct && (
-              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-black p-4 sm:flex-row">
+              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-ink p-4 sm:flex-row">
                 {selectedProduct.brand === "Spanl" && (
                   <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
                 )}
@@ -2723,7 +2732,7 @@ export default function GevelCalcPage() {
         </div>
 
         <div
-          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-ink bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
         >
           <div className="mx-auto max-w-[1400px]">
             {/* Mobile: 2-col grid with primaries side-by-side, Reset
@@ -2743,7 +2752,16 @@ export default function GevelCalcPage() {
                 }`}
                 aria-disabled={!selectedProduct}
                 onClick={(e) => {
-                  if (!selectedProduct) e.preventDefault();
+                  if (!selectedProduct) {
+                    e.preventDefault();
+                    return;
+                  }
+                  // Flush sessionStorage before navigation. The auto-save
+                  // useEffect debounces by 600ms, so a click within that
+                  // window would navigate to /render with stale or empty
+                  // calc state and `loadAllPhotos([])` would return empty
+                  // even though the photos are in IndexedDB.
+                  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false))); } catch {}
                 }}
               >
                 {t("gc.viewRender")}
@@ -2766,10 +2784,10 @@ export default function GevelCalcPage() {
               </button>
               {mode === "advanced" && (
                 <>
-                  <button type="button" onClick={exportConfig} className="rounded-xl border border-black px-3 py-2 text-sm">
+                  <button type="button" onClick={exportConfig} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
                   </button>
-                  <label className="cursor-pointer rounded-xl border border-black px-3 py-2 text-center text-sm">
+                  <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}
                     <input
                       type="file"

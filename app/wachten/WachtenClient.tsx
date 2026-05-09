@@ -150,7 +150,7 @@ export default function WachtenClient() {
   return (
     <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="wachten" />
-      <nav className="border-b border-black bg-white px-4 py-3">
+      <nav className="border-b border-ink bg-white px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <Link href="/" className="text-xl font-bold tracking-tight">
             Renisual
@@ -158,13 +158,13 @@ export default function WachtenClient() {
           <div className="flex gap-2">
             <Link
               href="/leaderboard"
-              className="rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
             >
               Leaderboard →
             </Link>
             <Link
               href="/render"
-              className="rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
             >
               Terug naar render
             </Link>
@@ -172,7 +172,7 @@ export default function WachtenClient() {
         </div>
       </nav>
 
-      <div className="border-b border-black bg-amber-50 px-4 py-2 text-center">
+      <div className="border-b border-ink bg-amber-50 px-4 py-2 text-center">
         <p className="text-sm font-medium text-amber-900">
           Je render wordt gegenereerd... <span className="text-amber-700">(±20 sec)</span>
         </p>
@@ -195,22 +195,22 @@ export default function WachtenClient() {
         </p>
 
         <div className="mt-6 grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-black bg-white p-3 text-center">
+          <div className="rounded-xl border border-ink bg-white p-3 text-center">
             <p className="text-[10px] uppercase tracking-wide text-gray-500">Score</p>
             <p className="text-2xl font-bold">{score}</p>
           </div>
-          <div className="rounded-xl border border-black bg-white p-3 text-center">
+          <div className="rounded-xl border border-ink bg-white p-3 text-center">
             <p className="text-[10px] uppercase tracking-wide text-gray-500">Best</p>
             <p className="text-2xl font-bold">{personalBest}</p>
           </div>
-          <div className="rounded-xl border border-black bg-white p-3 text-center">
+          <div className="rounded-xl border border-ink bg-white p-3 text-center">
             <p className="text-[10px] uppercase tracking-wide text-gray-500">Max tile</p>
             <p className="text-2xl font-bold">{max}</p>
           </div>
         </div>
 
         <div
-          className="mt-4 select-none touch-none rounded-2xl border border-black bg-neutral-300 p-2 sm:p-3"
+          className="mt-4 select-none touch-none rounded-2xl border border-ink bg-neutral-300 p-2 sm:p-3"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -243,7 +243,7 @@ export default function WachtenClient() {
           <button
             type="button"
             onClick={reset}
-            className="min-h-[44px] rounded-xl bg-black px-5 text-sm font-semibold text-white hover:opacity-80"
+            className="min-h-[44px] rounded-xl bg-ink px-5 text-sm font-semibold text-paper hover:opacity-80"
           >
             Nieuw spel
           </button>
@@ -253,7 +253,7 @@ export default function WachtenClient() {
         </div>
 
         {over && (
-          <div className="mt-6 rounded-2xl border-2 border-black bg-white p-5">
+          <div className="mt-6 rounded-2xl border-2 border-ink bg-white p-5">
             <h2 className="text-xl font-bold">Game over</h2>
             <p className="mt-1 text-sm text-gray-600">
               Eindscore: <span className="font-semibold">{score}</span> · Hoogste tegel:{" "}
@@ -268,12 +268,12 @@ export default function WachtenClient() {
                   placeholder="Naam voor leaderboard"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="min-h-[44px] flex-1 rounded-xl border border-black px-3 text-sm"
+                  className="min-h-[44px] flex-1 rounded-xl border border-ink px-3 text-sm"
                 />
                 <button
                   type="submit"
                   disabled={submitState === "loading"}
-                  className="min-h-[44px] rounded-xl bg-black px-5 text-sm font-semibold text-white hover:opacity-80 disabled:opacity-50"
+                  className="min-h-[44px] rounded-xl bg-ink px-5 text-sm font-semibold text-paper hover:opacity-80 disabled:opacity-50"
                 >
                   {submitState === "loading" ? "Bezig…" : "Sla score op"}
                 </button>

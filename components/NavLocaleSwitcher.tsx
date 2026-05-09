@@ -56,7 +56,7 @@ export default function NavLocaleSwitcher({ className, compact }: Props) {
             className={[
               "flex items-center justify-center rounded-lg p-1.5 transition",
               active
-                ? "bg-black ring-2 ring-black"
+                ? "bg-ink ring-2 ring-ink"
                 : "hover:bg-zinc-100",
             ].join(" ")}
           >
