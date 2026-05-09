@@ -311,6 +311,17 @@ export type OfferteDocumentProps = {
   pricePerMiddleProfile: number;
   pricePerCornerProfile: number;
   pricePerInsideCornerProfile?: number;
+  // Stick lengths in metres — render as e.g. "(3,8m)" suffix on each
+  // line in the offerte. Spanl ships some profiles in two lengths with
+  // different prices; the offerte must explicitly state which variant
+  // was calculated. Optional with sensible defaults so older payloads
+  // without lengths still render (no suffix).
+  lengthPanelM?: number;
+  lengthStartProfileM?: number;
+  lengthEndProfileM?: number;
+  lengthMiddleProfileM?: number;
+  lengthCornerProfileM?: number;
+  lengthInsideCornerProfileM?: number;
   fastenerEstimateExBtw: number;
   // Derived totals already computed by the calc engine — we re-display
   // them rather than recomputing to keep one source of truth.
@@ -385,45 +396,60 @@ function buildLineRows(
     pricePerCornerProfile: number;
     pricePerInsideCornerProfile?: number;
   },
+  // Stick lengths in metres so the PDF labels each profile with its
+  // length variant (e.g. "Eindprofiel (3.8m)" vs "Beginprofiel (3m)").
+  // Spanl voert sommige profielen in twee lengtes met verschillende
+  // prijzen — de offerte moet dus expliciet maken welke variant er
+  // gerekend is. All optional with sensible defaults so downstream
+  // call sites that don't yet pass them keep working.
+  lengths: {
+    lengthPanelM?: number;
+    lengthStartProfileM?: number;
+    lengthEndProfileM?: number;
+    lengthMiddleProfileM?: number;
+    lengthCornerProfileM?: number;
+    lengthInsideCornerProfileM?: number;
+  } = {},
   VAT: number,
 ): LineRow[] {
   const startCount = counts.profileStartCount ?? 0;
   const startPrice = prices.pricePerStartProfile ?? 0;
   const insideCornerCount = counts.profileInsideCornerCount ?? 0;
   const insideCornerPrice = prices.pricePerInsideCornerProfile ?? 0;
+  const fmtLen = (m?: number) => (m ? ` (${String(m).replace(".", ",")}m)` : "");
   return [
     {
-      desc: "Gevelpaneel",
+      desc: `Gevelpaneel${fmtLen(lengths.lengthPanelM)}`,
       qty: counts.panelCount,
       unit: prices.pricePerPanel * VAT,
       total: counts.panelCount * prices.pricePerPanel * VAT,
     },
     {
-      desc: "Beginprofiel",
+      desc: `Beginprofiel${fmtLen(lengths.lengthStartProfileM)}`,
       qty: startCount,
       unit: startPrice * VAT,
       total: startCount * startPrice * VAT,
     },
     {
-      desc: "Eindprofiel",
+      desc: `Eindprofiel${fmtLen(lengths.lengthEndProfileM)}`,
       qty: counts.profileEndCount,
       unit: prices.pricePerEndProfile * VAT,
       total: counts.profileEndCount * prices.pricePerEndProfile * VAT,
     },
     {
-      desc: "Tussenprofiel",
+      desc: `Tussenprofiel${fmtLen(lengths.lengthMiddleProfileM)}`,
       qty: counts.profileMiddleCount,
       unit: prices.pricePerMiddleProfile * VAT,
       total: counts.profileMiddleCount * prices.pricePerMiddleProfile * VAT,
     },
     {
-      desc: "Hoekprofiel (buiten)",
+      desc: `Hoekprofiel buiten${fmtLen(lengths.lengthCornerProfileM)}`,
       qty: counts.profileCornerCount,
       unit: prices.pricePerCornerProfile * VAT,
       total: counts.profileCornerCount * prices.pricePerCornerProfile * VAT,
     },
     {
-      desc: "Hoekprofiel (binnen)",
+      desc: `Hoekprofiel binnen${fmtLen(lengths.lengthInsideCornerProfileM)}`,
       qty: insideCornerCount,
       unit: insideCornerPrice * VAT,
       total: insideCornerCount * insideCornerPrice * VAT,
@@ -454,6 +480,14 @@ export function OfferteDocument(props: OfferteDocumentProps) {
   // When prices are shown, all unit/total values are presented INCLUSIEF
   // BTW (input is ex-BTW from the calc engine, multiplied by 1.21 here).
   // Single TOTAAL row, no separate BTW row.
+  const lengths = {
+    lengthPanelM: props.lengthPanelM,
+    lengthStartProfileM: props.lengthStartProfileM,
+    lengthEndProfileM: props.lengthEndProfileM,
+    lengthMiddleProfileM: props.lengthMiddleProfileM,
+    lengthCornerProfileM: props.lengthCornerProfileM,
+    lengthInsideCornerProfileM: props.lengthInsideCornerProfileM,
+  };
   const lineRows = buildLineRows(
     {
       panelCount: props.panelCount,
@@ -465,6 +499,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
       fastenerEstimateExBtw: props.fastenerEstimateExBtw,
     },
     prices,
+    lengths,
     VAT,
   );
   const totalInclBtw = lineRows.reduce((sum, row) => sum + row.total, 0);
@@ -484,6 +519,7 @@ export function OfferteDocument(props: OfferteDocumentProps) {
           fastenerEstimateExBtw: props.fastenerEstimateExBtw,
         },
         prices,
+        lengths,
         VAT,
       )
     : [];

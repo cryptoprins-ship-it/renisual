@@ -1604,6 +1604,15 @@ export default function GevelCalcPage() {
         pricePerMiddleProfile: DEFAULT_SPANL_PROFILES.connectionProfile.priceEachExVat,
         pricePerCornerProfile: DEFAULT_SPANL_PROFILES.cornerProfile.priceEachExVat,
         pricePerInsideCornerProfile: DEFAULT_SPANL_PROFILES.insideCornerProfile.priceEachExVat,
+        // Stick lengths in metres so the PDF renders e.g. "Eindprofiel (3,8m)".
+        // Spanl voert SBT-J in twee lengtes met verschillende prijzen — de
+        // offerte moet expliciet maken welke variant er is gerekend.
+        lengthPanelM: 4.2,
+        lengthStartProfileM: DEFAULT_SPANL_PROFILES.startProfile.lengthMm / 1000,
+        lengthEndProfileM: DEFAULT_SPANL_PROFILES.endProfile.lengthMm / 1000,
+        lengthMiddleProfileM: DEFAULT_SPANL_PROFILES.connectionProfile.lengthMm / 1000,
+        lengthCornerProfileM: DEFAULT_SPANL_PROFILES.cornerProfile.lengthMm / 1000,
+        lengthInsideCornerProfileM: DEFAULT_SPANL_PROFILES.insideCornerProfile.lengthMm / 1000,
         fastenerEstimateExBtw: 0,
       },
       calcOutput: {
