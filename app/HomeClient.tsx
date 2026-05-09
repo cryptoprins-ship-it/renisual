@@ -174,9 +174,9 @@ export default function HomeClient() {
           <div className="mt-10 flex flex-col items-start gap-3">
             <Link
               href="/render"
-              className="bg-paper px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100"
+              className="bg-accent px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90"
             >
-              {t("home.hero.cta")}
+              {t("home.cards.render.cta")}
             </Link>
             <p className="font-mono text-[11px] tracking-[0.05em] text-paper/70">
               {t("home.hero.ctaHint")}
@@ -212,8 +212,8 @@ export default function HomeClient() {
                   {t("home.cards.render.desc")}
                 </p>
               </div>
-              <div className="mt-12 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-ink">
-                <span>{t("home.hero.cta")}</span>
+              <div className="mt-12 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-accent">
+                <span>{t("home.cards.render.cta")}</span>
                 <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
               </div>
             </Link>
@@ -233,8 +233,8 @@ export default function HomeClient() {
                   {t("home.cards.calc.desc")}
                 </p>
               </div>
-              <div className="mt-12 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-ink">
-                <span>{t("home.hero.cta")}</span>
+              <div className="mt-12 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.15em] text-accent">
+                <span>{t("home.cards.calc.cta")}</span>
                 <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
               </div>
             </Link>
