@@ -205,7 +205,7 @@ export default function HomeClient() {
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
                   01 — {t("home.nav.render")}
                 </p>
-                <h2 className="mt-6 font-display text-4xl tracking-tight text-ink md:text-5xl lg:text-6xl">
+                <h2 className="mt-6 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
                   {t("home.cards.render.title")}
                 </h2>
                 <p className="mt-5 max-w-md text-base leading-relaxed text-stone-600">
@@ -226,7 +226,7 @@ export default function HomeClient() {
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
                   02 — {t("home.nav.calculator")}
                 </p>
-                <h2 className="mt-6 font-display text-4xl tracking-tight text-ink md:text-5xl lg:text-6xl">
+                <h2 className="mt-6 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
                   {t("home.cards.calc.title")}
                 </h2>
                 <p className="mt-5 max-w-md text-base leading-relaxed text-stone-600">
@@ -247,7 +247,7 @@ export default function HomeClient() {
       </section>
 
       <section className="border-b border-black px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1400px]">
           <h2 className="mb-12 text-center text-3xl font-bold">{t("home.how.heading")}</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {HOW_STEPS.map((item) => (
@@ -265,7 +265,7 @@ export default function HomeClient() {
       </section>
 
       <section className="border-b border-black bg-white px-4 py-12">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1400px]">
           <p className="mb-8 text-center text-sm font-medium text-gray-500">
             {t("home.brands.heading")}
           </p>
@@ -286,7 +286,7 @@ export default function HomeClient() {
       </section>
 
       <section className="border-b border-black px-4 py-16">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1400px]">
           <h2 className="mb-12 text-3xl font-bold">{t("home.features.heading")}</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {FEATURE_CARDS.map((f) => (
@@ -301,7 +301,7 @@ export default function HomeClient() {
       </section>
 
       <section id="roi" className="border-b border-black bg-white px-4 py-16 scroll-mt-24">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1400px]">
           <div className="grid gap-8 md:grid-cols-2 md:items-center">
             <div>
               <h2 className="text-3xl font-bold">{t("home.roi.heading")}</h2>
@@ -349,7 +349,7 @@ export default function HomeClient() {
       </section>
 
       <section id="roadmap" className="border-b border-black px-4 py-16 scroll-mt-24">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-[1400px]">
           <h2 className="text-3xl font-bold">{t("home.roadmap.heading")}</h2>
           <p className="mt-3 max-w-3xl text-gray-600 leading-relaxed">
             {t("home.roadmap.subtitle")}
@@ -463,7 +463,7 @@ export default function HomeClient() {
       </section>
 
       <footer className="border-t border-black bg-white px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
             <p className="mt-1 text-xs text-gray-400">{t("home.footer.tagline")}</p>

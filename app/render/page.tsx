@@ -1121,7 +1121,7 @@ export default function RenderPage() {
               <span aria-hidden>←</span>
               <span>Home</span>
             </Link>
-            <h1 className="mt-3 font-display text-4xl font-bold uppercase tracking-tight text-ink md:text-6xl">
+            <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
               {t("render.title")}
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-stone-600">

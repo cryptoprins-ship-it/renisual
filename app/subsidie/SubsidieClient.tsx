@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import DynamicMetadata from "@/components/DynamicMetadata";
 import { Logo } from "@/components/Logo";
+import SiteNav from "@/components/SiteNav";
 
 type IsdeIsolationKind = {
   id: string;
@@ -80,21 +81,7 @@ export default function SubsidieClient() {
   return (
     <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="subsidie" />
-      <nav className="border-b border-black bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
-            <Logo variant="horizontal" />
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/render" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-80">
-              Gevelrendering
-            </Link>
-            <Link href="/gevelcalc" className="rounded-xl border border-black px-4 py-2 text-sm font-medium hover:bg-gray-50">
-              Calculator
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <SiteNav />
 
       <header className="border-b border-black bg-white px-4 py-12 md:py-16">
         <div className="mx-auto max-w-4xl">
@@ -102,11 +89,11 @@ export default function SubsidieClient() {
             <span className="h-2 w-2 rounded-full bg-green-500" />
             Bijgewerkt voor 2026
           </div>
-          <h1 className="text-4xl font-bold leading-tight md:text-5xl">
-            Subsidies voor isolatie & renovatie 2026
+          <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
+            Subsidies 2026
           </h1>
           <p className="mt-4 text-lg text-gray-600">
-            Bespaar duizenden euro&apos;s met deze regelingen.
+            Voor isolatie &amp; renovatie. Bespaar duizenden euro&apos;s met deze regelingen.
           </p>
         </div>
       </header>
@@ -348,13 +335,13 @@ export default function SubsidieClient() {
       </section>
 
       <footer className="border-t border-black bg-white px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
             <p className="mt-1 text-xs text-gray-400">Het complete renovatieplatform voor Nederland.</p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link href="/render" className="hover:underline">Gevelrendering</Link>
+            <Link href="/render" className="hover:underline">Gevelvisualisatie</Link>
             <Link href="/gevelcalc" className="hover:underline">Calculator</Link>
             <Link href="/subsidie" className="hover:underline">Subsidies</Link>
           </div>

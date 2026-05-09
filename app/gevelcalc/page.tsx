@@ -1978,7 +1978,7 @@ export default function GevelCalcPage() {
               <span aria-hidden>←</span>
               <span>Home</span>
             </Link>
-            <h1 className="mt-3 font-display text-4xl font-bold uppercase tracking-tight text-ink md:text-6xl">
+            <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
               {t("gc.title")}
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-stone-600">{t("gc.subtitle")}</p>
@@ -2725,7 +2725,7 @@ export default function GevelCalcPage() {
         <div
           className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
         >
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-[1400px]">
             {/* Mobile: 2-col grid with primaries side-by-side, Reset
                 full-width at the bottom (less prominent, harder to tap
                 accidentally). Desktop: original flex layout, all on one
@@ -2927,12 +2927,12 @@ export default function GevelCalcPage() {
                     />
                     <span>
                       <span className="block font-medium text-ink">
-                        Render-foto meesturen
+                        Visualisatie-foto meesturen
                       </span>
                       <span className="block text-[11px] text-stone-600">
-                        De render uit /render wordt mee in de PDF en als bijlage
-                        bij de mail. Vink uit als de render niet bij deze offerte
-                        hoort (bv. na het laden van een oude config).
+                        De visualisatie uit /render wordt mee in de PDF en als
+                        bijlage bij de mail. Vink uit als de visualisatie niet bij
+                        deze offerte hoort (bv. na het laden van een oude config).
                       </span>
                     </span>
                   </label>
