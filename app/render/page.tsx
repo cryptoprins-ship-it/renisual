@@ -553,6 +553,7 @@ export default function RenderPage() {
   const rendersSectionRef = useRef<HTMLElement>(null);
   const initialMountRef = useRef(true);
   const wasReadyToRenderRef = useRef(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Per-photo scope key — variants are tagged with this at generation
   // time and filtered on display so each side (front / back / left /
@@ -671,6 +672,59 @@ export default function RenderPage() {
       useProjectStore.getState().setPhoto(path, fileName);
     } catch (err) {
       console.warn("[render] source photo cloud upload failed", err);
+    }
+  }
+
+  // Re-import a previously-downloaded render JPG so it appears in the
+  // variants grid again. Filename pattern from downloadVariant() is
+  // `renisual-render-{panelSku}-{orientation}-{shortId}.jpg` — we
+  // parse it back to recover panel + orientation metadata. Falls back
+  // to neutral defaults if filename was renamed by the user.
+  async function handleImportRender(file: File | null) {
+    if (!file || !file.type.startsWith("image/")) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const m = file.name.match(
+        /^renisual-render-(.+)-(horizontal|vertical)-[a-f0-9]{6}\.(jpe?g|png)$/i,
+      );
+      const panelSku = m?.[1] ?? "imported";
+      const parsedOrientation = (m?.[2]?.toLowerCase() as Orientation | undefined) ?? orientation;
+
+      // Best-effort label lookup so the tile shows the same caption as
+      // the original render, not just "Geïmporteerd".
+      let panelLabel = "Geïmporteerd";
+      let ralCode: string | undefined;
+      if (panelSku.startsWith("keralit-")) {
+        const km = panelSku.match(/^keralit-(.+)-(\d+)$/);
+        if (km) {
+          const prod = keralitProducts.find((p) => p.id === km[1]);
+          const col = KERALIT_COLORS.find((c) => c.number === Number(km[2]));
+          if (prod) panelLabel = `${prod.name}${col ? ` — ${col.name}` : ""}`;
+          ralCode = col?.ralCode;
+        }
+      } else if (panelSku !== "imported") {
+        const found = panels.find((p) => p.sku.toLowerCase() === panelSku.toLowerCase());
+        if (found) {
+          panelLabel = `${found.sku} — ${t(found.colorKey)}`;
+          ralCode = found.ral ?? undefined;
+        }
+      }
+
+      const variant: RenderVariant = {
+        id: crypto.randomUUID(),
+        panelLabel,
+        panelSku,
+        orientation: parsedOrientation,
+        prompt: "",
+        dataUrl,
+        createdAt: Date.now(),
+        engine: "imported",
+        sourcePhotoKey,
+        ralCode,
+      };
+      setVariants((prev) => [variant, ...prev]);
+    } catch {
+      setErrorMsg(t("render.error.upload"));
     }
   }
 
@@ -1576,6 +1630,25 @@ export default function RenderPage() {
             <span aria-hidden className="text-base leading-none">ⓘ</span>
             <p>{t("render.disclaimer")}</p>
           </div>
+
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              handleImportRender(f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => importInputRef.current?.click()}
+            className="mb-4 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-500 underline underline-offset-4 transition-colors hover:text-ink"
+          >
+            {t("render.btnImport")}
+          </button>
 
           {batchStartedAt !== null && (
             <BatchStatusBand
