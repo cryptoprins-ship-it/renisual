@@ -36,6 +36,15 @@ const TONE_LABEL_NL: Record<ToneNudge, string> = {
   [2]: "Veel lichter",
 };
 
+// Tone-0 baseline shows the RAL number inline when known so the badge
+// reads e.g. "Standaard (RAL 3005)" — disambiguates which RAL the tile
+// rendered. Falls back to "Standaard (RAL)" when no code (Spanl PBW
+// printed wood, Keralit colours without RAL match).
+function formatToneLabel(tone: ToneNudge, ralCode?: string | null): string {
+  if (tone === 0 && ralCode) return `Standaard (RAL ${ralCode})`;
+  return TONE_LABEL_NL[tone];
+}
+
 type SavedSide = {
   id: string;
   name: string;
@@ -74,6 +83,9 @@ type RenderVariant = {
   colorCheck?: ColorCheck;
   engine?: string;
   toneNudge?: ToneNudge;
+  // RAL code for the rendered colour, when known. Populates the
+  // "Standaard (RAL XXXX)" badge on the tone-0 baseline tile.
+  ralCode?: string;
   // Which photo this render was generated from. Used to filter the
   // displayed variants when the user switches between sides (front /
   // back / left / right) so each side keeps its own renders. Optional
@@ -895,6 +907,10 @@ export default function RenderPage() {
           engine: engineTag,
           toneNudge,
           sourcePhotoKey,
+          ralCode:
+            effBrand === "spanl"
+              ? effSpanlPanel?.ral ?? undefined
+              : effKeralitColor?.ralCode,
         };
         // Append in tone-batch order regardless of completion order.
         setVariants((prev) => {
@@ -1586,7 +1602,12 @@ export default function RenderPage() {
                   <VariantSlot
                     key={tone}
                     state={state}
-                    toneLabel={TONE_LABEL_NL[tone]}
+                    toneLabel={formatToneLabel(
+                      tone,
+                      brand === "spanl"
+                        ? selectedPanel?.ral
+                        : selectedKeralitColor?.ralCode,
+                    )}
                     onRetry={
                       state.kind === "failed"
                         ? () => {
@@ -1734,7 +1755,7 @@ export default function RenderPage() {
                             : "bg-stone-200 text-stone-800"
                         }`}
                       >
-                        {TONE_LABEL_NL[v.toneNudge]}
+                        {formatToneLabel(v.toneNudge, v.ralCode)}
                       </span>
                     )}
                     {v.colorCheck && (
