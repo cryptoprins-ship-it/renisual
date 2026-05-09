@@ -265,7 +265,7 @@ const TRANSLATIONS: Record<Locale, Strings> = {
     "home.cards.calc.title": "Calculator",
     "home.cards.calc.desc": "Bereken oppervlak, materiaal en prijs.",
     "home.cards.calc.cta": "Bereken",
-    "home.hero.eyebrow": "Visualiseer, reken, renoveer.",
+    "home.hero.eyebrow": "Render, reken, renoveer.",
     "home.hero.subtitle": "Het complete platform voor huisrenovatie — exterieur én interieur. Upload een foto, kies een materiaal en zie direct hoe het eruitziet.",
     "home.hero.btnQuick": "Snelle berekening →",
     "home.hero.btnRender": "Bekijk visualisatie",
