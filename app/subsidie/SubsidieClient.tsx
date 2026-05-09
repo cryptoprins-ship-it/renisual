@@ -90,10 +90,10 @@ export default function SubsidieClient() {
             Bijgewerkt voor 2026
           </div>
           <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
-            Subsidies voor isolatie & renovatie 2026
+            Subsidies 2026
           </h1>
           <p className="mt-4 text-lg text-gray-600">
-            Bespaar duizenden euro&apos;s met deze regelingen.
+            Voor isolatie &amp; renovatie. Bespaar duizenden euro&apos;s met deze regelingen.
           </p>
         </div>
       </header>
