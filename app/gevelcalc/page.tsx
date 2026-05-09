@@ -1168,18 +1168,10 @@ export default function GevelCalcPage() {
     if (next === mode) return;
 
     if (next === "advanced") {
-      // Snel → Per zijde: refinement, no confirm. Map quick area onto
-      // sides[0..3] as a square (sqrt(area)*100 cm). User can tweak
-      // afterwards. Sides beyond the first four are left untouched.
-      const m2 = quickAreaToM2(quickTotalArea, unit);
-      if (m2 > 0) {
-        const sideCm = String(Math.round(Math.sqrt(m2) * 100));
-        setSides((prev) =>
-          prev.map((s, i) => (i < 4 ? { ...s, width: sideCm, height: sideCm } : s))
-        );
-        setFrontBackSame(true);
-        setLeftRightSame(true);
-      }
+      // Snel → Per zijde: leave sides untouched. The previous heuristic
+      // (sqrt(area)*100 cm on all 4 sides assuming a square building)
+      // multiplied the user's quick m² by 4 once they switched, which
+      // surprised users who switched to enter actual per-side dimensions.
       setMode(next);
       return;
     }
