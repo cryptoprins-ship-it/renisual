@@ -1805,19 +1805,26 @@ export default function GevelCalcPage() {
           window.open(data.pdfUrl, "_blank", "noopener,noreferrer");
         }
       }
-      // Best-effort copy of the public offerte URL — most browsers
-      // grant clipboard inside a click handler without prompting.
-      // Only surface the success toast when the send to info@ also
-      // succeeded; otherwise an OK toast here would overwrite the
-      // persistent error toast set above and make the diagnostic
-      // code disappear before the user can read it.
-      try {
-        await navigator.clipboard.writeText(data.offerteUrl);
-        if (sendOk) {
-          showToast(`Offerte verstuurd naar Renisual ✓ — ${t("gc.offerte.linkCopied")}`);
+      // Success toast — always fires when the send-to-info@ succeeded,
+      // regardless of whether clipboard writeText works. Clipboard can
+      // silently fail (browser permission, page-focus loss during the
+      // PDF download trigger, etc.); previously the success toast was
+      // nested inside the clipboard try-block, so a clipboard failure
+      // also swallowed the "verstuurd ✓" feedback. The clipboard copy
+      // is now best-effort and only adjusts the toast message.
+      // Skipped when sendOk is false so we don't overwrite the
+      // persistent error toast set above (which contains the
+      // diagnostic code the user needs to read).
+      if (sendOk) {
+        let msg = "Offerte verstuurd naar Renisual ✓";
+        try {
+          await navigator.clipboard.writeText(data.offerteUrl);
+          msg += ` — ${t("gc.offerte.linkCopied")}`;
+        } catch {
+          /* clipboard blocked — toast still shows, just without the
+             "link copied" suffix */
         }
-      } catch {
-        /* clipboard blocked — link is still in the success block */
+        showToast(msg);
       }
     } catch (err) {
       console.error("[offerte] fetch failed", err);
