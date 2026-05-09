@@ -89,7 +89,7 @@ export default function SubsidieClient() {
             <span className="h-2 w-2 rounded-full bg-green-500" />
             Bijgewerkt voor 2026
           </div>
-          <h1 className="text-4xl font-bold leading-tight md:text-5xl">
+          <h1 className="mt-3 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
             Subsidies voor isolatie & renovatie 2026
           </h1>
           <p className="mt-4 text-lg text-gray-600">
