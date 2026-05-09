@@ -8,55 +8,6 @@ import PwaInstallButton from "@/components/PwaInstallButton";
 import { Logo } from "@/components/Logo";
 import { useLocale } from "@/lib/i18n";
 
-const SPONSOR_MAILTO =
-  "mailto:info@renisual.com?subject=Sponsoring%20Renisual";
-
-// Removed entries:
-// - aiRender ("AI Gevel Rendering via Gemini") — implementation
-//   detail, not a user-facing capability the homepage needs to brag
-//   about. Render flow is its own /render entry; no need to call out
-//   the model provider in the roadmap.
-// - frames ("Kozijnen & deuren visualisatie") — feature was pulled
-//   from v1 (too much klein-9b prompt drift); shouldn't claim it as
-//   shipped until it lands again.
-const ROADMAP_AVAILABLE_KEYS = [
-  "home.roadmap.avail.calc",
-  "home.roadmap.avail.roi",
-  "home.roadmap.avail.pdf",
-  "home.roadmap.avail.modes",
-];
-
-const ROADMAP_BINNENKORT_KEYS: Array<{ headingKey: string; itemKeys: string[] }> = [
-  {
-    headingKey: "home.roadmap.exterior",
-    itemKeys: [
-      "home.roadmap.ext.gevelIso",
-      "home.roadmap.ext.dakIso",
-      "home.roadmap.ext.garden",
-      "home.roadmap.ext.fence",
-      "home.roadmap.ext.veranda",
-    ],
-  },
-  {
-    headingKey: "home.roadmap.interiorRoom",
-    itemKeys: [
-      "home.roadmap.intRoom.bath",
-      "home.roadmap.intRoom.kitchen",
-      "home.roadmap.intRoom.living",
-      "home.roadmap.intRoom.bed",
-    ],
-  },
-  {
-    headingKey: "home.roadmap.interiorMaterial",
-    itemKeys: [
-      "home.roadmap.intMat.floor",
-      "home.roadmap.intMat.paint",
-      "home.roadmap.intMat.tiles",
-      "home.roadmap.intMat.ceiling",
-    ],
-  },
-];
-
 const ROI_BARS: Array<{ labelKey: string; adviceKey: string; roi: number; color: string }> = [
   { labelKey: "home.roi.bar.dak.label", adviceKey: "home.roi.bar.dak.advice", roi: 90, color: "bg-green-700" },
   { labelKey: "home.roi.bar.gevelIso.label", adviceKey: "home.roi.bar.gevelIso.advice", roi: 85, color: "bg-green-600" },
@@ -348,66 +299,9 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section id="roadmap" className="border-b border-black px-4 py-16 scroll-mt-24">
+      <section id="waitlist" className="border-b border-black px-4 py-16">
         <div className="mx-auto max-w-[1400px]">
-          <h2 className="text-3xl font-bold">{t("home.roadmap.heading")}</h2>
-          <p className="mt-3 max-w-3xl text-gray-600 leading-relaxed">
-            {t("home.roadmap.subtitle")}
-          </p>
-
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border-2 border-black bg-white p-6">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-black px-3 py-1 text-xs font-medium">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                {t("home.roadmap.available")}
-              </div>
-              <ul className="space-y-2">
-                {ROADMAP_AVAILABLE_KEYS.map((key) => (
-                  <li key={key} className="flex items-start gap-2 text-sm">
-                    <span aria-hidden className="font-bold text-green-600">✓</span>
-                    <span>{t(key)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-black bg-white p-6">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-black px-3 py-1 text-xs font-medium">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                {t("home.roadmap.soon")}
-              </div>
-              <div className="space-y-5">
-                {ROADMAP_BINNENKORT_KEYS.map((group) => (
-                  <div key={group.headingKey}>
-                    <h4 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-                      {t(group.headingKey)}
-                    </h4>
-                    <ul className="mt-2 space-y-2">
-                      {group.itemKeys.map((itemKey) => (
-                        <li key={itemKey} className="flex items-center justify-between gap-3 text-sm">
-                          <span>{t(itemKey)}</span>
-                          <a
-                            href={SPONSOR_MAILTO}
-                            className="shrink-0 rounded-full border border-amber-500 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 hover:bg-amber-100"
-                          >
-                            {t("home.roadmap.sponsor")}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-6 text-xs text-gray-500">
-                {t("home.roadmap.sponsorPrompt")}{" "}
-                <a href={SPONSOR_MAILTO} className="font-medium underline underline-offset-2">
-                  info@renisual.com
-                </a>
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-10 rounded-2xl border border-black bg-white p-6">
+          <div className="rounded-2xl border border-black bg-white p-6">
             <h3 className="text-xl font-bold">{t("home.waitlist.heading")}</h3>
             <p className="mt-2 text-sm text-gray-600">
               {t("home.waitlist.subtitle")}
@@ -473,7 +367,6 @@ export default function HomeClient() {
             <Link href={calcHref} className="hover:underline">{t("home.nav.calculator")}</Link>
             <a href="#roi" className="hover:underline">{t("home.nav.roi")}</a>
             {showSubsidies && <Link href="/subsidie" className="hover:underline">{t("home.nav.subsidies")}</Link>}
-            <a href="#roadmap" className="hover:underline">{t("home.roadmap.soon")}</a>
           </div>
           <p className="text-xs text-gray-400">© 2026 Renisual</p>
         </div>

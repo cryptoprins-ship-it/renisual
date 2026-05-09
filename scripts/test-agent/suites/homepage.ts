@@ -43,19 +43,9 @@ export const homepageTests: TestSuite = {
       },
     },
     {
-      name: "Roadmap section is present",
-      run: async (page) => {
-        await page.goto(`${config.baseUrl}/#roadmap`);
-        const text = await page.locator("body").innerText();
-        if (!/(Beschikbaar nu|Binnenkort)/i.test(text)) {
-          throw new Error("Roadmap headings missing");
-        }
-      },
-    },
-    {
       name: "Waitlist form exists",
       run: async (page) => {
-        await page.goto(`${config.baseUrl}/#roadmap`);
+        await page.goto(`${config.baseUrl}/#waitlist`);
         const input = await page.locator('input[type="email"]').first().count();
         if (input === 0) throw new Error("waitlist email input not found");
       },
