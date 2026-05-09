@@ -2760,7 +2760,7 @@ export default function GevelCalcPage() {
                 type="button"
                 onClick={downloadOfferte}
                 disabled={offerteSubmitting || !selectedProduct || !materialResult}
-                className="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white disabled:opacity-40"
+                className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
               >
                 {offerteSubmitting ? t("gc.btnExportPdfBusy") : "Vraag offerte aan"}
               </button>
@@ -2941,7 +2941,7 @@ export default function GevelCalcPage() {
                   type="button"
                   onClick={downloadOfferte}
                   disabled={offerteSubmitting}
-                  className="mt-3 flex w-full items-center justify-center gap-2 bg-ink px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-50"
+                  className="mt-3 flex w-full items-center justify-center gap-2 bg-accent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   <span>
                     {offerteSubmitting ? t("gc.btnExportPdfBusy") : "Vraag offerte aan"}

@@ -1847,7 +1847,7 @@ export default function RenderPage() {
                 type="button"
                 onClick={handleProceedToCalc}
                 disabled={isHandingOff}
-                className="col-span-2 bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40 md:col-auto"
+                className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
                 {isHandingOff ? "Bezig..." : "Bereken materiaal →"}
               </button>
@@ -1861,7 +1861,7 @@ export default function RenderPage() {
                 !sourcePhoto ||
                 (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
               }
-              className="col-span-2 bg-ink px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800 disabled:opacity-40 md:col-auto"
+              className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
             >
               Genereer (1 credit)
             </button>
