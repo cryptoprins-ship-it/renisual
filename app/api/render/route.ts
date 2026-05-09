@@ -69,9 +69,18 @@ const RAL_HEX: Record<string, { hex: string; name: string }> = {
   // RAL match per Keralit's product table. Lets Keralit-with-RAL route
   // through the proven Spanl mono_flat pipeline instead of the swatch-
   // based keralit_wood path.
-  "6005": { hex: "#114232", name: "mosgroen" },
-  "5011": { hex: "#1F3447", name: "staalblauw" },
+  "1015": { hex: "#E6D2B5", name: "licht ivoor" },
   "3005": { hex: "#4E1B1A", name: "wijnrood" },
+  "3011": { hex: "#761F1B", name: "bruinrood" },
+  "5004": { hex: "#1A1A2E", name: "monumentenblauw" },
+  "5011": { hex: "#1F3447", name: "staalblauw" },
+  "6005": { hex: "#114232", name: "mosgroen" },
+  "6009": { hex: "#283228", name: "donkergroen" },
+  "7001": { hex: "#898C8C", name: "grijs" },
+  "7039": { hex: "#6E6760", name: "kwartsgrijs" },
+  "8004": { hex: "#8B402A", name: "steenrood" },
+  "9001": { hex: "#FDF4E3", name: "cremeweiss" },
+  "9016": { hex: "#F1F0EA", name: "verkeerswit" },
 };
 function inferProductFromSku(sku: string): ProductForPrompt | null {
   const m = /^(YMSG|YMPB|YPMB|SG|PB|TS)[\s-]?(\d{4})([A-Z0-9-]*)$/i.exec(sku);
