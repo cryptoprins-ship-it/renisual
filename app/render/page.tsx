@@ -396,7 +396,7 @@ export default function RenderPage() {
         reader.onerror = () => reject(reader.error);
         reader.readAsDataURL(blob);
       });
-      const compressed = await compressDataUrl(dataUrl, 1600, 0.85);
+      const compressed = await compressUnderSize(dataUrl, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
     } catch {
@@ -649,11 +649,12 @@ export default function RenderPage() {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const raw = await fileToDataUrl(file);
-      // Cap upload at ~2.5MB decoded — large enough that JPEG quality
-      // doesn't drop below 0.8 for typical phone photos (so the source
-      // isn't visibly degraded before BFL sees it), but still well under
-      // the server's 8MB schema limit.
-      const compressed = await compressUnderSize(raw, 1600, 2_500_000);
+      // Cap upload at ~1MB decoded — keeps source photos within
+      // sessionStorage budget when persisting variants, speeds up
+      // upload on cellular networks, and stays well under the server's
+      // 8MB schema limit. 1600px @ q=0.85 typically lands ~400KB so
+      // the cap rarely degrades quality.
+      const compressed = await compressUnderSize(raw, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
     } catch {
@@ -747,7 +748,7 @@ export default function RenderPage() {
         const swatch = await urlToDataUrl(effKeralitColor.thumbnailUrl);
         if (swatch) refUrls.push(await compressDataUrl(swatch, 1024, 0.82));
       }
-      const photoLarge = await compressUnderSize(sourcePhoto, 1600, 2_500_000);
+      const photoLarge = await compressUnderSize(sourcePhoto, 1600, 1_000_000);
 
       let productSku: string | undefined;
       let productLabel: string;
