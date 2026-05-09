@@ -137,21 +137,18 @@ function buildStylePrompt(opts: ResolvePromptOpts): string {
   } else if (opts.shape === "spanish_tile") {
     surfaceDescriptor = "the printed Spanish roof-tile-look panels shown in the reference image — overlapping curved terracotta-style tiles in warm orange-red, ochre or weathered grey tones with shadowed grooves between rows. Match the reference image's exact colour palette and tile shape. NOT brick, NOT flat masonry — these are curved roof-tile shapes printed on flat wall panels.";
   } else {
-    // Wood prompt is shared by Spanl PBW (printed-wood SKUs) and the
-    // entire Keralit catalog. After 4 iterations of reference-only
-    // prompt language, klein-9b kept ignoring the swatch (Wijnrood
-    // rendered olive-green, Vergrijsd rendered honey or walnut) —
-    // klein-9b weighs prompt text far heavier than reference images
-    // for colour. The colour-hex anchor below is the same mechanism
-    // Spanl uses (where the catalog ships hex); for Keralit the hex
-    // is computed server-side from the swatch image via sharp.
+    // Wood prompt is shared by Spanl PBW and Keralit. Verbose wood-
+    // prompt language with ALL-CAPS conflicting instructions (5
+    // iterations: a6727c4, ec08873, c8f6e2d, 455d3ea, 3a951a6) all
+    // failed because klein-9b ignored the hex amid the noise.
+    // Spanl RAL prompts work because they're terse and embed hex
+    // inline in a single concrete noun phrase — no ALL CAPS, no
+    // negative directives, no case-list. Mirroring that pattern.
     if (opts.colorHex) {
-      surfaceDescriptor = `cladding panels in the EXACT colour hex ${opts.colorHex} — match this hex value precisely, do NOT lighten, darken, or shift the hue. The reference image (image 2) shows the wood-grain pattern and surface character; copy the pattern and grain from the reference, but the COLOUR is dictated by the hex value, not by the reference image. If the hex is dark, render dark; if light, render light; if grey, render grey; if red, render red; if green, render green. Flat panels with very slight surface relief from the print, NOT truly grooved planks.`;
+      surfaceDescriptor = `matt cladding panels painted in colour hex ${opts.colorHex}, with the surface pattern and grain shown in the reference image (image 2).`;
     } else {
-      // No hex available (no swatch, no DB row) — fall back to
-      // reference-only language. Best-effort; klein-9b will likely
-      // drift toward generic wood without an explicit hex anchor.
-      surfaceDescriptor = "cladding panels matching the reference image (image 2) EXACTLY in colour and surface character — same hue, same lightness, same saturation. The reference image is the colour source. Flat panels with very slight surface relief from the print, NOT truly grooved planks.";
+      surfaceDescriptor =
+        "matt cladding panels with the colour, surface pattern, and grain shown in the reference image (image 2).";
     }
   }
 

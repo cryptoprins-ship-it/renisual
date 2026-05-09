@@ -1175,6 +1175,8 @@ export async function POST(request: Request) {
         toneNudge: body.toneNudge,
         linenTexture,
       });
+      console.log("[render] bfl prompt:", bflPrompt);
+      console.log("[render] bfl swatchHex:", swatchHex ?? "(none)", "family:", family, "shape:", shape);
       const { bytes: outBytes, mime: outMime } = await renderViaBfl({
         apiKey: bflKey,
         prompt: bflPrompt,
