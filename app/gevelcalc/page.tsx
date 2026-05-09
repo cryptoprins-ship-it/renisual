@@ -1102,12 +1102,11 @@ export default function GevelCalcPage() {
     return `€${value.toFixed(2)}`;
   }
 
-  // Resolve a NL postcode + huisnummer to street + city via the PDOK
-  // locatieserver — Dutch government, free, no API key required, CORS
-  // enabled. The endpoint accepts free-text queries and ranks results;
-  // we ask for one. On success we set the canonical customerAddress
-  // string in the format that NL invoices/letters use, leaving the
-  // user free to edit afterwards (e.g., add an appartement-nummer).
+  // Resolve a NL postcode + huisnummer to street + city via our
+  // /api/postcode-lookup proxy. The proxy fronts PDOK locatieserver
+  // server-side so the browser only talks same-origin — sidesteps
+  // ad-blocker false-positives, corporate proxies, and mobile-carrier
+  // DNS filters that occasionally block api.pdok.nl directly.
   async function lookupAddress() {
     const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
     const cleanNumber = huisnummer.trim();
@@ -1117,23 +1116,24 @@ export default function GevelCalcPage() {
     }
     setAddressLookupState("loading");
     try {
-      const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${encodeURIComponent(
-        `postcode:${cleanPostcode} and huisnummer:${cleanNumber}`,
-      )}&rows=1&fl=straatnaam,woonplaatsnaam,huisnummer,postcode`;
+      const url = `/api/postcode-lookup?postcode=${cleanPostcode}&huisnummer=${encodeURIComponent(cleanNumber)}`;
       const res = await fetch(url);
+      if (res.status === 404) {
+        setAddressLookupState("notfound");
+        return;
+      }
       if (!res.ok) {
         setAddressLookupState("error");
         return;
       }
-      const data = await res.json();
-      const doc = data?.response?.docs?.[0];
-      if (!doc?.straatnaam || !doc?.woonplaatsnaam) {
+      const data = (await res.json()) as { straat?: string; woonplaats?: string };
+      if (!data?.straat || !data?.woonplaats) {
         setAddressLookupState("notfound");
         return;
       }
       const formattedPostcode = `${cleanPostcode.slice(0, 4)} ${cleanPostcode.slice(4)}`;
       setCustomerAddress(
-        `${doc.straatnaam} ${cleanNumber}, ${formattedPostcode} ${doc.woonplaatsnaam}`,
+        `${data.straat} ${cleanNumber}, ${formattedPostcode} ${data.woonplaats}`,
       );
       setAddressLookupState("ok");
     } catch {
