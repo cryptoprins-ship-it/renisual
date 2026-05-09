@@ -1232,6 +1232,14 @@ export async function POST(request: Request) {
         toneNudge: body.toneNudge,
         linenTexture,
         keralitWoodGrain,
+        // Visible panel width drives the keralitWoodGrain seam-spacing
+        // language (every Ncm). Use the inflated product's panel size
+        // first (set when Keralit ral-route inflates), fall back to
+        // body.panelWidthCm.
+        panelVisibleWidthCm:
+          (product.panel_work_size_mm ?? 0) > 0
+            ? (product.panel_work_size_mm as number) / 10
+            : body.panelWidthCm,
       });
       console.log("[render] bfl prompt:", bflPrompt);
       console.log("[render] bfl swatchHex:", swatchHex ?? "(none)", "family:", family, "shape:", shape);
