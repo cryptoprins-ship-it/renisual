@@ -42,7 +42,7 @@ export default function LeaderboardClient() {
   return (
     <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="leaderboard" />
-      <nav className="border-b border-black bg-white px-4 py-3">
+      <nav className="border-b border-ink bg-white px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <Link href="/" className="text-xl font-bold tracking-tight">
             Renisual
@@ -50,13 +50,13 @@ export default function LeaderboardClient() {
           <div className="flex gap-2">
             <Link
               href="/wachten"
-              className="rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
             >
               Speel 2048 →
             </Link>
             <Link
               href="/render"
-              className="rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+              className="rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
             >
               Render
             </Link>
@@ -75,7 +75,7 @@ export default function LeaderboardClient() {
         </p>
 
         {top && (
-          <div className="mt-6 rounded-2xl border-2 border-black bg-white p-5">
+          <div className="mt-6 rounded-2xl border-2 border-ink bg-white p-5">
             <p className="text-xs uppercase tracking-wide text-gray-500">#1 om te verslaan</p>
             <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -86,7 +86,7 @@ export default function LeaderboardClient() {
             </div>
             <Link
               href="/wachten"
-              className="mt-4 inline-block rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white hover:opacity-80"
+              className="mt-4 inline-block rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:opacity-80"
             >
               Kun je de #1 verslaan? →
             </Link>
@@ -100,13 +100,13 @@ export default function LeaderboardClient() {
             Leaderboard niet bereikbaar. Probeer het later nog eens.
           </p>
         ) : entries.length === 0 ? (
-          <div className="mt-8 rounded-2xl border-2 border-dashed border-black bg-white p-8 text-center">
+          <div className="mt-8 rounded-2xl border-2 border-dashed border-ink bg-white p-8 text-center">
             <p className="text-sm text-gray-600">
               Nog geen scores. Wees de eerste die de wachtkamer beklimt.
             </p>
             <Link
               href="/wachten"
-              className="mt-4 inline-block rounded-2xl bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-80"
+              className="mt-4 inline-block rounded-2xl bg-ink px-6 py-3 text-sm font-semibold text-paper hover:opacity-80"
             >
               Speel nu →
             </Link>
@@ -117,18 +117,18 @@ export default function LeaderboardClient() {
               <li
                 key={`${e.at}-${i}`}
                 className={`flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 ${
-                  i === 0 ? "border-2 border-black" : "border-black"
+                  i === 0 ? "border-2 border-ink" : "border-ink"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <span
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
                       i === 0
-                        ? "bg-amber-400 text-white"
+                        ? "bg-amber-400 text-paper"
                         : i === 1
-                        ? "bg-neutral-400 text-white"
+                        ? "bg-neutral-400 text-paper"
                         : i === 2
-                        ? "bg-amber-700 text-white"
+                        ? "bg-amber-700 text-paper"
                         : "bg-neutral-200 text-neutral-700"
                     }`}
                   >

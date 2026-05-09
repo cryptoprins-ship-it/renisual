@@ -19,7 +19,7 @@ type Props = {
 export default function VariantSlot({ state, toneLabel, onRetry }: Props) {
   const { t } = useLocale();
   return (
-    <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-black bg-stone-50">
+    <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-ink bg-stone-50">
       <div className="absolute left-2 top-2 z-10 bg-ink/80 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-paper">
         {toneLabel}
       </div>
@@ -47,7 +47,7 @@ export default function VariantSlot({ state, toneLabel, onRetry }: Props) {
             <button
               type="button"
               onClick={onRetry}
-              className="border border-red-900 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-red-900 hover:bg-red-900 hover:text-white"
+              className="border border-red-900 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-red-900 hover:bg-red-900 hover:text-paper"
             >
               {t("render.slot.retry") || "Probeer opnieuw"}
             </button>

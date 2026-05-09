@@ -221,11 +221,11 @@ function ToggleSwitch({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between rounded-xl border border-black bg-white px-4 py-3 text-left"
+      className="flex w-full items-center justify-between rounded-xl border border-ink bg-white px-4 py-3 text-left"
     >
       <span className="text-sm font-medium">{label}</span>
-      <span className={`relative h-6 w-11 rounded-full border border-black transition-colors ${checked ? "bg-black" : "bg-white"}`}>
-        <span className={`absolute top-1 h-4 w-4 rounded-full transition-all ${checked ? "left-6 bg-white" : "left-1 bg-black"}`} />
+      <span className={`relative h-6 w-11 rounded-full border border-ink transition-colors ${checked ? "bg-ink" : "bg-white"}`}>
+        <span className={`absolute top-1 h-4 w-4 rounded-full transition-all ${checked ? "left-6 bg-white" : "left-1 bg-ink"}`} />
       </span>
     </button>
   );
@@ -292,7 +292,7 @@ function InputWithSuffix({
   return (
     <div className="relative">
       <input
-        className={`w-full rounded-xl border border-black p-3 pr-14 disabled:bg-neutral-100 ${className ?? ""}`}
+        className={`w-full rounded-xl border border-ink p-3 pr-14 disabled:bg-neutral-100 ${className ?? ""}`}
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
@@ -325,8 +325,8 @@ function SpanlThumb({
       alt={productName}
       className={
         compact
-          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
-          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+          ? "block h-12 w-12 shrink-0 rounded-md border border-ink object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-ink object-cover sm:w-40"
       }
     />
   );
@@ -355,8 +355,8 @@ function KeralitThumb({
       loading="lazy"
       className={
         compact
-          ? "block h-12 w-12 shrink-0 rounded-md border border-black object-cover"
-          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-black object-cover sm:w-40"
+          ? "block h-12 w-12 shrink-0 rounded-md border border-ink object-cover"
+          : "block aspect-[4/3] w-32 shrink-0 rounded-xl border border-ink object-cover sm:w-40"
       }
     />
   );
@@ -375,7 +375,7 @@ function KeralitColorPicker({
   const selected = selectedNumber != null ? KERALIT_COLORS.find((c) => c.number === selectedNumber) : null;
 
   return (
-    <div className="mt-4 rounded-xl border border-black p-4 print-hidden">
+    <div className="mt-4 rounded-xl border border-ink p-4 print-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Keralit kleur</h3>
         {selected && (
@@ -391,7 +391,7 @@ function KeralitColorPicker({
             type="button"
             onClick={() => setActiveFinish(f)}
             className={`rounded-lg border px-3 py-1 text-xs ${
-              activeFinish === f ? "border-black bg-black text-white" : "border-black bg-white"
+              activeFinish === f ? "border-ink bg-ink text-paper" : "border-ink bg-white"
             }`}
           >
             {KERALIT_FINISH_LABEL_NL[f]}
@@ -406,7 +406,7 @@ function KeralitColorPicker({
             onClick={() => onSelect(c.number)}
             title={`${c.name} (${c.number})`}
             className={`group flex flex-col items-center gap-1 rounded-lg border p-1 ${
-              selectedNumber === c.number ? "border-black ring-2 ring-black" : "border-neutral-300"
+              selectedNumber === c.number ? "border-ink ring-2 ring-ink" : "border-neutral-300"
             }`}
           >
             <img
@@ -2134,7 +2134,7 @@ export default function GevelCalcPage() {
           </section>
 
           {mode === "quick" && (
-            <section className="rounded-2xl border border-black bg-white p-4 md:p-6">
+            <section className="rounded-2xl border border-ink bg-white p-4 md:p-6">
               <p className="mb-4 text-xs leading-relaxed text-stone-500 print-hidden">
                 {t("gc.modeAssumptionsBefore")}
                 <button
@@ -2148,7 +2148,7 @@ export default function GevelCalcPage() {
               </p>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl font-semibold">{t("gc.mode.quick")}</h2>
-                <div className="inline-flex rounded-xl border border-black p-1 print-hidden">
+                <div className="inline-flex rounded-xl border border-ink p-1 print-hidden">
                   <button
                     type="button"
                     onClick={() => {
@@ -2156,7 +2156,7 @@ export default function GevelCalcPage() {
                       setUnitTouched(true);
                     }}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      unit === "m2" ? "bg-black text-white" : "bg-white text-black"
+                      unit === "m2" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     m²
@@ -2168,7 +2168,7 @@ export default function GevelCalcPage() {
                       setUnitTouched(true);
                     }}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      unit === "ft2" ? "bg-black text-white" : "bg-white text-black"
+                      unit === "ft2" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     ft²
@@ -2189,7 +2189,7 @@ export default function GevelCalcPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("gc.quick.windowCount")}</label>
                   <input
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                     value={quickWindowCount}
                     onChange={(e) => setQuickWindowCount(e.target.value)}
                     placeholder="0"
@@ -2200,7 +2200,7 @@ export default function GevelCalcPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("gc.quick.doorCount")}</label>
                   <input
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                     value={quickDoorCount}
                     onChange={(e) => setQuickDoorCount(e.target.value)}
                     placeholder="0"
@@ -2223,7 +2223,7 @@ export default function GevelCalcPage() {
                   <button
                     type="button"
                     onClick={() => clearPhotoState(QUICK_SIDE_ID)}
-                    className="mt-2 rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+                    className="mt-2 rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
                   >
                     {t("upload_remove_retry")}
                   </button>
@@ -2246,19 +2246,19 @@ export default function GevelCalcPage() {
               )}
 
               <div className="metrics-row mt-5 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-black p-3">
+                <div className="rounded-xl border border-ink p-3">
                   <div className="text-xs text-gray-500">{t("gc.gross")}</div>
                   <div className="text-base font-semibold">
                     {m2ToUnit(quickTotalAreaM2, unit).toFixed(2)} {unitLabel}
                   </div>
                 </div>
-                <div className="rounded-xl border border-black p-3">
+                <div className="rounded-xl border border-ink p-3">
                   <div className="text-xs text-gray-500">{t("gc.openings")}</div>
                   <div className="text-base font-semibold">
                     {m2ToUnit(quickOpeningsM2, unit).toFixed(2)} {unitLabel}
                   </div>
                 </div>
-                <div className="rounded-xl border border-black p-3">
+                <div className="rounded-xl border border-ink p-3">
                   <div className="text-xs text-gray-500">{t("gc.quick.netEstimate")}</div>
                   <div className="text-base font-semibold">
                     {quickNetDisplay} {unitLabel}
@@ -2279,7 +2279,7 @@ export default function GevelCalcPage() {
               const photo = photos[side.id];
 
               return (
-                <section key={side.id} className="rounded-2xl border border-black bg-white p-4 md:p-6">
+                <section key={side.id} className="rounded-2xl border border-ink bg-white p-4 md:p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h2 className="text-xl font-semibold">{side.name}</h2>
@@ -2333,7 +2333,7 @@ export default function GevelCalcPage() {
                       <button
                         type="button"
                         onClick={() => clearPhotoState(side.id)}
-                        className="mt-2 rounded-xl border border-black px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+                        className="mt-2 rounded-xl border border-ink px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
                       >
                         {t("upload_remove_retry")}
                       </button>
@@ -2361,10 +2361,10 @@ export default function GevelCalcPage() {
                   </div>
 
                   {side.openings.length > 0 && (
-                    <div className="mt-5 space-y-4 rounded-2xl border border-black p-4">
+                    <div className="mt-5 space-y-4 rounded-2xl border border-ink p-4">
                       <h3 className="font-semibold">{t("gc.openings")}</h3>
                       {side.openings.map((opening) => (
-                        <div key={opening.id} className="rounded-xl border border-black p-4">
+                        <div key={opening.id} className="rounded-xl border border-ink p-4">
                           <div className="flex justify-between gap-4">
                             <h4 className="font-semibold">{t(`gc.opening.${opening.type}`)}</h4>
                             <button type="button" onClick={() => removeOpening(side.id, opening.id)} className="text-sm underline print-hidden">
@@ -2392,7 +2392,7 @@ export default function GevelCalcPage() {
                               suffix="cm"
                             />
                             <input
-                              className="rounded-xl border border-black p-3"
+                              className="rounded-xl border border-ink p-3"
                               placeholder={t("gc.countPlaceholder")}
                               value={opening.count}
                               onChange={(e) => updateOpening(side.id, opening.id, "count", e.target.value)}
@@ -2401,13 +2401,13 @@ export default function GevelCalcPage() {
                         </div>
                       ))}
                       <div className="flex flex-wrap gap-3 print-hidden">
-                        <button type="button" onClick={() => addOpening(side.id, "window")} className="rounded-xl border border-black px-4 py-2">
+                        <button type="button" onClick={() => addOpening(side.id, "window")} className="rounded-xl border border-ink px-4 py-2">
                           {t("gc.addWindow")}
                         </button>
-                        <button type="button" onClick={() => addOpening(side.id, "door")} className="rounded-xl border border-black px-4 py-2">
+                        <button type="button" onClick={() => addOpening(side.id, "door")} className="rounded-xl border border-ink px-4 py-2">
                           {t("gc.addDoor")}
                         </button>
-                        <button type="button" onClick={() => addOpening(side.id, "other")} className="rounded-xl border border-black px-4 py-2">
+                        <button type="button" onClick={() => addOpening(side.id, "other")} className="rounded-xl border border-ink px-4 py-2">
                           {t("gc.addOther")}
                         </button>
                       </div>
@@ -2415,15 +2415,15 @@ export default function GevelCalcPage() {
                   )}
 
                   <div className="metrics-row mt-5 grid grid-cols-3 gap-2">
-                    <div className="rounded-xl border border-black p-3">
+                    <div className="rounded-xl border border-ink p-3">
                       <div className="text-xs text-gray-500">{t("gc.gross")}</div>
                       <div className="text-base font-semibold">{calculateSideGrossM2(resolved).toFixed(2)} m²</div>
                     </div>
-                    <div className="rounded-xl border border-black p-3">
+                    <div className="rounded-xl border border-ink p-3">
                       <div className="text-xs text-gray-500">{t("gc.openings")}</div>
                       <div className="text-base font-semibold">{calculateSideOpeningsM2(side).toFixed(2)} m²</div>
                     </div>
-                    <div className="rounded-xl border border-black p-3">
+                    <div className="rounded-xl border border-ink p-3">
                       <div className="text-xs text-gray-500">{t("gc.net")}</div>
                       <div className="text-base font-semibold">{calculateSideNetM2(resolved).toFixed(2)} m²</div>
                     </div>
@@ -2466,7 +2466,7 @@ export default function GevelCalcPage() {
           )}
 
           {showProductPicker && (
-          <section className="rounded-2xl border border-black bg-white p-4 page-break-before">
+          <section className="rounded-2xl border border-ink bg-white p-4 page-break-before">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-semibold">{t("gc.productChoice")}</h2>
               {selectedProduct && (
@@ -2479,12 +2479,12 @@ export default function GevelCalcPage() {
                 </button>
               )}
             </div>
-            <div className="mt-3 inline-flex rounded-xl border border-black p-1 print-hidden">
+            <div className="mt-3 inline-flex rounded-xl border border-ink p-1 print-hidden">
               <button
                 type="button"
                 onClick={() => setProductCategory("gevelbekleding")}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  productCategory === "gevelbekleding" ? "bg-black text-white" : "bg-white text-black"
+                  productCategory === "gevelbekleding" ? "bg-ink text-paper" : "bg-white text-black"
                 }`}
               >
                 {t("gevelbekleding")}
@@ -2503,7 +2503,7 @@ export default function GevelCalcPage() {
                 <div
                   role="radiogroup"
                   aria-label={t("gc.display")}
-                  className="inline-flex rounded-xl border border-black p-1"
+                  className="inline-flex rounded-xl border border-ink p-1"
                 >
                   <button
                     type="button"
@@ -2511,7 +2511,7 @@ export default function GevelCalcPage() {
                     aria-checked={displayMode === "foto"}
                     onClick={() => setDisplayMode("foto")}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      displayMode === "foto" ? "bg-black text-white" : "bg-white text-black"
+                      displayMode === "foto" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     {t("gc.display.photo")}
@@ -2522,7 +2522,7 @@ export default function GevelCalcPage() {
                     aria-checked={displayMode === "tekst"}
                     onClick={() => setDisplayMode("tekst")}
                     className={`rounded-lg px-3 py-1 text-xs font-medium ${
-                      displayMode === "tekst" ? "bg-black text-white" : "bg-white text-black"
+                      displayMode === "tekst" ? "bg-ink text-paper" : "bg-white text-black"
                     }`}
                   >
                     {t("gc.display.text")}
@@ -2622,7 +2622,7 @@ export default function GevelCalcPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium">{t("render.orientation")}</label>
                   <select
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                     value={orientation}
                     onChange={(e) => setOrientation(e.target.value as Orientation)}
                   >
@@ -2647,7 +2647,7 @@ export default function GevelCalcPage() {
                     value={insideCornerCount}
                     onChange={(e) => setInsideCornerCount(e.target.value)}
                     placeholder="0"
-                    className="w-full rounded-xl border border-black p-3"
+                    className="w-full rounded-xl border border-ink p-3"
                   />
                   <p className="mt-1 text-xs text-stone-500">
                     {t("gc.insideCornerHint")}
@@ -2656,7 +2656,7 @@ export default function GevelCalcPage() {
               )}
             </div>
             {selectedProduct && (
-              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-black p-4 sm:flex-row">
+              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-ink p-4 sm:flex-row">
                 {selectedProduct.brand === "Spanl" && (
                   <SpanlThumb productId={selectedProduct.id} productName={selectedProduct.name} />
                 )}
@@ -2723,7 +2723,7 @@ export default function GevelCalcPage() {
         </div>
 
         <div
-          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-black bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-ink bg-white px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:block print:hidden"
         >
           <div className="mx-auto max-w-[1400px]">
             {/* Mobile: 2-col grid with primaries side-by-side, Reset
@@ -2766,10 +2766,10 @@ export default function GevelCalcPage() {
               </button>
               {mode === "advanced" && (
                 <>
-                  <button type="button" onClick={exportConfig} className="rounded-xl border border-black px-3 py-2 text-sm">
+                  <button type="button" onClick={exportConfig} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
                   </button>
-                  <label className="cursor-pointer rounded-xl border border-black px-3 py-2 text-center text-sm">
+                  <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}
                     <input
                       type="file"

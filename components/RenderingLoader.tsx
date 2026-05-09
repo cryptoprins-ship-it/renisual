@@ -59,7 +59,7 @@ export default function RenderingLoader({ attempt, aspect = "16/10", compact = f
       <div className={`flex flex-col items-center justify-center gap-3 ${containerPadding}`}>
         <div className={`relative ${spinnerSize}`}>
           <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-black border-t-transparent" />
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-ink border-t-transparent" />
         </div>
         <p className={`animate-pulse text-center font-medium text-neutral-800 ${messageClass}`}>
           {message}

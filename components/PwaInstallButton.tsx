@@ -182,7 +182,7 @@ export default function PwaInstallButton({ variant = "card" }: Props) {
     <>
       <div className="my-6 rounded-lg border border-stone-300 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-900">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-stone-900 text-paper dark:bg-stone-100 dark:text-stone-900">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
               <rect x="6" y="2" width="12" height="20" rx="2" />
               <line x1="11" y1="18" x2="13" y2="18" />
@@ -198,7 +198,7 @@ export default function PwaInstallButton({ variant = "card" }: Props) {
             {platform === "android" && deferredPrompt && (
               <button
                 onClick={onAndroidInstall}
-                className="mt-3 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                className="mt-3 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-paper hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
               >
                 {t("pwa.cta.install")}
               </button>
@@ -211,7 +211,7 @@ export default function PwaInstallButton({ variant = "card" }: Props) {
             {platform === "ios" && (
               <button
                 onClick={() => setShowIosSheet(true)}
-                className="mt-3 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                className="mt-3 rounded-md bg-stone-900 px-3 py-1.5 text-xs font-medium text-paper hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
               >
                 {t("pwa.cta.how")}
               </button>
@@ -239,7 +239,7 @@ function IosInstructionsSheet({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 p-4 sm:items-center"
       onClick={onClose}
     >
       <div
@@ -252,7 +252,7 @@ function IosInstructionsSheet({
         <ol className="space-y-3 text-sm text-stone-700 dark:text-stone-300">
           {[1, 2, 3, 4].map((n) => (
             <li key={n} className="flex gap-3">
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-900 text-xs font-medium text-white dark:bg-stone-100 dark:text-stone-900">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-900 text-xs font-medium text-paper dark:bg-stone-100 dark:text-stone-900">
                 {n}
               </span>
               <span dangerouslySetInnerHTML={{ __html: t(`pwa.ios.step${n}`) }} />
@@ -264,7 +264,7 @@ function IosInstructionsSheet({
         </p>
         <button
           onClick={onClose}
-          className="mt-4 w-full rounded-md bg-stone-900 px-3 py-2 text-sm font-medium text-white hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+          className="mt-4 w-full rounded-md bg-stone-900 px-3 py-2 text-sm font-medium text-paper hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
         >
           {t("pwa.close")}
         </button>

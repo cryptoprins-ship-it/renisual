@@ -197,12 +197,12 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section className="border-b border-black px-4 py-16">
+      <section className="border-b border-ink px-4 py-16">
         <div className="mx-auto max-w-[1400px]">
           <h2 className="mb-12 text-center text-3xl font-bold">{t("home.how.heading")}</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {HOW_STEPS.map((item) => (
-              <div key={item.step} className="rounded-2xl border border-black bg-white p-6">
+              <div key={item.step} className="rounded-2xl border border-ink bg-white p-6">
                 <div className="text-5xl font-bold text-gray-100">{item.step}</div>
                 <h3 className="mt-2 text-xl font-bold">{t(item.titleKey)}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">{t(item.descKey)}</p>
@@ -215,7 +215,7 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section className="border-b border-black bg-white px-4 py-12">
+      <section className="border-b border-ink bg-white px-4 py-12">
         <div className="mx-auto max-w-[1400px]">
           <p className="mb-8 text-center text-sm font-medium text-gray-500">
             {t("home.brands.heading")}
@@ -224,7 +224,7 @@ export default function HomeClient() {
             {["Spanl", "Keralit", t("home.brands.generic")].map((brand) => (
               <div
                 key={brand}
-                className="rounded-xl border border-black bg-[#f6f4ef] px-5 py-2.5 text-sm font-semibold"
+                className="rounded-xl border border-ink bg-[#f6f4ef] px-5 py-2.5 text-sm font-semibold"
               >
                 {brand}
               </div>
@@ -236,12 +236,12 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section className="border-b border-black px-4 py-16">
+      <section className="border-b border-ink px-4 py-16">
         <div className="mx-auto max-w-[1400px]">
           <h2 className="mb-12 text-3xl font-bold">{t("home.features.heading")}</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {FEATURE_CARDS.map((f) => (
-              <div key={f.titleKey} className="rounded-2xl border border-black bg-white p-5">
+              <div key={f.titleKey} className="rounded-2xl border border-ink bg-white p-5">
                 <div className="mb-3 text-2xl">{f.icon}</div>
                 <h3 className="font-bold">{t(f.titleKey)}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">{t(f.descKey)}</p>
@@ -251,7 +251,7 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section id="roi" className="border-b border-black bg-white px-4 py-16 scroll-mt-24">
+      <section id="roi" className="border-b border-ink bg-white px-4 py-16 scroll-mt-24">
         <div className="mx-auto max-w-[1400px]">
           <div className="grid gap-8 md:grid-cols-2 md:items-center">
             <div>
@@ -265,7 +265,7 @@ export default function HomeClient() {
             </div>
             <div className="space-y-3">
               {ROI_BARS.map((item) => (
-                <div key={item.labelKey} className="rounded-xl border border-black bg-[#f6f4ef] p-4">
+                <div key={item.labelKey} className="rounded-xl border border-ink bg-[#f6f4ef] p-4">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm font-semibold">{t(item.labelKey)}</span>
                     <span className="text-sm font-bold">{item.roi}% ROI*</span>
@@ -299,9 +299,9 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section id="waitlist" className="border-b border-black px-4 py-16">
+      <section id="waitlist" className="border-b border-ink px-4 py-16">
         <div className="mx-auto max-w-[1400px]">
-          <div className="rounded-2xl border border-black bg-white p-6">
+          <div className="rounded-2xl border border-ink bg-white p-6">
             <h3 className="text-xl font-bold">{t("home.waitlist.heading")}</h3>
             <p className="mt-2 text-sm text-gray-600">
               {t("home.waitlist.subtitle")}
@@ -327,13 +327,13 @@ export default function HomeClient() {
                 value={waitEmail}
                 onChange={(e) => setWaitEmail(e.target.value)}
                 disabled={waitState === "loading" || waitState === "ok"}
-                className="min-h-[48px] flex-1 rounded-xl border border-black px-3 text-base disabled:bg-neutral-100"
+                className="min-h-[48px] flex-1 rounded-xl border border-ink px-3 text-base disabled:bg-neutral-100"
                 suppressHydrationWarning
               />
               <button
                 type="submit"
                 disabled={waitState === "loading" || waitState === "ok"}
-                className="min-h-[48px] rounded-xl bg-black px-6 text-base font-semibold text-white hover:opacity-80 disabled:opacity-50"
+                className="min-h-[48px] rounded-xl bg-ink px-6 text-base font-semibold text-paper hover:opacity-80 disabled:opacity-50"
               >
                 {waitState === "loading"
                   ? t("home.waitlist.btnLoading")
@@ -356,7 +356,7 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <footer className="border-t border-black bg-white px-4 py-8">
+      <footer className="border-t border-ink bg-white px-4 py-8">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />

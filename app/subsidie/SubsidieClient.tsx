@@ -83,9 +83,9 @@ export default function SubsidieClient() {
       <DynamicMetadata page="subsidie" />
       <SiteNav />
 
-      <header className="border-b border-black bg-white px-4 py-12 md:py-16">
+      <header className="border-b border-ink bg-white px-4 py-12 md:py-16">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-black px-3 py-1 text-xs font-medium">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-ink px-3 py-1 text-xs font-medium">
             <span className="h-2 w-2 rounded-full bg-green-500" />
             Bijgewerkt voor 2026
           </div>
@@ -98,10 +98,10 @@ export default function SubsidieClient() {
         </div>
       </header>
 
-      <section className="border-b border-black px-4 py-12">
+      <section className="border-b border-ink px-4 py-12">
         <div className="mx-auto max-w-4xl space-y-4">
           {SUBSIDIES.map((s) => (
-            <article key={s.id} className="rounded-2xl border border-black bg-white p-6">
+            <article key={s.id} className="rounded-2xl border border-ink bg-white p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <h2 className="text-xl font-bold">{s.title}</h2>
                 <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${s.badgeColor}`}>
@@ -120,7 +120,7 @@ export default function SubsidieClient() {
             </article>
           ))}
 
-          <section className="rounded-2xl border border-black bg-white p-6">
+          <section className="rounded-2xl border border-ink bg-white p-6">
             <h2 className="text-xl font-bold mb-2">
               Gemeentelijke subsidies &amp; toewijzingen
             </h2>
@@ -133,7 +133,7 @@ export default function SubsidieClient() {
             </p>
 
             <div className="grid gap-4 md:grid-cols-2 mb-6">
-              <div className="rounded-xl border border-black bg-[#f6f4ef] p-4">
+              <div className="rounded-xl border border-ink bg-[#f6f4ef] p-4">
                 <h3 className="font-semibold mb-2">Voorbeelden per gemeente</h3>
                 <ul className="text-sm space-y-1 text-gray-700">
                   <li>🏙️ Amsterdam — tot €1.500 spouwmuurisolatie</li>
@@ -143,7 +143,7 @@ export default function SubsidieClient() {
                   <li>🏙️ Alle gemeenten — check je postcode</li>
                 </ul>
               </div>
-              <div className="rounded-xl border border-black bg-[#f6f4ef] p-4">
+              <div className="rounded-xl border border-ink bg-[#f6f4ef] p-4">
                 <h3 className="font-semibold mb-2">Hoe werkt een toewijzing?</h3>
                 <ol className="text-sm space-y-1 text-gray-700 list-decimal list-inside">
                   <li>Aanvraag indienen bij je gemeente</li>
@@ -155,7 +155,7 @@ export default function SubsidieClient() {
               </div>
             </div>
 
-            <div className="rounded-xl border-2 border-black bg-black text-white p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="rounded-xl border-2 border-ink bg-ink text-paper p-5 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="font-semibold">Controleer subsidies in je gemeente</p>
                 <p className="text-sm text-gray-300 mt-1">
@@ -183,7 +183,7 @@ export default function SubsidieClient() {
         </div>
       </section>
 
-      <section className="border-b border-black bg-white px-4 py-16">
+      <section className="border-b border-ink bg-white px-4 py-16">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-3xl font-bold">Bereken je subsidie</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -195,7 +195,7 @@ export default function SubsidieClient() {
             <label className="block text-sm">
               <span className="mb-1 block font-medium">Type isolatie</span>
               <select
-                className="min-h-[48px] w-full rounded-xl border border-black px-3 text-base"
+                className="min-h-[48px] w-full rounded-xl border border-ink px-3 text-base"
                 value={kindId}
                 onChange={(e) => setKindId(e.target.value)}
               >
@@ -214,12 +214,12 @@ export default function SubsidieClient() {
                 placeholder="bv. 80"
                 value={m2}
                 onChange={(e) => setM2(e.target.value)}
-                className="min-h-[48px] w-full rounded-xl border border-black px-3 text-base"
+                className="min-h-[48px] w-full rounded-xl border border-ink px-3 text-base"
               />
             </label>
           </div>
 
-          <div className="mt-6 rounded-2xl border-2 border-black bg-[#f6f4ef] p-6">
+          <div className="mt-6 rounded-2xl border-2 border-ink bg-[#f6f4ef] p-6">
             <p className="text-xs uppercase tracking-wide text-gray-500">Geschatte ISDE-subsidie</p>
             <p className="mt-1 text-3xl font-bold">
               {result && result.amount > 0
@@ -238,7 +238,7 @@ export default function SubsidieClient() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/gevelcalc"
-              className="rounded-2xl bg-black px-6 py-3 text-base font-semibold text-white hover:opacity-80"
+              className="rounded-2xl bg-ink px-6 py-3 text-base font-semibold text-paper hover:opacity-80"
             >
               Bereken volledige renovatiekosten →
             </Link>
@@ -246,7 +246,7 @@ export default function SubsidieClient() {
               href="https://www.rvo.nl/subsidies-financiering/isde"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-2xl border-2 border-black bg-white px-6 py-3 text-base font-semibold hover:bg-gray-50"
+              className="rounded-2xl border-2 border-ink bg-white px-6 py-3 text-base font-semibold hover:bg-gray-50"
             >
               ISDE-tarieven bij RVO ↗
             </a>
@@ -254,11 +254,11 @@ export default function SubsidieClient() {
         </div>
       </section>
 
-      <section className="border-b border-black bg-[#f6f4ef] px-4 py-16">
+      <section className="border-b border-ink bg-[#f6f4ef] px-4 py-16">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-3xl border-2 border-black bg-white p-8 md:p-12">
+          <div className="rounded-3xl border-2 border-ink bg-white p-8 md:p-12">
             <div className="text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-black px-3 py-1 text-xs font-medium">
+              <span className="inline-flex items-center gap-2 rounded-full border border-ink px-3 py-1 text-xs font-medium">
                 Aanvraagservice
               </span>
               <h2 className="mt-4 text-3xl font-bold md:text-4xl">
@@ -267,7 +267,7 @@ export default function SubsidieClient() {
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
+              <div className="rounded-2xl border border-ink bg-[#f6f4ef] p-5">
                 <div className="text-2xl">📋</div>
                 <h3 className="mt-2 font-bold">Compleet pakket</h3>
                 <p className="mt-2 text-sm text-gray-700">
@@ -275,7 +275,7 @@ export default function SubsidieClient() {
                   aanvraagpakket.
                 </p>
               </div>
-              <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
+              <div className="rounded-2xl border border-ink bg-[#f6f4ef] p-5">
                 <div className="text-2xl">⚡</div>
                 <h3 className="mt-2 font-bold">Je dient zelf in</h3>
                 <p className="mt-2 text-sm text-gray-700">
@@ -283,7 +283,7 @@ export default function SubsidieClient() {
                   Stap-voor-stap begeleiding inbegrepen.
                 </p>
               </div>
-              <div className="rounded-2xl border border-black bg-[#f6f4ef] p-5">
+              <div className="rounded-2xl border border-ink bg-[#f6f4ef] p-5">
                 <div className="text-2xl">💶</div>
                 <h3 className="mt-2 font-bold">€25 vaste prijs</h3>
                 <p className="mt-2 text-sm text-gray-700">
@@ -304,7 +304,7 @@ export default function SubsidieClient() {
                   "Subsidie wordt uitbetaald op je rekening",
                 ].map((step, i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-paper">
                       {i + 1}
                     </span>
                     <span className="pt-0.5 text-sm">
@@ -318,7 +318,7 @@ export default function SubsidieClient() {
             <div className="mt-8 text-center">
               <Link
                 href="/contact?onderwerp=subsidie-aanvraagpakket"
-                className="inline-block rounded-2xl bg-black px-8 py-4 text-base font-bold text-white hover:opacity-80"
+                className="inline-block rounded-2xl bg-ink px-8 py-4 text-base font-bold text-paper hover:opacity-80"
               >
                 Aanvraagpakket bestellen voor €25 →
               </Link>
@@ -334,7 +334,7 @@ export default function SubsidieClient() {
         </div>
       </section>
 
-      <footer className="border-t border-black bg-white px-4 py-8">
+      <footer className="border-t border-ink bg-white px-4 py-8">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
