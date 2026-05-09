@@ -23,6 +23,11 @@ import BatchStatusBand from "@/components/render/BatchStatusBand";
 import VariantSlot, { type VariantSlotState } from "@/components/render/VariantSlot";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
+// Local fallback for the /render source photo. Survives navigation
+// back from /gevelcalc even when the Supabase upload was still in
+// flight (race) or the signed URL has expired. Cleared by
+// handleNewFacade when the user explicitly resets.
+const LS_RENDER_PHOTO = "renisual-render-source-photo";
 // One render click now produces five tiles: the exact RAL baseline plus
 // four tone nudges. Cap matches that batch size.
 const MAX_VARIANTS = 5;
@@ -399,6 +404,7 @@ export default function RenderPage() {
       const compressed = await compressUnderSize(dataUrl, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
+      try { localStorage.setItem(LS_RENDER_PHOTO, compressed); } catch { /* quota — ignore */ }
     } catch {
       setErrorMsg(t("render.error.upload"));
     }
@@ -511,6 +517,25 @@ export default function RenderPage() {
       setErrorMsg(t("render.error.config"));
     }
   }, [loadAllPhotos, t]);
+
+  // Local-fallback restore: read the last source-photo dataURL from
+  // localStorage. Runs first so the photo appears immediately on
+  // remount; the zustand/STORAGE_KEY restores below override with
+  // fresher data when available. Together this is bullet-proof
+  // against the navigation-back-from-calc bug — even if the cloud
+  // upload was mid-flight or the signed URL has expired, the photo
+  // is restored from the same dataURL the user originally selected.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(LS_RENDER_PHOTO);
+      if (saved && saved.startsWith("data:image/")) {
+        setPhotoOverride(saved);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // Hydrate from the cross-page project store: photo uploaded in
   // /gevelcalc lives in Supabase Storage, the path is in zustand.
@@ -661,6 +686,7 @@ export default function RenderPage() {
       const compressed = await compressUnderSize(raw, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
+      try { localStorage.setItem(LS_RENDER_PHOTO, compressed); } catch { /* quota — ignore */ }
     } catch {
       setErrorMsg(t("render.error.upload"));
       return;
@@ -1183,6 +1209,7 @@ export default function RenderPage() {
     setSelectedSideId("");
     setVariants([]);
     setErrorMsg("");
+    try { localStorage.removeItem(LS_RENDER_PHOTO); } catch { /* ignore */ }
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
