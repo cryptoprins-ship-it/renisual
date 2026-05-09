@@ -81,7 +81,7 @@ export default function SubsidieClient() {
     <main className="min-h-[100dvh] bg-paper text-ink">
       <DynamicMetadata page="subsidie" />
       <nav className="border-b border-black bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4">
           <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
             <Logo variant="horizontal" />
           </Link>
@@ -348,7 +348,7 @@ export default function SubsidieClient() {
       </section>
 
       <footer className="border-t border-black bg-white px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
             <p className="mt-1 text-xs text-gray-400">Het complete renovatieplatform voor Nederland.</p>
