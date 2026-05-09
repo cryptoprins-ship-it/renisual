@@ -6,26 +6,16 @@ import DynamicMetadata from "@/components/DynamicMetadata";
 import { Logo } from "@/components/Logo";
 import { useLocale } from "@/lib/i18n";
 
-const PARAGRAPH_KEYS = [
-  "about.p1",
-  "about.p2",
-  "about.p3",
-  "about.p4",
-  "about.p5",
-  "about.p6",
-  "about.p7",
-  "about.p8",
-];
+const PARAGRAPH_KEYS = ["about.p1", "about.p2", "about.p3", "about.p4"];
 
 export default function AboutClient() {
   const { locale, t } = useLocale();
   const showSubsidies = locale === "nl";
 
   return (
-    <main className="min-h-[100dvh] bg-paper text-ink">
+    <main className="flex min-h-[100dvh] flex-col bg-paper text-ink">
       <DynamicMetadata page="about" />
 
-      {/* Slim architectural header — mirrors homepage */}
       <nav className="sticky top-0 z-30 border-b border-stone-200 bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-6 md:px-12 lg:px-20">
           <Link href="/" aria-label="Renisual home" className="inline-flex items-center">
@@ -50,54 +40,32 @@ export default function AboutClient() {
         </div>
       </nav>
 
-      {/* Editorial hero — full-bleed image, bottom-left text overlay */}
-      <section className="relative h-[calc(100dvh-4rem)] min-h-[640px] w-full overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-cover bg-center brightness-90 contrast-105"
-          style={{ backgroundImage: "url(/samples/houses/woning-2.jpg)" }}
-        />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink/60 via-ink/30 to-transparent" />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent" />
-
-        <div className="relative z-10 mx-auto flex h-full max-w-[1400px] flex-col justify-end px-6 pb-16 md:px-12 md:pb-20 lg:px-20 lg:pb-24">
-          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-paper/80">
+      <article className="flex-1 px-6 py-10 md:px-12 md:py-14 lg:px-20 lg:py-16">
+        <div className="mx-auto max-w-2xl">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
             {t("about.eyebrow")}
           </p>
-          <h1 className="font-display text-4xl leading-[1.05] tracking-tight text-paper md:text-6xl lg:text-7xl">
+          <h1 className="mt-3 font-display text-4xl tracking-tight text-ink md:text-5xl">
             {t("about.title")}
           </h1>
-          <p className="mt-6 font-display text-lg italic tracking-tight text-paper/85 md:text-xl">
-            {t("home.hero.tagline")}
-          </p>
-        </div>
-      </section>
-
-      {/* Body — editorial prose, max-w-2xl, generous whitespace */}
-      <section className="px-6 py-20 md:px-12 md:py-28 lg:px-20">
-        <div className="mx-auto max-w-2xl space-y-8 text-lg leading-[1.7] text-stone-800">
-          {PARAGRAPH_KEYS.map((key) => (
-            <p key={key}>{t(key)}</p>
-          ))}
-          <p className="pt-4 font-display italic text-stone-700">
+          <div className="mt-8 space-y-5 text-base leading-[1.7] text-stone-800 md:text-lg">
+            {PARAGRAPH_KEYS.map((key) => (
+              <p key={key}>{t(key)}</p>
+            ))}
+          </div>
+          <p className="mt-8 font-display italic text-stone-700">
             {t("about.signature")}
           </p>
-        </div>
-      </section>
-
-      {/* CTA — architectural button matching homepage hero CTA, inverted for light bg */}
-      <section className="border-t border-stone-200 px-6 py-20 md:px-12 md:py-28 lg:px-20">
-        <div className="mx-auto max-w-2xl">
           <Link
             href="/render"
-            className="inline-block bg-ink px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
+            className="mt-8 inline-block bg-ink px-7 py-4 font-mono text-xs uppercase tracking-[0.15em] text-paper transition-colors hover:bg-stone-800"
           >
             {t("about.cta.button")} →
           </Link>
         </div>
-      </section>
+      </article>
 
-      <footer className="border-t border-stone-200 bg-paper px-6 py-10 md:px-12 lg:px-20">
+      <footer className="border-t border-stone-200 bg-paper px-6 py-8 md:px-12 lg:px-20">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4">
           <div>
             <Logo variant="horizontal" markSize={28} />
