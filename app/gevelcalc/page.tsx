@@ -2743,7 +2743,16 @@ export default function GevelCalcPage() {
                 }`}
                 aria-disabled={!selectedProduct}
                 onClick={(e) => {
-                  if (!selectedProduct) e.preventDefault();
+                  if (!selectedProduct) {
+                    e.preventDefault();
+                    return;
+                  }
+                  // Flush sessionStorage before navigation. The auto-save
+                  // useEffect debounces by 600ms, so a click within that
+                  // window would navigate to /render with stale or empty
+                  // calc state and `loadAllPhotos([])` would return empty
+                  // even though the photos are in IndexedDB.
+                  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buildSaveData(false))); } catch {}
                 }}
               >
                 {t("gc.viewRender")}
