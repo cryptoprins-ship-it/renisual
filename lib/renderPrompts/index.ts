@@ -138,14 +138,21 @@ function buildStylePrompt(opts: ResolvePromptOpts): string {
     surfaceDescriptor = "the printed Spanish roof-tile-look panels shown in the reference image — overlapping curved terracotta-style tiles in warm orange-red, ochre or weathered grey tones with shadowed grooves between rows. Match the reference image's exact colour palette and tile shape. NOT brick, NOT flat masonry — these are curved roof-tile shapes printed on flat wall panels.";
   } else {
     // Wood prompt is shared by Spanl PBW (printed-wood SKUs) and the
-    // entire Keralit catalog (routed here because no SKU/RAL/hex is
-    // available — the per-color thumbnail swatch is the only ground
-    // truth). The earlier "match the reference image's exact tones"
-    // phrasing was too soft — klein-9b ignored grey-brown / weathered
-    // swatches and defaulted to generic honey/pine wood. Stronger
-    // wording here pins both COLOUR and surface character to the
-    // swatch and explicitly forbids the honey-brown drift.
-    surfaceDescriptor = "cladding panels matching the reference image (image 2) EXACTLY — same colour, same lightness, same hue, same saturation, same surface character. The reference image is the AUTHORITATIVE source: match it precisely, do NOT shift toward the 'average wood colour' from training data. Render light when the reference is light, dark when dark, grey when grey, green when green, red when red, blue when blue, white when white, black when black. If the reference shows wood-grain (in any colour — grey, brown, green, red, blue, white, black), render wood-grain in that exact colour and lightness. If the reference shows weathered grey-brown driftwood (muted, faded, slightly silvery), render exactly that — NOT dark walnut, NOT espresso. If the reference shows oak grain, render oak in the reference's exact colour. If it shows a smooth solid colour, render smooth solid panels in that exact colour. Do NOT default to a 'generic wood' tone like honey-brown, pine, or oak-honey unless the reference itself shows that tone. Flat panels with very slight surface relief from the print, NOT truly grooved planks.";
+    // entire Keralit catalog. After 4 iterations of reference-only
+    // prompt language, klein-9b kept ignoring the swatch (Wijnrood
+    // rendered olive-green, Vergrijsd rendered honey or walnut) —
+    // klein-9b weighs prompt text far heavier than reference images
+    // for colour. The colour-hex anchor below is the same mechanism
+    // Spanl uses (where the catalog ships hex); for Keralit the hex
+    // is computed server-side from the swatch image via sharp.
+    if (opts.colorHex) {
+      surfaceDescriptor = `cladding panels in the EXACT colour hex ${opts.colorHex} — match this hex value precisely, do NOT lighten, darken, or shift the hue. The reference image (image 2) shows the wood-grain pattern and surface character; copy the pattern and grain from the reference, but the COLOUR is dictated by the hex value, not by the reference image. If the hex is dark, render dark; if light, render light; if grey, render grey; if red, render red; if green, render green. Flat panels with very slight surface relief from the print, NOT truly grooved planks.`;
+    } else {
+      // No hex available (no swatch, no DB row) — fall back to
+      // reference-only language. Best-effort; klein-9b will likely
+      // drift toward generic wood without an explicit hex anchor.
+      surfaceDescriptor = "cladding panels matching the reference image (image 2) EXACTLY in colour and surface character — same hue, same lightness, same saturation. The reference image is the colour source. Flat panels with very slight surface relief from the print, NOT truly grooved planks.";
+    }
   }
 
   return `Reclad the wall surfaces of this building with ${surfaceDescriptor}

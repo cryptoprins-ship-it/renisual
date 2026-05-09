@@ -1104,13 +1104,67 @@ export async function POST(request: Request) {
         skuUpper.startsWith("YMPB") ||
         skuUpper.startsWith("YPMB") ||
         skuUpper.startsWith("YMSG");
+
+      // Server-side swatch → hex extraction. For style/wood (Keralit
+      // and Spanl PBW) the catalog often ships no hex value, so the
+      // BFL prompt has been falling back to reference-image-only
+      // language and klein-9b drifts (Vergrijsd → honey/walnut,
+      // Wijnrood → olive). Compute the swatch's mean RGB here so the
+      // wood prompt can anchor on a hex token the same way the RAL
+      // prompt does.
+      let swatchHex: string | undefined;
+      if (
+        family === "style" &&
+        shape === "wood" &&
+        !product.color_hex &&
+        referenceParts.length > 0
+      ) {
+        try {
+          const buf = Buffer.from(referenceParts[0].inlineData.data, "base64");
+          const meta = await sharp(buf).metadata();
+          const w = meta.width ?? 0;
+          const h = meta.height ?? 0;
+          // Crop the centre 60% before averaging so packaging / white
+          // background around the swatch doesn't pull the mean toward
+          // grey. Skip the crop on tiny images where the math is moot.
+          const pipeline = sharp(buf);
+          if (w >= 50 && h >= 50) {
+            const cropW = Math.round(w * 0.6);
+            const cropH = Math.round(h * 0.6);
+            pipeline.extract({
+              left: Math.round((w - cropW) / 2),
+              top: Math.round((h - cropH) / 2),
+              width: cropW,
+              height: cropH,
+            });
+          }
+          const { data, info } = await pipeline
+            .resize(1, 1, { fit: "fill" })
+            .removeAlpha()
+            .raw()
+            .toBuffer({ resolveWithObject: true });
+          if (info.channels >= 3 && data.length >= 3) {
+            const r = data[0];
+            const g = data[1];
+            const b = data[2];
+            const hex =
+              "#" +
+              [r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("");
+            swatchHex = hex;
+            logger.info({ swatchHex, w, h }, "render_swatch_hex");
+          }
+        } catch (err) {
+          logger.warn({ err }, "render_swatch_hex_extract_failed");
+        }
+      }
+
       const bflPrompt = resolveBflPrompt({
         family,
         shape,
         orientation: body.orientation ?? "horizontal",
         ralCode: product.ral_code,
         colorName: product.color_name,
-        colorHex: product.color_hex,
+        colorHex: product.color_hex ?? swatchHex,
         facadeWidthMeters,
         facadeHeightMeters,
         includeFascia: body.includeBoeideel,
