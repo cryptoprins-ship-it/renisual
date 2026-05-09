@@ -18,27 +18,33 @@ export type KeralitColor = {
   sku: string;
   finish: KeralitFinish;
   thumbnailUrl: string;
+  // When the Keralit colour ships with a known RAL match (per Keralit's
+  // own product table), this is set so the render pipeline can route
+  // the colour through the proven Spanl RAL prompt instead of the
+  // swatch-only keralit_wood prompt. klein-9b respects RAL hex tokens
+  // far more reliably than swatch-derived hexes.
+  ralCode?: string;
 };
 
 const CDN = "https://d7rh5s3nxmpy4.cloudfront.net/CMP2458";
 
 export const KERALIT_COLORS: KeralitColor[] = [
   { number: 249, name: "Bruingrijs", sku: "BI9020", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ108BI9020_249_Bruingrijs_Classic_met_houtnerf_THM.jpg` },
-  { number: 294, name: "Zwartgrijs", sku: "BI9053", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ123BI9053_294_Zwartgrijs_Classic_met_houtnerf_THM.jpg` },
+  { number: 294, name: "Zwartgrijs", sku: "BI9053", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ123BI9053_294_Zwartgrijs_Classic_met_houtnerf_THM.jpg`, ralCode: "7021" },
   { number: 295, name: "Basaltgrijs", sku: "BI9018", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ124BI9018_295_Basaltgrijs_Classic_met_houtnerf_THM.jpg` },
   { number: 310, name: "Grijs", sku: "BI9030", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ126BI9030_310_Grijs_Classic_met_houtnerf_THM.jpg` },
   { number: 311, name: "Kwartsgrijs", sku: "BI9031", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ127BI9031_311_Kwartsgrijs_Classic_met_houtnerf_THM.jpg` },
-  { number: 312, name: "Mosgroen", sku: "BI9036", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ128BI9036_312_Mosgroen_Classic_met_houtnerf_THM.jpg` },
+  { number: 312, name: "Mosgroen", sku: "BI9036", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ128BI9036_312_Mosgroen_Classic_met_houtnerf_THM.jpg`, ralCode: "6005" },
   { number: 313, name: "Licht", sku: "BI9032", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ129BI9032_313_Licht_Classic_met_houtnerf_THM.jpg` },
-  { number: 314, name: "Zwart", sku: "BI9052", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ130BI9052_314_Zwart_Classic_met_houtnerf_THM.jpg` },
-  { number: 315, name: "Antraciet", sku: "BI9017", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ131BI9017_315_Antraciet_Classic_met_houtnerf_THM.jpg` },
+  { number: 314, name: "Zwart", sku: "BI9052", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ130BI9052_314_Zwart_Classic_met_houtnerf_THM.jpg`, ralCode: "9005" },
+  { number: 315, name: "Antraciet", sku: "BI9017", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ131BI9017_315_Antraciet_Classic_met_houtnerf_THM.jpg`, ralCode: "7016" },
   { number: 317, name: "Donker eiken", sku: "BI9027", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ133BI9027_317_Donker_eiken_Classic_met_houtnerf_THM.jpg` },
   { number: 318, name: "Licht eiken", sku: "BI9028", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ134BI9028_318_Licht_eiken_Classic_met_houtnerf_THM.jpg` },
   { number: 319, name: "Mahonie", sku: "BI9033", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ135BI9033_319_Mahonie_Classic_met_houtnerf_THM.jpg` },
   { number: 320, name: "Steenrood", sku: "BI9044", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ136BI9044_320_Steenrood_Classic_met_houtnerf_THM.jpg` },
   { number: 321, name: "Monumentenblauw", sku: "BI9034", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ137BI9034_321_Monumentenblauw_Classic_met_houtnerf_THM.jpg` },
-  { number: 322, name: "Staalblauw", sku: "BI9043", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ138BI9043_322_Staalblauw_Classic_met_houtnerf_THM.jpg` },
-  { number: 323, name: "Wijnrood", sku: "BI9050", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ139BI9050_323_Wijnrood_Classic_met_houtnerf_THM.jpg` },
+  { number: 322, name: "Staalblauw", sku: "BI9043", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ138BI9043_322_Staalblauw_Classic_met_houtnerf_THM.jpg`, ralCode: "5011" },
+  { number: 323, name: "Wijnrood", sku: "BI9050", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ139BI9050_323_Wijnrood_Classic_met_houtnerf_THM.jpg`, ralCode: "3005" },
   { number: 324, name: "Monumentengroen", sku: "BI9035", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ140BI9035_324_Monumentengroen_Classic_met_houtnerf_THM.jpg` },
   { number: 325, name: "Golden", sku: "BI9029", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ141BI9029_325_Golden_Classic_met_houtnerf_THM.jpg` },
   { number: 326, name: "Wit", sku: "BI9051", finish: "classic-houtnerf", thumbnailUrl: `${CDN}/FVKQ142BI9051_326_Wit_Classic_met_houtnerf_THM.jpg` },

@@ -65,6 +65,13 @@ const RAL_HEX: Record<string, { hex: string; name: string }> = {
   "9010": { hex: "#F1ECE0", name: "wit" },
   "9005": { hex: "#0A0A0A", name: "diepzwart" },
   "9006": { hex: "#A5A8A8", name: "zilver" },
+  // Added 2026-05-09 to support Keralit colours that ship with a known
+  // RAL match per Keralit's product table. Lets Keralit-with-RAL route
+  // through the proven Spanl mono_flat pipeline instead of the swatch-
+  // based keralit_wood path.
+  "6005": { hex: "#114232", name: "mosgroen" },
+  "5011": { hex: "#1F3447", name: "staalblauw" },
+  "3005": { hex: "#4E1B1A", name: "wijnrood" },
 };
 function inferProductFromSku(sku: string): ProductForPrompt | null {
   const m = /^(YMSG|YMPB|YPMB|SG|PB|TS)[\s-]?(\d{4})([A-Z0-9-]*)$/i.exec(sku);
@@ -555,6 +562,11 @@ const renderSchema = z.object({
   // honoured by the BFL path, ignored on the Gemini fallback.
   toneNudge: z.union([z.literal(-2), z.literal(-1), z.literal(0), z.literal(1), z.literal(2)]).optional(),
   locale: z.string().max(10).optional(),
+  // Keralit colour's known RAL match (when present in the catalog).
+  // When set, route.ts inflates the legacy free-text product into a
+  // ral_code-bearing product so detectFamilyAndShape sends it through
+  // the Spanl mono_flat pipeline instead of keralit_wood.
+  keralitRalCode: z.string().regex(/^\d{4}$/).optional(),
 });
 
 type RenderBody = z.infer<typeof renderSchema>;
@@ -975,15 +987,43 @@ export async function POST(request: Request) {
       brandPrefix = "Spanl ";
     }
   } else if (body.productLabel) {
+    // Keralit colours that ship with a RAL match get inflated into a
+    // ral_code-bearing product so detectFamilyAndShape routes them
+    // through the Spanl mono_flat prompt (which klein-9b respects).
+    // Without RAL: product has no ral_code, falls to keralit_wood
+    // branch with swatch-extracted hex.
+    let inflatedRalCode: string | null = null;
+    let inflatedColorName: string | null = null;
+    let inflatedColorHex: string | null = null;
+    if (body.keralitRalCode) {
+      const ral = RAL_HEX[body.keralitRalCode];
+      if (ral) {
+        inflatedRalCode = body.keralitRalCode;
+        inflatedColorName = ral.name;
+        inflatedColorHex = ral.hex;
+      } else {
+        logger.warn(
+          { keralitRalCode: body.keralitRalCode },
+          "render_keralit_ral_unknown"
+        );
+      }
+    }
     product = {
       sku: null,
       name: body.productLabel,
       description: body.productDescription ?? null,
-      ral_code: null,
-      color_name: null,
-      color_hex: null,
+      ral_code: inflatedRalCode,
+      color_name: inflatedColorName,
+      color_hex: inflatedColorHex,
       color_hex_render: null,
       image_url: null,
+      // Keralit Gevelpaneel 250mm → 250mm visible width. Without this
+      // buildMonoFlatPrompt defaults to Spanl's 370mm and the panel-
+      // count rhythm comes out wrong for Keralit.
+      panel_work_size_mm:
+        body.panelWidthCm && body.panelWidthCm > 0
+          ? Math.round(body.panelWidthCm * 10)
+          : null,
     };
   } else {
     return Response.json({ error: "no_product" }, { status: 400 });

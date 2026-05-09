@@ -793,6 +793,11 @@ export default function RenderPage() {
         // See note at top of file (kozijnen + boeideel customisation
         // removed for v1).
         locale,
+        // When the picked Keralit colour has a known RAL match, ship
+        // it so route.ts can route through the Spanl mono_flat prompt
+        // instead of the swatch-only keralit_wood path. Undefined for
+        // Spanl renders and Keralit colours without a RAL match.
+        keralitRalCode: effKeralitColor?.ralCode,
       };
 
       // Per-call render. Returns the friendly error key on failure so the

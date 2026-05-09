@@ -207,13 +207,18 @@ export function detectFamilyAndShape(product: {
   if (sku.startsWith("PB") || sku.startsWith("YMPB")) {
     return { family: "ral", shape: "mono_flat" };
   }
-  // Keralit panels reach here with no SKU / no RAL — the legacy free-text
-  // path in the render route. Routed to keralit_wood (separate from
-  // style/wood used by Spanl PBW) so the colour-pinning prompt iteration
-  // here does NOT affect Spanl PBW renders. The catalog has no hex; the
-  // server computes mean RGB from the swatch thumbnail and passes it
-  // via colorHex.
+  // Keralit panels reach here with no SKU. Two sub-cases:
+  //  - Keralit colour with a known RAL match (e.g. 322 Staalblauw → RAL
+  //    5011): route.ts inflates ral_code + color_hex from RAL_HEX before
+  //    calling us. Send those through the proven Spanl mono_flat path
+  //    so klein-9b's RAL handling kicks in.
+  //  - Keralit colour without RAL (wood-look colours like Bruin eiken,
+  //    Vergrijsd ceder, all Pure mat): no ral_code, no DB hex. Stays on
+  //    keralit_wood with swatch-extracted hex.
   if ((product.name ?? "").toLowerCase().startsWith("keralit")) {
+    if (product.ral_code) {
+      return { family: "ral", shape: "mono_flat" };
+    }
     return { family: "style", shape: "keralit_wood" };
   }
   // Fallback — RAL Mono Flat is the safest default for unknown SKUs that
