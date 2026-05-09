@@ -566,13 +566,16 @@ export default function RenderPage() {
     return "";
   }, [selectedSideId, photoOverride]);
 
-  // Variants visible in the current photo scope. Legacy variants
-  // without a sourcePhotoKey are shown everywhere (treated as untagged).
+  // Variants visible in the current photo scope. Legacy/imported
+  // variants without a sourcePhotoKey are shown on every photo
+  // (treated as untagged). Without a source photo loaded, all
+  // variants show — this lets the user import a previously-downloaded
+  // render and view it before re-uploading the source.
   const visibleVariants = useMemo(
     () =>
       sourcePhotoKey
-        ? variants.filter((v) => v.sourcePhotoKey === sourcePhotoKey)
-        : [],
+        ? variants.filter((v) => !v.sourcePhotoKey || v.sourcePhotoKey === sourcePhotoKey)
+        : variants,
     [variants, sourcePhotoKey],
   );
 
@@ -719,7 +722,11 @@ export default function RenderPage() {
         dataUrl,
         createdAt: Date.now(),
         engine: "imported",
-        sourcePhotoKey,
+        // Untagged when there's no source photo yet — keeps the import
+        // visible across photo switches and (combined with the
+        // visibleVariants always-show-when-no-photo branch) lets the
+        // user browse imports without uploading a source first.
+        sourcePhotoKey: sourcePhotoKey || undefined,
         ralCode,
       };
       setVariants((prev) => [variant, ...prev]);
