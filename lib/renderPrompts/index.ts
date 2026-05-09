@@ -144,7 +144,12 @@ function buildRalPrompt(opts: ResolvePromptOpts): string {
     // Round to integer cm because klein-9b doesn't reliably parse
     // fractional centimetres.
     const seamCm = Math.round(opts.panelVisibleWidthCm ?? 25);
-    wallDesc = `matt PVC cladding panels in ${colorPhraseFor(opts)}, with a printed wood-grain surface texture — fine parallel grain lines along the panel length plus subtle wood-fibre detail catching the light, visibly textured panel face (NOT smooth, NOT glossy). Adjacent panels meet at clearly visible recessed shadow seams every ${seamCm}cm — distinct ${seamAxisKeralit} channels marking each panel edge, NOT hairline-faint. The wood-grain is a printed pattern on the surface; the colour stays exactly as specified by the RAL hex above.`;
+    // MANDATORY-style seam language adopted from Spanl's Mono Groove
+    // prompt because soft "clearly visible" wording was too easily
+    // ignored in img2img mode (klein-9b defers to smooth source photo).
+    // Phrasing mirrors the Mono Groove block: caps directive, "MUST be
+    // visible", explicit cadence count, defensive negatives.
+    wallDesc = `matt PVC cladding panels in ${colorPhraseFor(opts)}, with a printed wood-grain surface texture — fine parallel grain lines along the panel length plus subtle wood-fibre detail catching the light, visibly textured panel face (NOT smooth, NOT glossy). VISIBLE PANEL-EDGE SHADOWS ARE MANDATORY: render distinct ${seamAxisKeralit} shadow lines every ${seamCm}cm where panels meet — these MUST be visible as a regular cadence of ${seamAxisKeralit} darker recessed channels across the entire facade. NOT hairline-faint, NOT absent. Each shadow line is the boundary between two panels; without them the surface incorrectly reads as a continuous wall. The wood-grain is a printed pattern on the surface; the colour stays exactly as specified by the RAL hex above.`;
   }
 
   const tone = TONE_PHRASES[opts.toneNudge ?? 0] ?? "";
