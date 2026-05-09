@@ -154,7 +154,7 @@ export default function HomeClient() {
             >
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
-                  01 — {t("home.nav.render")}
+                  01 — {t("home.cards.render.cta")}
                 </p>
                 <h2 className="mt-6 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
                   {t("home.cards.render.title")}
@@ -175,7 +175,7 @@ export default function HomeClient() {
             >
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
-                  02 — {t("home.nav.calculator")}
+                  02 — {t("home.cards.calc.cta")}
                 </p>
                 <h2 className="mt-6 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
                   {t("home.cards.calc.title")}
