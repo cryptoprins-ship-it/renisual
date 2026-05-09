@@ -20,27 +20,34 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* Default page palette + body type */
-html, body {
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  letter-spacing: -0.005em;     /* slightly tighter Inter tracking */
-}
+/* Base styles MUST live inside @layer base so Tailwind utility classes
+   (font-mono, font-sans, etc.) can override them on individual elements.
+   Unlayered rules win over Tailwind's @layer utilities by CSS cascade
+   spec, so without this wrapper a `<h1 className="font-mono">` would
+   still render in Fraunces. */
+@layer base {
+  /* Default page palette + body type */
+  html, body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    letter-spacing: -0.005em;     /* slightly tighter Inter tracking */
+  }
 
-/* Default heading treatment — editorial serif, tight tracking, snug leading */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  font-weight: 500;             /* Fraunces optical sizing prefers medium */
-  font-optical-sizing: auto;
-}
+  /* Default heading treatment — editorial serif, tight tracking, snug leading */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    font-weight: 500;             /* Fraunces optical sizing prefers medium */
+    font-optical-sizing: auto;
+  }
 
-/* Selection in the accent so it feels intentional */
-::selection {
-  background: var(--color-accent);
-  color: var(--color-paper);
+  /* Selection in the accent so it feels intentional */
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-paper);
+  }
 }
 
 @keyframes slideDown {
