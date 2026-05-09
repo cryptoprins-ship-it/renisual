@@ -1115,7 +1115,7 @@ export async function POST(request: Request) {
       let swatchHex: string | undefined;
       if (
         family === "style" &&
-        shape === "wood" &&
+        shape === "keralit_wood" &&
         !product.color_hex &&
         referenceParts.length > 0
       ) {

@@ -18,7 +18,7 @@
 export type Orientation = "horizontal" | "vertical";
 export type ProductFamily = "ral" | "style";
 export type RalShape = "mono_flat" | "mono_groove" | "mono_textured" | "strip";
-export type StyleShape = "brick" | "wood" | "spanish_tile";
+export type StyleShape = "brick" | "wood" | "spanish_tile" | "keralit_wood";
 export type ToneNudge = -2 | -1 | 0 | 1 | 2;
 
 export type ResolvePromptOpts = {
@@ -136,20 +136,27 @@ function buildStylePrompt(opts: ResolvePromptOpts): string {
     surfaceDescriptor = "the printed brick-look panels shown in the reference image — soft weathered brick pattern in light cream-tan, beige and grey-brown tones with subtle cream mortar lines, on flat panels (very slight relief from the print, not truly protruding bricks). Match the reference image's exact tones and pattern.";
   } else if (opts.shape === "spanish_tile") {
     surfaceDescriptor = "the printed Spanish roof-tile-look panels shown in the reference image — overlapping curved terracotta-style tiles in warm orange-red, ochre or weathered grey tones with shadowed grooves between rows. Match the reference image's exact colour palette and tile shape. NOT brick, NOT flat masonry — these are curved roof-tile shapes printed on flat wall panels.";
-  } else {
-    // Wood prompt is shared by Spanl PBW and Keralit. Verbose wood-
-    // prompt language with ALL-CAPS conflicting instructions (5
-    // iterations: a6727c4, ec08873, c8f6e2d, 455d3ea, 3a951a6) all
-    // failed because klein-9b ignored the hex amid the noise.
-    // Spanl RAL prompts work because they're terse and embed hex
-    // inline in a single concrete noun phrase — no ALL CAPS, no
-    // negative directives, no case-list. Mirroring that pattern.
+  } else if (opts.shape === "keralit_wood") {
+    // Keralit-only branch. Catalog ships no hex, so the server
+    // computes one from the per-color thumbnail swatch via sharp
+    // (mean RGB of centre crop) and passes it via opts.colorHex.
+    // Prompt mirrors Spanl RAL terseness — single noun phrase,
+    // hex inline, no ALL CAPS, no negative directives. Spanl PBW
+    // is NOT routed here (PBW keeps the original wood prompt
+    // below) because the 5-iteration prompt thrash on this branch
+    // was Keralit-specific.
     if (opts.colorHex) {
       surfaceDescriptor = `matt cladding panels painted in colour hex ${opts.colorHex}, with the surface pattern and grain shown in the reference image (image 2).`;
     } else {
       surfaceDescriptor =
         "matt cladding panels with the colour, surface pattern, and grain shown in the reference image (image 2).";
     }
+  } else {
+    // shape === "wood" — Spanl PBW (printed wood SKUs). Restored
+    // to the exact text from before the Keralit debugging chain
+    // started. Do NOT modify when iterating on Keralit colour-
+    // pinning — Keralit lives on the keralit_wood branch above.
+    surfaceDescriptor = "the printed wood-look panels shown in the reference image — wood-plank appearance with the exact tones, grain pattern and surface texture from the reference. Flat panels with very slight relief from the print, NOT truly grooved planks. Match the reference image's exact tones and pattern.";
   }
 
   return `Reclad the wall surfaces of this building with ${surfaceDescriptor}
@@ -201,16 +208,13 @@ export function detectFamilyAndShape(product: {
     return { family: "ral", shape: "mono_flat" };
   }
   // Keralit panels reach here with no SKU / no RAL — the legacy free-text
-  // path in the render route. They are PVC cladding sold as wood-look
-  // (Classic met houtnerf, Modern eiken) or smooth-mat (Pure mat effen).
-  // Routing them to style/wood means the BFL prompt instructs the model
-  // to "match the reference image's exact tones and pattern" — and the
-  // reference IS the per-color Keralit swatch thumbnail, which is the
-  // only ground truth we have for these colors (no hex in the catalog).
-  // Without this branch they fell through to style/brick and rendered
-  // as cream-tan brick pattern regardless of the chosen Keralit color.
+  // path in the render route. Routed to keralit_wood (separate from
+  // style/wood used by Spanl PBW) so the colour-pinning prompt iteration
+  // here does NOT affect Spanl PBW renders. The catalog has no hex; the
+  // server computes mean RGB from the swatch thumbnail and passes it
+  // via colorHex.
   if ((product.name ?? "").toLowerCase().startsWith("keralit")) {
-    return { family: "style", shape: "wood" };
+    return { family: "style", shape: "keralit_wood" };
   }
   // Fallback — RAL Mono Flat is the safest default for unknown SKUs that
   // still ship with a ral_code, since most of the catalog is Mono Flat.
