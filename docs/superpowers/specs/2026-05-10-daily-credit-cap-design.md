@@ -19,7 +19,7 @@ Stop een gebruiker na 10 Gemini-renders per dag. Reset om 00:00 Europe/Amsterdam
 
 1. **Eerste bezoek aan `/render`**: counter zichtbaar onder de Render-knop: `10/10 over vandaag` (of de huidige stand). Cookie `__rs_uid` wordt gezet bij eerste GET `/api/credits`.
 2. **Klik op Render** terwijl `remaining ≥ 5`: batch van 5 tone-renders gaat normaal door, counter daalt met 5, UI updatet na de batch.
-3. **Klik op Render** terwijl `remaining < 5`: knop is disabled. Inline blok onder de knop: *"Je 10 gratis renders voor vandaag zijn op. Morgen om middernacht weer 10. Binnenkort kun je ook bijkopen — schrijf je in voor de mailing."* Met links naar `/offerte` en de wachtlijst-pagina.
+3. **Klik op Render** terwijl `remaining < 5`: knop is disabled. Inline blok onder de knop: *"Je 10 gratis renders voor vandaag zijn op. Morgen om middernacht weer 10."* Met één link: `Vraag offerte aan →` (`/offerte`).
 4. **00:00 NL volgende dag**: bij volgende request krijg je vanzelf weer 10 (date-key wisselt).
 
 ## Architecture
@@ -147,8 +147,8 @@ const [credits, setCredits] = useState<{ used: number; remaining: number; resetA
 
 **Wall UI** (nieuwe component `components/render/CreditWallNotice.tsx`):
 - Mount conditie: `credits && credits.remaining < 5`.
-- Tekst: *"Je 10 gratis renders voor vandaag zijn op. Morgen om middernacht weer 10. Binnenkort kun je ook bijkopen — schrijf je in voor de mailing."*
-- Twee subtiele links onder de tekst: `Vraag offerte aan →` (`/offerte`) en `Mailing →` (`/wachten` of mailto:cryptoprins@gmail.com — TBD which exists).
+- Tekst: *"Je 10 gratis renders voor vandaag zijn op. Morgen om middernacht weer 10."*
+- Eén subtiele link onder de tekst: `Vraag offerte aan →` (`/offerte`).
 - Render-knop binnen `<button disabled={credits.remaining < 5}>` zodat klikken onmogelijk is.
 
 **402-handler in `runRenderBatch`**: catch al bestaat (per memory: render-iteration-freeze niet aan tunen). Voor 402-status met `error === "credit_cap"`: set `failedTones` = alle tones, en force-fetch `/api/credits` om de wall te triggeren. De individuele tone-slots tonen dan "Mislukt" — maar dat is een acceptabele edge-case; pre-flight check vangt het normaal af.
@@ -223,10 +223,10 @@ Geen unit-tests (project heeft geen framework). Per implementation-task gate op:
 
 ## Self-review notes
 
-**Placeholder scan**: één TBD bewust gelaten — "mailto:cryptoprins@gmail.com — TBD which exists" voor de mailing-link in de wall. Implementatie-plan moet vaststellen of `/wachten` of een mailto bestaat.
+**Placeholder scan**: geen TBD's. Wall UI heeft één concrete link (`/offerte`).
 
 **Internal consistency**: cookie cap 10 + IP cap 30 + batch=5 ⇒ 2 batches per cookie/dag, 6 batches per IP/dag. Klopt.
 
-**Scope check**: één spec, één plan. Geen Stripe, geen DB, geen email-magic-link. Past in ½ dag werk.
+**Scope check**: één spec, één plan. Geen Stripe, geen DB, geen email-magic-link, geen mailing-list. Past in ½ dag werk.
 
-**Ambiguity**: "binnenkort kun je ook bijkopen" tekst — toezegging zonder leverdatum. Acceptabel — past bij Spec B die in pipeline staat. Als Spec B nooit komt is dit een loze belofte; mitigation: regel valt makkelijk te verwijderen in 1 commit.
+**Ambiguity**: geen open vragen meer.
