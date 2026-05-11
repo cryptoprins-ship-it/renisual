@@ -221,9 +221,14 @@ export async function consumeCredit(userKey: UserKey): Promise<CreditConsumeResu
       pipe.expire(cookieK, KEY_TTL_SECONDS);
       pipe.incr(ipK);
       pipe.expire(ipK, KEY_TTL_SECONDS);
-      const res = (await pipe.exec()) as [number, unknown, number, unknown];
-      const cookieCount = Number(res[0] ?? 0);
-      const ipCount = Number(res[2] ?? 0);
+      const res = (await pipe.exec()) as unknown[];
+      const cookieCount = typeof res[0] === "number" ? res[0] : null;
+      const ipCount = typeof res[2] === "number" ? res[2] : null;
+      if (cookieCount === null || ipCount === null) {
+        // Upstash pipeline returned non-number INCR — fail-open per spec.
+        console.warn("[credits] pipeline unexpected shape:", res);
+        return { ok: true, remaining: -1, resetAt };
+      }
       if (cookieCount > COOKIE_CAP) {
         return { ok: false, reason: "cookie_cap", remaining: 0, resetAt };
       }
@@ -236,8 +241,12 @@ export async function consumeCredit(userKey: UserKey): Promise<CreditConsumeResu
       const pipe = redis.pipeline();
       pipe.incr(ipK);
       pipe.expire(ipK, KEY_TTL_SECONDS);
-      const res = (await pipe.exec()) as [number, unknown];
-      const ipCount = Number(res[0] ?? 0);
+      const res = (await pipe.exec()) as unknown[];
+      const ipCount = typeof res[0] === "number" ? res[0] : null;
+      if (ipCount === null) {
+        console.warn("[credits] pipeline unexpected shape:", res);
+        return { ok: true, remaining: -1, resetAt };
+      }
       if (ipCount > IP_CAP) {
         return { ok: false, reason: "ip_cap", remaining: 0, resetAt };
       }
