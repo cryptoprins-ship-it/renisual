@@ -97,5 +97,36 @@ export const renderTests: TestSuite = {
         }
       },
     },
+    {
+      name: "GET /api/credits returns counter shape",
+      run: async (page) => {
+        const res = await page.request.get(`${config.baseUrl}/api/credits`);
+        if (res.status() !== 200) {
+          throw new Error(`expected 200, got ${res.status()}`);
+        }
+        const data = await res.json();
+        if (typeof data.used !== "number") throw new Error("missing used");
+        if (typeof data.remaining !== "number") throw new Error("missing remaining");
+        if (typeof data.resetAt !== "string") throw new Error("missing resetAt");
+      },
+    },
+    {
+      name: "Counter visible on /render",
+      run: async (page) => {
+        await page.goto(`${config.baseUrl}/render`);
+        await page.waitForLoadState("networkidle", { timeout: 10000 });
+        const credits = await page.evaluate(() =>
+          fetch("/api/credits").then((r) => r.json()),
+        );
+        if (credits.remaining < 0) {
+          // Fail-open mode — counter hidden by design. Pass.
+          return;
+        }
+        const counterText = page.locator('text=/over vandaag/');
+        if ((await counterText.count()) === 0) {
+          throw new Error("counter not visible despite remaining >= 0");
+        }
+      },
+    },
   ],
 };
