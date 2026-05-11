@@ -10,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/gevelcalc", priority: 0.8 },
     { path: "/subsidie", priority: 0.8 },
     { path: "/about", priority: 0.7 },
+    { path: "/privacy", priority: 0.4 },
+    { path: "/terms", priority: 0.4 },
     { path: "/wachten", priority: 0.5 },
     { path: "/leaderboard", priority: 0.5 },
   ];

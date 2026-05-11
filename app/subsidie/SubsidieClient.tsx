@@ -344,6 +344,9 @@ export default function SubsidieClient() {
             <Link href="/render" className="hover:underline">Gevelvisualisatie</Link>
             <Link href="/gevelcalc" className="hover:underline">Calculator</Link>
             <Link href="/subsidie" className="hover:underline">Subsidies</Link>
+            <Link href="/privacy" className="hover:underline">Privacy</Link>
+            <Link href="/terms" className="hover:underline">Voorwaarden</Link>
+            <a href="mailto:cryptoprins@gmail.com" className="hover:underline">Contact</a>
           </div>
         </div>
       </footer>
