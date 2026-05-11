@@ -4,6 +4,32 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { Redis } from "@upstash/redis";
 
+let _redis: Redis | null | undefined;
+function getRedis(): Redis | null {
+  if (_redis !== undefined) return _redis;
+  const rawUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!rawUrl || !token) return (_redis = null);
+  try {
+    // Same URL normalization as lib/ratelimit.ts — operators sometimes
+    // upper-case the protocol on paste.
+    const trimmed = rawUrl.trim();
+    const m = /^(https?):\/\/(.+)$/i.exec(trimmed);
+    const url = m ? `${m[1].toLowerCase()}://${m[2]}` : trimmed;
+    _redis = new Redis({ url, token: token.trim() });
+  } catch {
+    _redis = null;
+  }
+  return _redis;
+}
+
+function cookieKey(date: string, cookie: string): string {
+  return `credit:cookie:${date}:${cookie}`;
+}
+function ipKey(date: string, ip: string): string {
+  return `credit:ip:${date}:${ip}`;
+}
+
 export const COOKIE_NAME = "__rs_uid";
 export const COOKIE_CAP = 10;
 export const IP_CAP = 30;
@@ -150,11 +176,77 @@ export function getUserKey(req: Request): { userKey: UserKey; setCookie: SetCook
     setCookie: { name: COOKIE_NAME, value, maxAgeSeconds: COOKIE_MAX_AGE_SECONDS },
   };
 }
-export async function checkCredits(_userKey: UserKey): Promise<CreditCheck> {
-  throw new Error("not_implemented");
+export async function checkCredits(userKey: UserKey): Promise<CreditCheck> {
+  const redis = getRedis();
+  const resetAt = nextResetISO();
+  if (!redis) {
+    // Fail-open: Upstash unavailable, signal "unknown" to the UI.
+    return { used: 0, remaining: -1, resetAt };
+  }
+  const date = dateNL();
+  try {
+    const reads: Promise<unknown>[] = [redis.get<number>(ipKey(date, userKey.ip))];
+    if (userKey.cookie) {
+      reads.push(redis.get<number>(cookieKey(date, userKey.cookie)));
+    }
+    const results = await Promise.all(reads);
+    const ipUsed = Number(results[0] ?? 0);
+    const cookieUsed = userKey.cookie ? Number(results[1] ?? 0) : null;
+    if (cookieUsed === null) {
+      // Cookies disabled — frontend hides counter via remaining: -1.
+      return { used: ipUsed, remaining: -1, resetAt };
+    }
+    const remaining = Math.max(0, COOKIE_CAP - cookieUsed);
+    return { used: cookieUsed, remaining, resetAt };
+  } catch (err) {
+    console.warn("[credits] checkCredits upstash err — fail-open:", err);
+    return { used: 0, remaining: -1, resetAt };
+  }
 }
-export async function consumeCredit(_userKey: UserKey): Promise<CreditConsumeResult> {
-  throw new Error("not_implemented");
+export async function consumeCredit(userKey: UserKey): Promise<CreditConsumeResult> {
+  const redis = getRedis();
+  const resetAt = nextResetISO();
+  if (!redis) {
+    // Upstash unavailable: fail-open. Spec: liever eens een gratis dag dan 500's.
+    return { ok: true, remaining: -1, resetAt };
+  }
+  const date = dateNL();
+  try {
+    const ipK = ipKey(date, userKey.ip);
+    if (userKey.cookie) {
+      const cookieK = cookieKey(date, userKey.cookie);
+      // Pipeline: 4 commands atomic-as-batch.
+      const pipe = redis.pipeline();
+      pipe.incr(cookieK);
+      pipe.expire(cookieK, KEY_TTL_SECONDS);
+      pipe.incr(ipK);
+      pipe.expire(ipK, KEY_TTL_SECONDS);
+      const res = (await pipe.exec()) as [number, unknown, number, unknown];
+      const cookieCount = Number(res[0] ?? 0);
+      const ipCount = Number(res[2] ?? 0);
+      if (cookieCount > COOKIE_CAP) {
+        return { ok: false, reason: "cookie_cap", remaining: 0, resetAt };
+      }
+      if (ipCount > IP_CAP) {
+        return { ok: false, reason: "ip_cap", remaining: 0, resetAt };
+      }
+      return { ok: true, remaining: Math.max(0, COOKIE_CAP - cookieCount), resetAt };
+    } else {
+      // No cookie: only IP cap.
+      const pipe = redis.pipeline();
+      pipe.incr(ipK);
+      pipe.expire(ipK, KEY_TTL_SECONDS);
+      const res = (await pipe.exec()) as [number, unknown];
+      const ipCount = Number(res[0] ?? 0);
+      if (ipCount > IP_CAP) {
+        return { ok: false, reason: "ip_cap", remaining: 0, resetAt };
+      }
+      return { ok: true, remaining: -1, resetAt };
+    }
+  } catch (err) {
+    console.warn("[credits] consumeCredit upstash err — fail-open:", err);
+    return { ok: true, remaining: -1, resetAt };
+  }
 }
 export function formatSetCookie(directive: SetCookieDirective, isProd: boolean): string {
   const parts = [
