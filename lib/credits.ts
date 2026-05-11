@@ -4,19 +4,33 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { Redis } from "@upstash/redis";
 
+// Strip a single pair of surrounding double or single quotes. Hostinger's
+// env-var UI stores quotes literally when operators paste a `KEY="value"`
+// snippet from an Upstash/Stripe dashboard. Without this strip the Redis
+// client constructs an invalid URL and all calls silently fail-open.
+function stripSurroundingQuotes(s: string): string {
+  const t = s.trim();
+  if (t.length >= 2) {
+    const f = t[0];
+    const l = t[t.length - 1];
+    if ((f === '"' && l === '"') || (f === "'" && l === "'")) {
+      return t.slice(1, -1);
+    }
+  }
+  return t;
+}
+
 let _redis: Redis | null | undefined;
 function getRedis(): Redis | null {
   if (_redis !== undefined) return _redis;
   const rawUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!rawUrl || !token) return (_redis = null);
+  const rawToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!rawUrl || !rawToken) return (_redis = null);
   try {
-    // Same URL normalization as lib/ratelimit.ts — operators sometimes
-    // upper-case the protocol on paste.
-    const trimmed = rawUrl.trim();
-    const m = /^(https?):\/\/(.+)$/i.exec(trimmed);
-    const url = m ? `${m[1].toLowerCase()}://${m[2]}` : trimmed;
-    _redis = new Redis({ url, token: token.trim() });
+    const stripped = stripSurroundingQuotes(rawUrl);
+    const m = /^(https?):\/\/(.+)$/i.exec(stripped);
+    const url = m ? `${m[1].toLowerCase()}://${m[2].toLowerCase()}` : stripped;
+    _redis = new Redis({ url, token: stripSurroundingQuotes(rawToken) });
   } catch {
     _redis = null;
   }

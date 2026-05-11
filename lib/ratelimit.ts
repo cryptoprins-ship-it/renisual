@@ -20,24 +20,42 @@ type Limiter = {
   limit: (key: string) => Promise<{ success: boolean; reset: number; remaining: number }>;
 };
 
+// Strip a single pair of surrounding double or single quotes. Hostinger's
+// env-var UI stores quotes literally when operators paste a `KEY="value"`
+// snippet from a dashboard.
+function stripSurroundingQuotes(s: string): string {
+  const t = s.trim();
+  if (t.length >= 2) {
+    const f = t[0];
+    const l = t[t.length - 1];
+    if ((f === '"' && l === '"') || (f === "'" && l === "'")) {
+      return t.slice(1, -1);
+    }
+  }
+  return t;
+}
+
 // Upstash REST URLs must be lowercase `https://...`; some hosting panels
 // upper-case env-var values on paste, which crashes the client at construct
 // time. Normalize defensively rather than asking the operator to remember.
 function normalizeUpstashUrl(raw: string): string {
-  const trimmed = raw.trim();
-  const m = /^(https?):\/\/(.+)$/i.exec(trimmed);
-  if (!m) return trimmed;
-  return `${m[1].toLowerCase()}://${m[2]}`;
+  const stripped = stripSurroundingQuotes(raw);
+  const m = /^(https?):\/\/(.+)$/i.exec(stripped);
+  if (!m) return stripped;
+  return `${m[1].toLowerCase()}://${m[2].toLowerCase()}`;
 }
 
 let _redis: Redis | null | undefined;
 function getRedis(): Redis | null {
   if (_redis !== undefined) return _redis;
   const rawUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!rawUrl || !token) return (_redis = null);
+  const rawToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!rawUrl || !rawToken) return (_redis = null);
   try {
-    _redis = new Redis({ url: normalizeUpstashUrl(rawUrl), token: token.trim() });
+    _redis = new Redis({
+      url: normalizeUpstashUrl(rawUrl),
+      token: stripSurroundingQuotes(rawToken),
+    });
   } catch {
     _redis = null;
   }
