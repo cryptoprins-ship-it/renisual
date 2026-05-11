@@ -793,7 +793,8 @@ export default function RenderPage() {
   ) {
     if (!sourcePhoto) return;
 
-    if (credits && credits.remaining >= 0 && credits.remaining < TONE_BATCH.length) {
+    // 1 click → 1 fetch → 1 credit. Block only when remaining hits 0.
+    if (credits && credits.remaining >= 0 && credits.remaining < 1) {
       // Wall component takes over; abort silently.
       return;
     }
@@ -1979,7 +1980,7 @@ export default function RenderPage() {
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={isGenerating || !sourcePhoto}
+                disabled={isGenerating || !sourcePhoto || (credits !== null && credits.remaining >= 0 && credits.remaining < 1)}
                 className="rounded-lg border border-error/30 bg-white px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/15 disabled:opacity-50"
               >
                 {t("rendering_retry_button")}
@@ -2024,7 +2025,7 @@ export default function RenderPage() {
                   isGenerating ||
                   !sourcePhoto ||
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
-                  (credits !== null && credits.remaining >= 0 && credits.remaining < 5)
+                  (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
                 }
                 className="col-span-2 border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40 md:col-auto"
               >
@@ -2044,8 +2045,8 @@ export default function RenderPage() {
               <div className="mt-2">
                 <CreditCounter remaining={credits?.remaining ?? null} />
               </div>
-              {credits !== null && credits.remaining >= 0 && credits.remaining < 5 && (
-                <CreditWallNotice remaining={credits.remaining} resetAt={credits.resetAt} />
+              {credits !== null && credits.remaining >= 0 && credits.remaining < 1 && (
+                <CreditWallNotice remaining={credits.remaining} />
               )}
               <button
                 type="button"
@@ -2065,7 +2066,7 @@ export default function RenderPage() {
                   isGenerating ||
                   !sourcePhoto ||
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
-                  (credits !== null && credits.remaining >= 0 && credits.remaining < 5)
+                  (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
                 }
                 className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
@@ -2074,9 +2075,9 @@ export default function RenderPage() {
               <div className="col-span-2 mt-2 md:col-auto">
                 <CreditCounter remaining={credits?.remaining ?? null} />
               </div>
-              {credits !== null && credits.remaining >= 0 && credits.remaining < 5 && (
+              {credits !== null && credits.remaining >= 0 && credits.remaining < 1 && (
                 <div className="col-span-2 md:col-auto">
-                  <CreditWallNotice remaining={credits.remaining} resetAt={credits.resetAt} />
+                  <CreditWallNotice remaining={credits.remaining} />
                 </div>
               )}
             </>
