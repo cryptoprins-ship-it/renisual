@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { products, type Orientation } from "@/lib/productCatalog";
 import { loadSpanlImageIndex, type SpanlImageProduct } from "@/lib/spanlImageCatalog";
@@ -21,6 +21,8 @@ import SiteNav from "@/components/SiteNav";
 import PhotoUploader from "@/components/PhotoUploader";
 import BatchStatusBand from "@/components/render/BatchStatusBand";
 import VariantSlot, { type VariantSlotState } from "@/components/render/VariantSlot";
+import CreditCounter from "@/components/render/CreditCounter";
+import CreditWallNotice from "@/components/render/CreditWallNotice";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 // Local fallback for the /render source photo. Survives navigation
@@ -761,6 +763,21 @@ export default function RenderPage() {
     }
   }
 
+  const refetchCredits = useCallback(async () => {
+    try {
+      const res = await fetch("/api/credits", { credentials: "same-origin" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { used: number; remaining: number; resetAt: string };
+      setCredits(data);
+    } catch {
+      // fail-silent — UI verbergt counter bij credits === null
+    }
+  }, []);
+
+  useEffect(() => {
+    void refetchCredits();
+  }, [refetchCredits]);
+
   // Single batch runner — fires one BFL call per tone-nudge in the input
   // array, in parallel. Used both for the default baseline-only click
   // (`[0]`, clearFirst=true) and the optional "show variations" button
@@ -775,6 +792,11 @@ export default function RenderPage() {
     override?: { panelSku: string; orientation: Orientation },
   ) {
     if (!sourcePhoto) return;
+
+    if (credits && credits.remaining >= 0 && credits.remaining < TONE_BATCH.length) {
+      // Wall component takes over; abort silently.
+      return;
+    }
 
     // Resolve effective panel context. Override path looks up the panel
     // by SKU in the catalog (Spanl: raw SKU; Keralit: parses the
@@ -956,6 +978,10 @@ export default function RenderPage() {
               continue;
             }
             console.error("[render] HTTP error", { status: res.status, bodyText, toneNudge });
+            if (res.status === 402) {
+              void refetchCredits();
+              return { ok: false, errorKey: "render.error.credit_cap" };
+            }
             let upstreamErrorText = "";
             try {
               const parsed = JSON.parse(bodyText) as { error?: string };
@@ -1073,6 +1099,7 @@ export default function RenderPage() {
       setBatchAbort(null);
       setBatchStartedAt(null);
       setBatchTones([]);
+      void refetchCredits();
     }
   }
 
@@ -1083,6 +1110,11 @@ export default function RenderPage() {
   }
 
   const [isHandingOff, setIsHandingOff] = useState(false);
+  const [credits, setCredits] = useState<{
+    used: number;
+    remaining: number;
+    resetAt: string;
+  } | null>(null);
 
   // "Bereken materiaal →" handler. Uploads the most relevant variant
   // (baseline if present, otherwise the latest) into the
@@ -1991,7 +2023,8 @@ export default function RenderPage() {
                 disabled={
                   isGenerating ||
                   !sourcePhoto ||
-                  (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
+                  (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
+                  (credits !== null && credits.remaining >= 0 && credits.remaining < 5)
                 }
                 className="col-span-2 border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40 md:col-auto"
               >
@@ -2008,6 +2041,12 @@ export default function RenderPage() {
                   return productLabel ? `Genereer (${productLabel})` : "Genereer";
                 })()}
               </button>
+              <div className="mt-2">
+                <CreditCounter remaining={credits?.remaining ?? null} />
+              </div>
+              {credits !== null && credits.remaining >= 0 && credits.remaining < 5 && (
+                <CreditWallNotice remaining={credits.remaining} resetAt={credits.resetAt} />
+              )}
               <button
                 type="button"
                 onClick={handleProceedToCalc}
@@ -2018,18 +2057,29 @@ export default function RenderPage() {
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={
-                isGenerating ||
-                !sourcePhoto ||
-                (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor)
-              }
-              className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
-            >
-              Genereer (1 credit)
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={
+                  isGenerating ||
+                  !sourcePhoto ||
+                  (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
+                  (credits !== null && credits.remaining >= 0 && credits.remaining < 5)
+                }
+                className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
+              >
+                Genereer (1 credit)
+              </button>
+              <div className="col-span-2 mt-2 md:col-auto">
+                <CreditCounter remaining={credits?.remaining ?? null} />
+              </div>
+              {credits !== null && credits.remaining >= 0 && credits.remaining < 5 && (
+                <div className="col-span-2 md:col-auto">
+                  <CreditWallNotice remaining={credits.remaining} resetAt={credits.resetAt} />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
