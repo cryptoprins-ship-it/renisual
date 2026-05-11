@@ -185,13 +185,14 @@ export async function checkCredits(userKey: UserKey): Promise<CreditCheck> {
   }
   const date = dateNL();
   try {
-    const reads: Promise<unknown>[] = [redis.get<number>(ipKey(date, userKey.ip))];
+    const pipe = redis.pipeline();
+    pipe.get<number>(ipKey(date, userKey.ip));
     if (userKey.cookie) {
-      reads.push(redis.get<number>(cookieKey(date, userKey.cookie)));
+      pipe.get<number>(cookieKey(date, userKey.cookie));
     }
-    const results = await Promise.all(reads);
-    const ipUsed = Number(results[0] ?? 0);
-    const cookieUsed = userKey.cookie ? Number(results[1] ?? 0) : null;
+    const results = (await pipe.exec()) as unknown[];
+    const ipUsed = typeof results[0] === "number" ? results[0] : 0;
+    const cookieUsed = userKey.cookie ? (typeof results[1] === "number" ? results[1] : 0) : null;
     if (cookieUsed === null) {
       // Cookies disabled — frontend hides counter via remaining: -1.
       return { used: ipUsed, remaining: -1, resetAt };
