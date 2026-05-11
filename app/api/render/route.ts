@@ -10,7 +10,7 @@ sharp.simd(false);
 sharp.concurrency(1);
 import { z } from "zod";
 import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
-import { consumeCredit, formatSetCookie, getUserKey } from "@/lib/credits";
+import { consumeCredit, formatSetCookie, getUserKey, type SetCookieDirective } from "@/lib/credits";
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/utils/supabase/server";
@@ -874,6 +874,16 @@ async function renderViaBfl(args: {
   throw new Error(`bfl_timeout_${id ?? "unknown"}`);
 }
 
+function withCookie(response: Response, setCookie: SetCookieDirective | null): Response {
+  if (setCookie) {
+    response.headers.append(
+      "Set-Cookie",
+      formatSetCookie(setCookie, process.env.NODE_ENV === "production"),
+    );
+  }
+  return response;
+}
+
 export async function POST(request: Request) {
   const forbidden = verifyOrigin(request);
   if (forbidden) return forbidden;
@@ -886,22 +896,18 @@ export async function POST(request: Request) {
   const credit = await consumeCredit(userKey);
   if (!credit.ok) {
     logger.warn({ ip, reason: credit.reason }, "render_credit_cap");
-    const body = JSON.stringify({
-      error: "credit_cap",
-      reason: credit.reason,
-      remaining: 0,
-      resetAt: credit.resetAt,
-    });
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (setCookie) {
-      headers["Set-Cookie"] = formatSetCookie(
-        setCookie,
-        process.env.NODE_ENV === "production",
-      );
-    }
-    return new Response(body, { status: 402, headers });
+    return withCookie(
+      new Response(
+        JSON.stringify({
+          error: "credit_cap",
+          reason: credit.reason,
+          remaining: 0,
+          resetAt: credit.resetAt,
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } },
+      ),
+      setCookie,
+    );
   }
 
   // Bestaande burst rate-limit. Best-effort, fail-open.
@@ -921,14 +927,14 @@ export async function POST(request: Request) {
     // is operationally useful but leaks our infra to attackers. Server log
     // captures the detail for an operator looking at the dashboard.
     logger.error("render_missing_gemini_key");
-    return Response.json({ error: "internal_error" }, { status: 500 });
+    return withCookie(Response.json({ error: "internal_error" }, { status: 500 }), setCookie);
   }
 
   let raw: unknown;
   try {
     raw = await request.json();
   } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
+    return withCookie(Response.json({ error: "invalid_json" }, { status: 400 }), setCookie);
   }
 
   const parsed = renderSchema.safeParse(raw);
@@ -939,16 +945,19 @@ export async function POST(request: Request) {
       { issues: parsed.error.flatten() },
       "render_invalid_input"
     );
-    return Response.json(
-      { error: "invalid_input", issues: parsed.error.flatten() },
-      { status: 400 }
+    return withCookie(
+      Response.json(
+        { error: "invalid_input", issues: parsed.error.flatten() },
+        { status: 400 }
+      ),
+      setCookie,
     );
   }
   const body: RenderBody = parsed.data;
 
   const photoResult = await resolvePhotoPart(body.photoDataUrl);
   if (!photoResult.ok) {
-    return Response.json({ error: photoResult.error }, { status: photoResult.status });
+    return withCookie(Response.json({ error: photoResult.error }, { status: photoResult.status }), setCookie);
   }
   const photoPart = photoResult.part;
   // Cap source dimensions before sharp ops touch it. Phone photos can be
@@ -1057,7 +1066,7 @@ export async function POST(request: Request) {
           : null,
     };
   } else {
-    return Response.json({ error: "no_product" }, { status: 400 });
+    return withCookie(Response.json({ error: "no_product" }, { status: 400 }), setCookie);
   }
 
   // Reference image strategy:
@@ -1273,17 +1282,13 @@ export async function POST(request: Request) {
       });
       const matched = await matchSourceAspect(outBytes, outMime, sourceBytes);
       logger.info({ outBytes: matched.bytes.length }, "render_bfl_ok");
-      const __bflResponse = Response.json({
-        renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
-        engine: "bfl",
-      });
-      if (setCookie) {
-        __bflResponse.headers.append(
-          "Set-Cookie",
-          formatSetCookie(setCookie, process.env.NODE_ENV === "production"),
-        );
-      }
-      return __bflResponse;
+      return withCookie(
+        Response.json({
+          renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
+          engine: "bfl",
+        }),
+        setCookie,
+      );
     } catch (err) {
       bflFailReason = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200);
       logger.warn({ err }, "render_bfl_failed_fallback_to_gemini");
@@ -1311,7 +1316,7 @@ export async function POST(request: Request) {
     const imagePart = response.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
     if (!imagePart?.inlineData?.data) {
       logger.warn("render_no_image_returned");
-      return Response.json({ error: "upstream_no_image" }, { status: 502 });
+      return withCookie(Response.json({ error: "upstream_no_image" }, { status: 502 }), setCookie);
     }
 
     const renderedBytes = Buffer.from(imagePart.inlineData.data, "base64");
@@ -1321,21 +1326,17 @@ export async function POST(request: Request) {
       renderedMime,
       sourceBytes
     );
-    const __geminiResponse = Response.json({
-      renderDataUrl: `data:${outMime};base64,${outBytes.toString("base64")}`,
-      engine: "gemini",
-      bflFailReason,
-    });
-    if (setCookie) {
-      __geminiResponse.headers.append(
-        "Set-Cookie",
-        formatSetCookie(setCookie, process.env.NODE_ENV === "production"),
-      );
-    }
-    return __geminiResponse;
+    return withCookie(
+      Response.json({
+        renderDataUrl: `data:${outMime};base64,${outBytes.toString("base64")}`,
+        engine: "gemini",
+        bflFailReason,
+      }),
+      setCookie,
+    );
   } catch (err) {
     logger.error({ err }, "render_gemini_failed");
-    return Response.json({ error: "upstream_error" }, { status: 502 });
+    return withCookie(Response.json({ error: "upstream_error" }, { status: 502 }), setCookie);
   }
 }
 
