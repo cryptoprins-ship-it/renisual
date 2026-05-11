@@ -1991,7 +1991,7 @@ export default function GevelCalcPage() {
 
       <main className="min-h-[100dvh] bg-paper text-ink print:!h-auto print:!min-h-0 print:!overflow-visible">
         <SiteNav />
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 pb-56 md:px-12 md:pb-24 lg:grid-cols-[1fr_500px] lg:gap-12 lg:px-20 lg:py-10 print:!block print:!h-auto print:!pb-0">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-12 pb-56 md:px-12 md:py-16 md:pb-24 lg:grid-cols-[1fr_500px] lg:gap-12 lg:px-20 print:!block print:!h-auto print:!pb-0">
           <div className="space-y-10 print:!h-auto print:!overflow-visible">
           <header className="border-b border-stone-200 pb-8 print-hidden">
             <div className="flex items-center justify-between gap-3">
