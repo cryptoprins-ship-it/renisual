@@ -1994,15 +1994,23 @@ export default function GevelCalcPage() {
         <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 py-8 pb-56 md:px-12 md:pb-24 lg:grid-cols-[1fr_500px] lg:gap-12 lg:px-20 lg:py-10 print:!block print:!h-auto print:!pb-0">
           <div className="space-y-10 print:!h-auto print:!overflow-visible">
           <header className="border-b border-stone-200 pb-8 print-hidden">
-            <Link
-              href="/"
-              aria-label="Home"
-              className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
-            >
-              <span aria-hidden>←</span>
-              <span>Home</span>
-            </Link>
-            <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
+            <div className="flex items-center justify-between gap-3">
+              <Link
+                href="/"
+                aria-label="Home"
+                className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
+              >
+                <span aria-hidden>←</span>
+                <span>Home</span>
+              </Link>
+              <Link
+                href="/render"
+                className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
+              >
+                {t("nav.toRender")}
+              </Link>
+            </div>
+            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
               Renisual
             </p>
             <h1 className="mt-1 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
