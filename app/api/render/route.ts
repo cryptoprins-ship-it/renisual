@@ -10,6 +10,7 @@ sharp.simd(false);
 sharp.concurrency(1);
 import { z } from "zod";
 import { renderLimit, clientKeyFromRequest, rateLimitResponse } from "@/lib/ratelimit";
+import { consumeCredit, formatSetCookie, getUserKey } from "@/lib/credits";
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/utils/supabase/server";
@@ -878,11 +879,32 @@ export async function POST(request: Request) {
   if (forbidden) return forbidden;
 
   const ip = clientKeyFromRequest(request);
-  // Rate-limiting is best-effort. If the limiter itself throws (e.g.
-  // Upstash WRONGPASS, network glitch) we fail-open and serve the render
-  // — losing rate-limit enforcement is far less bad than 500'ing every
-  // request. The shared lib also catches Upstash throws and falls back
-  // to in-memory; this is belt-and-suspenders.
+
+  // Credit cap (10 cookie / 30 IP per dag, midnight-NL reset).
+  // Spec: docs/superpowers/specs/2026-05-10-daily-credit-cap-design.md
+  const { userKey, setCookie } = getUserKey(request);
+  const credit = await consumeCredit(userKey);
+  if (!credit.ok) {
+    logger.warn({ ip, reason: credit.reason }, "render_credit_cap");
+    const body = JSON.stringify({
+      error: "credit_cap",
+      reason: credit.reason,
+      remaining: 0,
+      resetAt: credit.resetAt,
+    });
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (setCookie) {
+      headers["Set-Cookie"] = formatSetCookie(
+        setCookie,
+        process.env.NODE_ENV === "production",
+      );
+    }
+    return new Response(body, { status: 402, headers });
+  }
+
+  // Bestaande burst rate-limit. Best-effort, fail-open.
   try {
     const { success, reset } = await renderLimit.limit(ip);
     if (!success) {
@@ -1251,10 +1273,17 @@ export async function POST(request: Request) {
       });
       const matched = await matchSourceAspect(outBytes, outMime, sourceBytes);
       logger.info({ outBytes: matched.bytes.length }, "render_bfl_ok");
-      return Response.json({
+      const __bflResponse = Response.json({
         renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
         engine: "bfl",
       });
+      if (setCookie) {
+        __bflResponse.headers.append(
+          "Set-Cookie",
+          formatSetCookie(setCookie, process.env.NODE_ENV === "production"),
+        );
+      }
+      return __bflResponse;
     } catch (err) {
       bflFailReason = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200);
       logger.warn({ err }, "render_bfl_failed_fallback_to_gemini");
@@ -1292,11 +1321,18 @@ export async function POST(request: Request) {
       renderedMime,
       sourceBytes
     );
-    return Response.json({
+    const __geminiResponse = Response.json({
       renderDataUrl: `data:${outMime};base64,${outBytes.toString("base64")}`,
       engine: "gemini",
       bflFailReason,
     });
+    if (setCookie) {
+      __geminiResponse.headers.append(
+        "Set-Cookie",
+        formatSetCookie(setCookie, process.env.NODE_ENV === "production"),
+      );
+    }
+    return __geminiResponse;
   } catch (err) {
     logger.error({ err }, "render_gemini_failed");
     return Response.json({ error: "upstream_error" }, { status: 502 });
