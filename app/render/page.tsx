@@ -1222,8 +1222,8 @@ export default function RenderPage() {
       <DynamicMetadata page="render" />
       <SiteNav />
       <div className="mx-auto max-w-[1400px] px-6 py-12 pb-52 md:px-12 md:py-16 md:pb-28 lg:px-20">
-        <header className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b border-stone-200 pb-8">
-          <div>
+        <header className="mb-12 border-b border-stone-200 pb-8">
+          <div className="flex items-center justify-between gap-3">
             <Link
               href="/"
               aria-label="Home"
@@ -1232,22 +1232,22 @@ export default function RenderPage() {
               <span aria-hidden>←</span>
               <span>Home</span>
             </Link>
-            <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
-              Renisual
-            </p>
-            <h1 className="mt-1 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
-              {t("render.title")}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed text-stone-600">
-              {savedConfig?.projectName ?? t("render.subtitleStandalone")}
-            </p>
+            <Link
+              href="/gevelcalc"
+              className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
+            >
+              {t("nav.toCalc")}
+            </Link>
           </div>
-          <Link
-            href="/gevelcalc"
-            className="border border-ink px-6 py-2.5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-ink hover:text-paper"
-          >
-            {t("nav.toCalc")} →
-          </Link>
+          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
+            Renisual
+          </p>
+          <h1 className="mt-1 font-mono text-4xl font-bold uppercase tracking-normal text-ink md:text-6xl">
+            {t("render.title")}
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-stone-600">
+            {savedConfig?.projectName ?? t("render.subtitleStandalone")}
+          </p>
         </header>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_500px]">
         <div className="space-y-12">
