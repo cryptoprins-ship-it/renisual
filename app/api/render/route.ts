@@ -921,14 +921,11 @@ export async function POST(request: Request) {
     logger.warn({ err }, "render_ratelimit_failopen");
   }
 
+  // Gemini is fallback-only. The key check moved to the fallback path
+  // below so FLUX-only deployments (no Gemini key configured at all)
+  // can still render. apiKey may be undefined here — that's fine until
+  // we actually need Gemini.
   const apiKey = resolveGeminiKey();
-  if (!apiKey) {
-    // Don't echo env-var diagnostics back to the caller — that information
-    // is operationally useful but leaks our infra to attackers. Server log
-    // captures the detail for an operator looking at the dashboard.
-    logger.error("render_missing_gemini_key");
-    return withCookie(Response.json({ error: "internal_error" }, { status: 500 }), setCookie);
-  }
 
   let raw: unknown;
   try {
@@ -1294,6 +1291,17 @@ export async function POST(request: Request) {
       logger.warn({ err }, "render_bfl_failed_fallback_to_gemini");
       // intentional fall-through
     }
+  }
+
+  if (!apiKey) {
+    // FLUX is the primary engine; Gemini is fallback. If FLUX failed (or
+    // wasn't configured) AND no Gemini key is set, there's no provider left.
+    // Surface it as an upstream failure rather than an internal config error.
+    logger.error({ bflFailReason }, "render_bfl_failed_no_gemini_fallback");
+    return withCookie(
+      Response.json({ error: "render_unavailable", bflFailReason }, { status: 502 }),
+      setCookie,
+    );
   }
 
   const ai = new GoogleGenAI({ apiKey });
