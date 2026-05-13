@@ -5,7 +5,8 @@
 
 import sharp from "sharp";
 
-const RENISUAL_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
+function renisualMarkSvg(size: number): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}">
   <defs>
     <pattern id="brick" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="6">
       <rect width="10" height="6" fill="#5C2E18"/>
@@ -18,6 +19,7 @@ const RENISUAL_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
   <path d="M14 32 L50 52 L50 92 L14 72 Z" fill="#6B8E4E"/>
   <path d="M86 32 L50 52 L50 92 L86 72 Z" fill="url(#brick)"/>
 </svg>`;
+}
 
 function escapeXml(s: string): string {
   return s.replace(/[<>&"']/g, (c) => ({
@@ -61,7 +63,7 @@ export async function applyWatermark(
     <g opacity="0.6">
       <rect width="${wmW}" height="${wmH}" fill="#000" opacity="0.35" rx="${Math.round(wmH * 0.12)}"/>
       <g transform="translate(${padding}, ${(wmH - markSize) / 2})">
-        ${RENISUAL_MARK_SVG.replace(/width="\d+" height="\d+"/, `width="${markSize}" height="${markSize}"`)}
+        ${renisualMarkSvg(markSize)}
       </g>
       <text x="${padding + markSize + padding}" y="${wmH / 2 - 2}" fill="#fff" font-family="system-ui, sans-serif" font-size="${fontSize}" font-weight="600" dominant-baseline="middle">${captionText}</text>
       ${urlText ? `<text x="${padding + markSize + padding}" y="${wmH / 2 + fontSize + 2}" fill="#fff" font-family="system-ui, sans-serif" font-size="${Math.round(fontSize * 0.85)}" opacity="0.85" dominant-baseline="middle">${urlText}</text>` : ""}
