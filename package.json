@@ -44,14 +44,14 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.4",
+    "eslint-config-next": "^16.2.6",
     "install": "^0.13.0",
     "nodemailer": "^8.0.7",
-    "npm": "^11.13.0",
-    "playwright": "^1.59.1",
+    "npm": "^11.14.1",
+    "playwright": "^1.60.0",
     "postcss": "^8",
     "sharp": "^0.34.5",
-    "tailwindcss": "^4.0.0",
+    "tailwindcss": "^4.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }
