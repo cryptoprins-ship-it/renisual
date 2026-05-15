@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const LAST_UPDATED = "11 mei 2026";
-const CONTACT_EMAIL = "cryptoprins@gmail.com";
+const CONTACT_EMAIL = "info@renisual.com";
 
 export default function TermsPage() {
   return (
@@ -155,6 +155,7 @@ export default function TermsPage() {
             <Link href="/about" className="hover:text-ink">Over</Link>
             <Link href="/privacy" className="hover:text-ink">Privacy</Link>
             <Link href="/terms" className="hover:text-ink">Voorwaarden</Link>
+            <Link href="/cookiebeleid" className="hover:text-ink">Cookies</Link>
             <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-ink">Contact</a>
           </div>
           <p className="text-xs text-stone-400">© 2026 Renisual</p>

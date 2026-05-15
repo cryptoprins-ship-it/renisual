@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/about", priority: 0.7 },
     { path: "/privacy", priority: 0.4 },
     { path: "/terms", priority: 0.4 },
+    { path: "/cookiebeleid", priority: 0.4 },
     { path: "/wachten", priority: 0.5 },
     { path: "/leaderboard", priority: 0.5 },
   ];

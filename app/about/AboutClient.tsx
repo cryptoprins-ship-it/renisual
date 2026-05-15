@@ -87,7 +87,8 @@ export default function AboutClient() {
             )}
             <Link href="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-ink transition-colors">Voorwaarden</Link>
-            <a href="mailto:cryptoprins@gmail.com" className="hover:text-ink transition-colors">Contact</a>
+            <Link href="/cookiebeleid" className="hover:text-ink transition-colors">Cookies</Link>
+            <a href="mailto:info@renisual.com" className="hover:text-ink transition-colors">Contact</a>
           </div>
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
             © 2026 Renisual

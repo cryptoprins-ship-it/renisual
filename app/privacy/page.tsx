@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const LAST_UPDATED = "11 mei 2026";
-const CONTACT_EMAIL = "cryptoprins@gmail.com";
+const CONTACT_EMAIL = "info@renisual.com";
 
 export default function PrivacyPage() {
   return (
@@ -131,8 +131,13 @@ export default function PrivacyPage() {
             <section>
               <h2 className="font-display text-2xl tracking-tight">Cookies</h2>
               <p className="mt-2">
-                Renisual gebruikt alleen functionele opslag (localStorage) voor zaken als taalkeuze en je
-                laatst-opgeslagen project. Geen tracking-cookies, geen advertising-cookies.
+                Renisual zet alleen strikt noodzakelijke cookies (sessie, render-cap-teller) en
+                gebruikt localStorage voor taalkeuze en je laatst opgeslagen project. Geen
+                tracking- of advertentiecookies. Volledig overzicht op{" "}
+                <Link href="/cookiebeleid" className="underline underline-offset-4 hover:text-accent">
+                  /cookiebeleid
+                </Link>
+                .
               </p>
             </section>
 
@@ -168,6 +173,7 @@ export default function PrivacyPage() {
             <Link href="/about" className="hover:text-ink">Over</Link>
             <Link href="/privacy" className="hover:text-ink">Privacy</Link>
             <Link href="/terms" className="hover:text-ink">Voorwaarden</Link>
+            <Link href="/cookiebeleid" className="hover:text-ink">Cookies</Link>
             <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-ink">Contact</a>
           </div>
           <p className="text-xs text-stone-400">© 2026 Renisual</p>

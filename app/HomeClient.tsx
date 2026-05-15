@@ -369,7 +369,8 @@ export default function HomeClient() {
             {showSubsidies && <Link href="/subsidie" className="hover:underline">{t("home.nav.subsidies")}</Link>}
             <Link href="/privacy" className="hover:underline">Privacy</Link>
             <Link href="/terms" className="hover:underline">Voorwaarden</Link>
-            <a href="mailto:cryptoprins@gmail.com" className="hover:underline">Contact</a>
+            <Link href="/cookiebeleid" className="hover:underline">Cookies</Link>
+            <a href="mailto:info@renisual.com" className="hover:underline">Contact</a>
           </div>
           <p className="text-xs text-stone-400">© 2026 Renisual</p>
         </div>
