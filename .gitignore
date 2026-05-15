@@ -41,3 +41,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev / IDE / harness artifacts (not source-of-truth)
+.vscode/
+.playwright-mcp/
+browser-harness/
+dev.log
+
+# experiment outputs + ad-hoc screenshots
+/public/test-outputs/
+rendering*.png
+patches.png
+sam-mask.png
+
+# stale backups
+*.bak
+*.before-*

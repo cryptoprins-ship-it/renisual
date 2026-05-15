@@ -1,0 +1,13 @@
+# Security policy for renisual.com
+# RFC 9116 compliant
+
+Contact: mailto:info@renisual.com
+Expires: 2027-05-13T00:00:00.000Z
+Preferred-Languages: nl, en
+Canonical: https://renisual.com/.well-known/security.txt
+
+# Found a security issue? Email the contact above with:
+# - Affected URL / endpoint
+# - Steps to reproduce
+# - Impact assessment
+# We respond within 5 business days. No bug bounty program.
