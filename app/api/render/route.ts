@@ -15,6 +15,7 @@ import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/utils/supabase/server";
 import { resolveBflPrompt, detectFamilyAndShape } from "@/lib/renderPrompts";
+import { applyWatermark } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -1278,10 +1279,14 @@ export async function POST(request: Request) {
         referenceParts,
       });
       const matched = await matchSourceAspect(outBytes, outMime, sourceBytes);
-      logger.info({ outBytes: matched.bytes.length }, "render_bfl_ok");
+      const branded = await applyWatermark(matched.bytes, {
+        caption: "Rendered by Renisual AI",
+        url: "renisual.com",
+      });
+      logger.info({ outBytes: branded.length }, "render_bfl_ok");
       return withCookie(
         Response.json({
-          renderDataUrl: `data:${matched.mime};base64,${matched.bytes.toString("base64")}`,
+          renderDataUrl: `data:image/jpeg;base64,${branded.toString("base64")}`,
           engine: "bfl",
         }),
         setCookie,
@@ -1329,14 +1334,18 @@ export async function POST(request: Request) {
 
     const renderedBytes = Buffer.from(imagePart.inlineData.data, "base64");
     const renderedMime = imagePart.inlineData.mimeType ?? "image/png";
-    const { bytes: outBytes, mime: outMime } = await matchSourceAspect(
+    const { bytes: outBytes } = await matchSourceAspect(
       renderedBytes,
       renderedMime,
       sourceBytes
     );
+    const branded = await applyWatermark(outBytes, {
+      caption: "Rendered by Renisual AI",
+      url: "renisual.com",
+    });
     return withCookie(
       Response.json({
-        renderDataUrl: `data:${outMime};base64,${outBytes.toString("base64")}`,
+        renderDataUrl: `data:image/jpeg;base64,${branded.toString("base64")}`,
         engine: "gemini",
         bflFailReason,
       }),
