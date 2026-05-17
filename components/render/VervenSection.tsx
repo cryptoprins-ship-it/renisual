@@ -101,9 +101,11 @@ export function VervenSection({
             type="button"
             onClick={handleRender}
             disabled={!canRender}
-            className="rounded bg-stone-900 px-6 py-3 text-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-stone-900 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-50 transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {loading ? t("render.verven.loading") : t("render.verven.cta")}
+            {loading
+              ? t("render.verven.loading")
+              : t("render.generate.cta", { credits: 1 })}
           </button>
           <CreditCounter remaining={creditsRemaining} />
         </div>

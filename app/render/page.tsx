@@ -2091,7 +2091,7 @@ export default function RenderPage() {
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
                   (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
                 }
-                className="col-span-2 border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40 md:col-auto"
+                className="col-span-2 bg-stone-900 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-50 transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
                 {(() => {
                   // Spanl SKUs (e.g. PB7038A) already encode the colour, so
@@ -2134,7 +2134,7 @@ export default function RenderPage() {
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
                   (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
                 }
-                className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
+                className="col-span-2 bg-stone-900 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-50 transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
                 {t("render.generate.cta", { credits: 1 })}
               </button>
