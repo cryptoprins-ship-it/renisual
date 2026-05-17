@@ -1128,9 +1128,62 @@ export default function RenderPage() {
     remaining: number;
     resetAt: string;
   } | null>(null);
-  // Paint-mode (verven) state: raw File handle for SAM upload + method tab.
+  // Paint-mode (verven) state: raw File handle, method tab, RAL pick,
+  // render result + loading/error mirrors of the bekleden flow so the
+  // single shared "Genereer" footer button dispatches per method.
   const [paintFile, setPaintFile] = useState<File | null>(null);
   const [method, setMethod] = useState<RenderMethod>("bekleden");
+  const [paintRalCode, setPaintRalCode] = useState<string | null>(null);
+  const [paintResultUrl, setPaintResultUrl] = useState<string | null>(null);
+  const [paintLoading, setPaintLoading] = useState(false);
+  const [paintError, setPaintError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (paintResultUrl) URL.revokeObjectURL(paintResultUrl);
+    };
+  }, [paintResultUrl]);
+
+  async function handlePaintGenerate() {
+    if (!paintFile || !paintRalCode) return;
+    setPaintLoading(true);
+    setPaintError(null);
+    if (paintResultUrl) {
+      URL.revokeObjectURL(paintResultUrl);
+      setPaintResultUrl(null);
+    }
+    try {
+      const fd = new FormData();
+      fd.append("photo", paintFile);
+      fd.append("ralCode", paintRalCode);
+      const res = await fetch("/api/render/paint", { method: "POST", body: fd });
+      if (!res.ok) {
+        let body: { error?: string; remaining?: number } = {};
+        try {
+          body = await res.json();
+        } catch {
+          /* non-JSON */
+        }
+        if (res.status === 402 && typeof body.remaining === "number") {
+          setCredits((prev) =>
+            prev ? { ...prev, remaining: body.remaining ?? 0 } : prev,
+          );
+        }
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
+      const remainingHdr = res.headers.get("x-credit-remaining");
+      const remaining = remainingHdr ? parseInt(remainingHdr, 10) : NaN;
+      if (!Number.isNaN(remaining)) {
+        setCredits((prev) => (prev ? { ...prev, remaining } : prev));
+      }
+      const blob = await res.blob();
+      setPaintResultUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      setPaintError(e instanceof Error ? e.message : "render_failed");
+    } finally {
+      setPaintLoading(false);
+    }
+  }
 
   // After page reload sourcePhoto is restored from localStorage without a
   // File — re-derive paintFile from the data URL so VervenSection doesn't
@@ -1443,14 +1496,37 @@ export default function RenderPage() {
               {t("render.method.verven.title")}
             </p>
             <VervenSection
-              key={sourcePhoto || "no-photo"}
               photoSrc={sourcePhoto || null}
-              photoFile={paintFile}
-              creditsRemaining={credits?.remaining ?? null}
-              onCreditsChanged={(r) =>
-                setCredits((prev) => (prev ? { ...prev, remaining: r } : null))
-              }
+              ralCode={paintRalCode}
+              onRalChange={setPaintRalCode}
             />
+            {paintError && (
+              <div className="mt-3 text-sm text-red-700">
+                {t("render.verven.errorPrefix")} {paintError}
+              </div>
+            )}
+            {paintResultUrl && (
+              <div className="mt-6">
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
+                  {t("render.verven.result.label")}
+                </p>
+                <img
+                  src={paintResultUrl}
+                  alt={t("render.verven.result.alt")}
+                  className="block max-w-full"
+                />
+                <a
+                  href={paintResultUrl}
+                  download="renisual-verfvariant.jpg"
+                  className="mt-2 inline-block text-sm underline"
+                >
+                  {t("render.download")}
+                </a>
+                <p className="mt-2 text-xs text-stone-600">
+                  {t("render.verven.disclaimer")}
+                </p>
+              </div>
+            )}
           </section>
         )}
 
@@ -2127,16 +2203,29 @@ export default function RenderPage() {
             <>
               <button
                 type="button"
-                onClick={handleGenerate}
+                onClick={method === "verven" ? handlePaintGenerate : handleGenerate}
                 disabled={
-                  isGenerating ||
-                  !sourcePhoto ||
-                  (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
-                  (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
+                  method === "verven"
+                    ? (paintLoading ||
+                        !sourcePhoto ||
+                        !paintRalCode ||
+                        (credits !== null &&
+                          credits.remaining >= 0 &&
+                          credits.remaining < 1))
+                    : (isGenerating ||
+                        !sourcePhoto ||
+                        (brand === "spanl"
+                          ? !selectedPanel
+                          : !selectedKeralitProduct || !selectedKeralitColor) ||
+                        (credits !== null &&
+                          credits.remaining >= 0 &&
+                          credits.remaining < 1))
                 }
                 className="col-span-2 bg-stone-900 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-50 transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
-                {t("render.generate.cta", { credits: 1 })}
+                {method === "verven" && paintLoading
+                  ? t("render.verven.loading")
+                  : t("render.generate.cta", { credits: 1 })}
               </button>
               <div className="col-span-2 mt-2 md:col-auto">
                 <CreditCounter remaining={credits?.remaining ?? null} />
