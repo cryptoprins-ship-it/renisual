@@ -1,5 +1,6 @@
-// Daily 10-credit cap, midnight-NL reset, cookie+IP scope.
+// Weekly 10-credit cap, Monday-00:00-NL reset, cookie+IP scope.
 // Spec: docs/superpowers/specs/2026-05-10-daily-credit-cap-design.md
+// Note: bucket = ISO week ("YYYY-Wnn"), cap-keys live for ~9 days TTL.
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { Redis } from "@upstash/redis";
@@ -48,7 +49,7 @@ export const COOKIE_NAME = "__rs_uid";
 export const COOKIE_CAP = 10;
 export const IP_CAP = 30;
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
-const KEY_TTL_SECONDS = 60 * 60 * 36; // 36h, dekt 25h DST-dag
+const KEY_TTL_SECONDS = 60 * 60 * 24 * 9; // 9 dagen, dekt week + DST-buffer
 
 export type UserKey = {
   cookie: string | null;
@@ -71,7 +72,6 @@ export type SetCookieDirective = {
   maxAgeSeconds: number;
 };
 
-// === Implementations come in Tasks 3 + 4. ===
 export function dateNL(now: Date = new Date()): string {
   // Intl.DateTimeFormat in Europe/Amsterdam respecteert DST automatisch.
   const fmt = new Intl.DateTimeFormat("en-CA", {
@@ -83,30 +83,46 @@ export function dateNL(now: Date = new Date()): string {
   return fmt.format(now); // "YYYY-MM-DD" — en-CA gebruikt ISO-orde
 }
 
-export function nextResetISO(now: Date = new Date()): string {
-  // Volgende 00:00 in Europe/Amsterdam, terug-vertaald naar UTC ISO.
-  const today = dateNL(now);
-  // Parse "YYYY-MM-DD" → next day. Date math in UTC, dan offset corrigeren.
-  const [y, m, d] = today.split("-").map(Number);
-  // Construeer een UTC-tijdstempel voor middernacht Amsterdam-tijd morgen.
-  // Approach: probeer 00:00 UTC volgende dag, dan corrigeer met de offset
-  // van Amsterdam ten opzichte van UTC op die datum.
-  const nextDayUtc = new Date(Date.UTC(y, m - 1, d + 1, 0, 0, 0));
-  // Bepaal Amsterdam-offset op dat moment (in minuten, positief = ten oosten)
+// Bucket-key voor weekly cap. ISO 8601-week — maandag = eerste dag, donderdag
+// bepaalt het jaar. Format: "YYYY-Wnn" (bv. "2026-W20").
+export function weekNL(now: Date = new Date()): string {
+  const [y, mo, da] = dateNL(now).split("-").map(Number);
+  const dt = new Date(Date.UTC(y, mo - 1, da));
+  const dayNum = (dt.getUTCDay() + 6) % 7;
+  dt.setUTCDate(dt.getUTCDate() - dayNum + 3);
+  const isoYear = dt.getUTCFullYear();
+  const firstThu = new Date(Date.UTC(isoYear, 0, 4));
+  const firstThuOffset = (firstThu.getUTCDay() + 6) % 7;
+  firstThu.setUTCDate(firstThu.getUTCDate() - firstThuOffset + 3);
+  const weekNum =
+    1 + Math.round((dt.getTime() - firstThu.getTime()) / (7 * 86400000));
+  return `${isoYear}-W${String(weekNum).padStart(2, "0")}`;
+}
+
+function amsterdamOffsetMs(at: Date): number {
   const offsetFmt = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Amsterdam",
     timeZoneName: "shortOffset",
   });
-  const parts = offsetFmt.formatToParts(nextDayUtc);
+  const parts = offsetFmt.formatToParts(at);
   const tz = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+1";
-  // tz format is e.g. "GMT+2" or "GMT+1"
-  const match = /GMT([+-])(\d+)(?::(\d+))?/.exec(tz);
-  const sign = match?.[1] === "-" ? -1 : 1;
-  const hours = match ? Number(match[2]) : 1;
-  const mins = match?.[3] ? Number(match[3]) : 0;
-  const offsetMs = sign * (hours * 60 + mins) * 60 * 1000;
-  // 00:00 Amsterdam = 00:00 UTC - offset
-  return new Date(nextDayUtc.getTime() - offsetMs).toISOString();
+  const m = tz.match(/GMT([+-])(\d+)(?::(\d+))?/);
+  const sign = m?.[1] === "-" ? -1 : 1;
+  const hours = m ? Number(m[2]) : 1;
+  const mins = m?.[3] ? Number(m[3]) : 0;
+  return sign * (hours * 60 + mins) * 60 * 1000;
+}
+
+export function nextResetISO(now: Date = new Date()): string {
+  // Volgende maandag 00:00 in Europe/Amsterdam → UTC ISO.
+  const [y, mo, da] = dateNL(now).split("-").map(Number);
+  const todayUtc = new Date(Date.UTC(y, mo - 1, da));
+  const day = todayUtc.getUTCDay(); // 0=Sun..6=Sat
+  const daysUntilMonday = day === 1 ? 7 : (8 - day) % 7 || 7;
+  const nextMonUtc = new Date(
+    Date.UTC(y, mo - 1, da + daysUntilMonday, 0, 0, 0),
+  );
+  return new Date(nextMonUtc.getTime() - amsterdamOffsetMs(nextMonUtc)).toISOString();
 }
 
 function getCookieSecret(): string | null {
@@ -197,7 +213,7 @@ export async function checkCredits(userKey: UserKey): Promise<CreditCheck> {
     // Fail-open: Upstash unavailable, signal "unknown" to the UI.
     return { used: 0, remaining: -1, resetAt };
   }
-  const date = dateNL();
+  const date = weekNL();
   try {
     const pipe = redis.pipeline();
     pipe.get<number>(ipKey(date, userKey.ip));
@@ -225,7 +241,7 @@ export async function consumeCredit(userKey: UserKey): Promise<CreditConsumeResu
     // Upstash unavailable: fail-open. Spec: liever eens een gratis dag dan 500's.
     return { ok: true, remaining: -1, resetAt };
   }
-  const date = dateNL();
+  const date = weekNL();
   try {
     const ipK = ipKey(date, userKey.ip);
     if (userKey.cookie) {

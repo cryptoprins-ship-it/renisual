@@ -15,7 +15,7 @@ export default function CreditCounter({ remaining, total = 10 }: Props) {
       }`}
       aria-live="polite"
     >
-      {remaining}/{total} over vandaag
+      {remaining}/{total} over deze week
     </span>
   );
 }

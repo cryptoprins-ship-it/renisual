@@ -14,8 +14,8 @@ export default function CreditWallNotice({ remaining }: Props) {
       aria-live="polite"
     >
       <p>
-        Je <strong>10 gratis renders</strong> voor vandaag zijn op (
-        {remaining}/10 over). Morgen om middernacht weer 10.
+        Je <strong>10 gratis renders</strong> voor deze week zijn op (
+        {remaining}/10 over). Volgende maandag 00:00 weer 10.
       </p>
       <p className="mt-2 text-xs text-stone-600">
         <Link
