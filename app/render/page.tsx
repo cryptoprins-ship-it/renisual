@@ -1500,33 +1500,6 @@ export default function RenderPage() {
               ralCode={paintRalCode}
               onRalChange={setPaintRalCode}
             />
-            {paintError && (
-              <div className="mt-3 text-sm text-red-700">
-                {t("render.verven.errorPrefix")} {paintError}
-              </div>
-            )}
-            {paintResultUrl && (
-              <div className="mt-6">
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">
-                  {t("render.verven.result.label")}
-                </p>
-                <img
-                  src={paintResultUrl}
-                  alt={t("render.verven.result.alt")}
-                  className="block max-w-full"
-                />
-                <a
-                  href={paintResultUrl}
-                  download="renisual-verfvariant.jpg"
-                  className="mt-2 inline-block text-sm underline"
-                >
-                  {t("render.download")}
-                </a>
-                <p className="mt-2 text-xs text-stone-600">
-                  {t("render.verven.disclaimer")}
-                </p>
-              </div>
-            )}
           </section>
         )}
 
@@ -1801,7 +1774,6 @@ export default function RenderPage() {
 
         </div>
 
-        {method === "bekleden" && (
         <aside ref={rendersSectionRef} className="flex scroll-mt-20 flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto">
           <header>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
@@ -1822,6 +1794,54 @@ export default function RenderPage() {
             </div>
           )}
 
+        {method === "verven" && (
+          <section>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+                {t("render.verven.result.label")}
+              </p>
+            </div>
+            {paintLoading && (
+              <div className="mb-3 rounded-md border border-stone-300 bg-stone-50 p-3 text-xs text-stone-700">
+                {t("render.verven.loading")}
+              </div>
+            )}
+            {paintError && (
+              <div className="mb-3 text-sm text-red-700">
+                {t("render.verven.errorPrefix")} {paintError}
+              </div>
+            )}
+            {paintResultUrl ? (
+              <div>
+                <img
+                  src={paintResultUrl}
+                  alt={t("render.verven.result.alt")}
+                  className="block w-full border border-stone-200 object-contain"
+                />
+                <a
+                  href={paintResultUrl}
+                  download="renisual-verfvariant.jpg"
+                  className="mt-2 inline-block text-sm underline"
+                >
+                  {t("render.download")}
+                </a>
+                <p className="mt-2 text-xs text-stone-600">
+                  {t("render.verven.disclaimer")}
+                </p>
+              </div>
+            ) : (
+              !paintLoading && (
+                <p className="text-sm text-stone-500">
+                  {paintRalCode
+                    ? t("render.verven.readyHint")
+                    : t("render.verven.pickRalHint")}
+                </p>
+              )
+            )}
+          </section>
+        )}
+
+        {method === "bekleden" && (
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
@@ -2127,8 +2147,8 @@ export default function RenderPage() {
             </div>
           )}
         </section>
-        </aside>
         )}
+        </aside>
         </div>
       </div>
 
