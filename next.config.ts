@@ -31,6 +31,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
+  poweredByHeader: false,
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
