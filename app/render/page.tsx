@@ -23,6 +23,8 @@ import BatchStatusBand from "@/components/render/BatchStatusBand";
 import VariantSlot, { type VariantSlotState } from "@/components/render/VariantSlot";
 import CreditCounter from "@/components/render/CreditCounter";
 import CreditWallNotice from "@/components/render/CreditWallNotice";
+import { MethodSwitcher, type RenderMethod } from "@/components/render/MethodSwitcher";
+import { VervenSection } from "@/components/render/VervenSection";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 // Local fallback for the /render source photo. Survives navigation
@@ -413,6 +415,7 @@ export default function RenderPage() {
       const compressed = await compressUnderSize(dataUrl, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
+      setPaintFile(new File([blob], file, { type: blob.type || "image/jpeg" }));
       try { localStorage.setItem(LS_RENDER_PHOTO, compressed); } catch { /* quota — ignore */ }
     } catch {
       setErrorMsg(t("render.error.upload"));
@@ -695,6 +698,7 @@ export default function RenderPage() {
       const compressed = await compressUnderSize(raw, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
+      setPaintFile(file);
       try { localStorage.setItem(LS_RENDER_PHOTO, compressed); } catch { /* quota — ignore */ }
     } catch {
       setErrorMsg(t("render.error.upload"));
@@ -1124,6 +1128,28 @@ export default function RenderPage() {
     remaining: number;
     resetAt: string;
   } | null>(null);
+  // Paint-mode (verven) state: raw File handle for SAM upload + method tab.
+  const [paintFile, setPaintFile] = useState<File | null>(null);
+  const [method, setMethod] = useState<RenderMethod>("bekleden");
+
+  // After page reload sourcePhoto is restored from localStorage without a
+  // File — re-derive paintFile from the data URL so VervenSection doesn't
+  // show the "upload eerst" warning on restored state.
+  useEffect(() => {
+    if (paintFile || !sourcePhoto) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(sourcePhoto);
+        const blob = await res.blob();
+        if (cancelled) return;
+        setPaintFile(new File([blob], "restored.jpg", { type: blob.type || "image/jpeg" }));
+      } catch {
+        /* leave null — user can re-upload */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sourcePhoto, paintFile]);
 
   // "Bereken materiaal →" handler. Uploads the most relevant variant
   // (baseline if present, otherwise the latest) into the
@@ -1267,11 +1293,11 @@ export default function RenderPage() {
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/"
-              aria-label="Home"
+              aria-label={t("nav.home.aria")}
               className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
             >
               <span aria-hidden>←</span>
-              <span>Home</span>
+              <span>{t("nav.home")}</span>
             </Link>
             <Link
               href="/gevelcalc"
@@ -1404,6 +1430,32 @@ export default function RenderPage() {
           )}
         </section>
 
+        <section>
+          <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            {t("render.method.label")}
+          </p>
+          <MethodSwitcher method={method} onChange={setMethod} />
+        </section>
+
+        {method === "verven" && (
+          <section>
+            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              {t("render.method.verven.title")}
+            </p>
+            <VervenSection
+              key={sourcePhoto || "no-photo"}
+              photoSrc={sourcePhoto || null}
+              photoFile={paintFile}
+              creditsRemaining={credits?.remaining ?? null}
+              onCreditsChanged={(r) =>
+                setCredits((prev) => (prev ? { ...prev, remaining: r } : null))
+              }
+            />
+          </section>
+        )}
+
+        {method === "bekleden" && (
+        <>
         <section ref={panelSectionRef} className="scroll-mt-20">
           <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
             02 — {t("render.section.supplier")}
@@ -1668,9 +1720,12 @@ export default function RenderPage() {
             </div>
           )}
         </section>
+        </>
+        )}
 
         </div>
 
+        {method === "bekleden" && (
         <aside ref={rendersSectionRef} className="flex scroll-mt-20 flex-col gap-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto">
           <header>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
@@ -1997,6 +2052,7 @@ export default function RenderPage() {
           )}
         </section>
         </aside>
+        )}
         </div>
       </div>
 
@@ -2047,7 +2103,9 @@ export default function RenderPage() {
                     brand === "spanl"
                       ? selectedPanel?.sku
                       : selectedKeralitColor?.name;
-                  return productLabel ? `Genereer (${productLabel})` : "Genereer";
+                  return productLabel
+                    ? t("render.generate.withProduct", { product: productLabel })
+                    : t("render.generate");
                 })()}
               </button>
               <div className="mt-2">
@@ -2078,7 +2136,7 @@ export default function RenderPage() {
                 }
                 className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
-                Genereer (1 credit)
+                {t("render.generate.cta", { credits: 1 })}
               </button>
               <div className="col-span-2 mt-2 md:col-auto">
                 <CreditCounter remaining={credits?.remaining ?? null} />
