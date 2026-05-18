@@ -21,11 +21,19 @@ export type CalcPhotoPdfOpening = {
   count: number;
 };
 
+export type CalcPhotoPdfImage = {
+  data: Buffer;
+  format: "jpg" | "png";
+};
+
 export type CalcPhotoPdfSide = {
   name: string;
   widthCm: number;
   heightCm: number;
-  photoDataUrl?: string;
+  // Decoded image (Buffer + format). @react-pdf v4 Image src accepteert
+  // dit shape voor server-side rendering. Raw data-URLs werken niet
+  // betrouwbaar in renderToBuffer.
+  photo?: CalcPhotoPdfImage;
   openings: CalcPhotoPdfOpening[];
 };
 
@@ -138,9 +146,9 @@ function SideBlock({
         </Text>
       </View>
       <View style={styles.inner}>
-        {side.photoDataUrl ? (
+        {side.photo ? (
           <View style={styles.photoBox}>
-            <Image src={side.photoDataUrl} style={styles.photo} />
+            <Image src={side.photo} style={styles.photo} />
           </View>
         ) : (
           <View style={styles.placeholder}>

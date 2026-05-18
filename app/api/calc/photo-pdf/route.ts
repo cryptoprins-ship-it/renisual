@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyOrigin } from "@/lib/verifyOrigin";
-import { buildCalcPhotoPdf } from "@/lib/calc/photoPdf";
+import {
+  buildCalcPhotoPdf,
+  type CalcPhotoPdfImage,
+} from "@/lib/calc/photoPdf";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+// Parse `data:image/<jpeg|png>;base64,<bytes>` naar { data: Buffer, format }.
+// @react-pdf renderToBuffer accepteert raw data-URLs niet betrouwbaar
+// server-side; dit shape werkt wel deterministisch.
+function decodePhoto(dataUrl: string): CalcPhotoPdfImage | undefined {
+  const m = /^data:image\/(jpe?g|png);base64,([A-Za-z0-9+/=]+)$/.exec(
+    dataUrl.trim(),
+  );
+  if (!m) return undefined;
+  const format = m[1].toLowerCase() === "png" ? "png" : "jpg";
+  try {
+    const data = Buffer.from(m[2], "base64");
+    if (data.length === 0) return undefined;
+    return { data, format };
+  } catch {
+    return undefined;
+  }
+}
 
 const openingSchema = z.object({
   type: z.enum(["window", "door", "other"]),
@@ -52,10 +73,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const decodedSides = parsed.data.sides.map((s) => ({
+      name: s.name,
+      widthCm: s.widthCm,
+      heightCm: s.heightCm,
+      photo: s.photoDataUrl ? decodePhoto(s.photoDataUrl) : undefined,
+      openings: s.openings,
+    }));
     const pdf = await buildCalcPhotoPdf({
       generatedAt: new Date(),
       projectName: parsed.data.projectName,
-      sides: parsed.data.sides,
+      sides: decodedSides,
     });
     return new NextResponse(new Uint8Array(pdf), {
       status: 200,
