@@ -3039,12 +3039,12 @@ export default function GevelCalcPage() {
                   <button type="button" onClick={exportConfig} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
                   </button>
-                  <button type="button" onClick={() => exportPdf(isTouchDevice())} className="rounded-xl border border-ink px-3 py-2 text-sm">
-                    {t("gc.btnExportConfigPdf")}
-                  </button>
-                  <button type="button" onClick={() => exportPhotoPdf(isTouchDevice())} className="rounded-xl border border-ink px-3 py-2 text-sm">
-                    {t("gc.btnExportPhotoPdf")}
-                  </button>
+                  {/* PDF berekening + PDF foto's+maten zijn bewust verwijderd
+                      in per-zijde mode: de offerte bevat nu de BOM (berekening)
+                      én de gevelmaten + visualisatie. Beide PDF-exports werden
+                      een lead-leak (klant/klusbedrijf kon zonder offerte-aanvraag
+                      een leverancier-ready spec sheet downloaden). Snel-mode
+                      heeft deze knoppen al nooit gehad. */}
                   <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}
                     <input
