@@ -913,6 +913,10 @@ export default function GevelCalcPage() {
   const [uploadErrorSideId, setUploadErrorSideId] = useState<string | null>(null);
   // Offerte download flow (POST /api/offertes -> PDF + ref + public URL).
   const [offerteSubmitting, setOfferteSubmitting] = useState(false);
+  const offerteContactComplete =
+    customerEmail.trim() !== "" &&
+    customerLastName.trim() !== "" &&
+    customerAddress.trim() !== "";
   const [offerteResult, setOfferteResult] = useState<{ ref: string; offerteUrl: string } | null>(null);
   // Opt-in to include indicative prices on the PDF. Default off per
   // user request — the offerte is a BOM document by default; prices
@@ -3025,8 +3029,9 @@ export default function GevelCalcPage() {
               <button
                 type="button"
                 onClick={downloadOfferte}
-                disabled={offerteSubmitting || !selectedProduct || !materialResult}
-                className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
+                disabled={offerteSubmitting || !selectedProduct || !materialResult || !offerteContactComplete}
+                title={!offerteContactComplete ? "Vul naam, e-mail en adres in om de offerte aan te vragen." : undefined}
+                className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {offerteSubmitting ? t("gc.btnExportPdfBusy") : "Vraag offerte aan"}
               </button>
@@ -3212,8 +3217,9 @@ export default function GevelCalcPage() {
                 <button
                   type="button"
                   onClick={downloadOfferte}
-                  disabled={offerteSubmitting}
-                  className="mt-3 flex w-full items-center justify-center gap-2 bg-accent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+                  disabled={offerteSubmitting || !offerteContactComplete}
+                  title={!offerteContactComplete ? "Vul naam, e-mail en adres in om de offerte aan te vragen." : undefined}
+                  className="mt-3 flex w-full items-center justify-center gap-2 bg-accent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span>
                     {offerteSubmitting ? t("gc.btnExportPdfBusy") : "Vraag offerte aan"}
