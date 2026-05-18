@@ -51,12 +51,13 @@ export const DEFAULT_SPANL_PROFILES: ProfileSet = {
     priceEachExVat: 7.95,
   },
   endProfile: {
-    // 3,8 m sticks (not 3 m as previously stored). Price corrected per
-    // Spanl catalog. The same SKU also serves as the BOTTOM rail for
-    // vertical installs (mounted upside down with drainage holes
-    // drilled every 1 m + primer-coated interior — see install notes).
+    // 3 m sticks per Spanl-leverancier (2026-05-18 update: 3,8 m wordt
+    // niet meer geleverd). Same SKU dient ook als BOTTOM rail bij
+    // verticale installs (omgekeerd gemonteerd met drainage-gaten elke
+    // 1 m + primer-coated interior — zie install-notes). Eindprofielen
+    // lopen ook rond elk kozijn (alle 4 zijden) — zie calc-loop.
     name: "SBT J Channel eindprofiel",
-    lengthMm: 3800,
+    lengthMm: 3000,
     priceEachExVat: 14.95,
   },
   connectionProfile: {
@@ -285,6 +286,22 @@ export function calculateMaterialResult({
     // 0.55m extensions = 5 sticks).
     cornerMeters += heightM;
     cornerSegments.push(heightM);
+
+    // Eindprofiel loopt ook rond elk kozijn — alle 4 zijden per opening
+    // (boven, onder, links, rechts). Per kozijn = 2×breedte + 2×hoogte.
+    // Bin-packing pool deelt offcuts met gevel-randen.
+    side.openings.forEach((opening) => {
+      const opW = toNumber(opening.width) / 100;
+      const opH = toNumber(opening.height) / 100;
+      const opCount = toNumber(opening.count);
+      if (opW <= 0 || opH <= 0 || opCount <= 0) return;
+      for (let i = 0; i < opCount; i++) {
+        // 4 segmenten per kozijn — niet één perimeter-segment, omdat
+        // hoeken afzonderlijk gesneden worden (mitre cuts).
+        endSegments.push(opW, opW, opH, opH);
+        endMeters += 2 * opW + 2 * opH;
+      }
+    });
 
     if (orientation === "horizontal") {
       // Bottom: Beginprofiel (QBJ).  Top: Eindprofiel (SBT-J).
