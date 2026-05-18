@@ -287,19 +287,25 @@ export function calculateMaterialResult({
     cornerMeters += heightM;
     cornerSegments.push(heightM);
 
-    // Eindprofiel loopt ook rond elk kozijn — alle 4 zijden per opening
-    // (boven, onder, links, rechts). Per kozijn = 2×breedte + 2×hoogte.
-    // Bin-packing pool deelt offcuts met gevel-randen.
+    // Eindprofiel loopt rond elke opening — 4 zijden voor kozijnen/ramen
+    // (boven, onder, links, rechts), 3 zijden voor deuren (geen
+    // onderdorpel, deur zit op de grond). Hoeken zijn mitre-snedes, dus
+    // 4 (of 3) losse segmenten ipv één perimeter-segment.
     side.openings.forEach((opening) => {
       const opW = toNumber(opening.width) / 100;
       const opH = toNumber(opening.height) / 100;
       const opCount = toNumber(opening.count);
       if (opW <= 0 || opH <= 0 || opCount <= 0) return;
+      const isDoor = opening.type === "door";
       for (let i = 0; i < opCount; i++) {
-        // 4 segmenten per kozijn — niet één perimeter-segment, omdat
-        // hoeken afzonderlijk gesneden worden (mitre cuts).
-        endSegments.push(opW, opW, opH, opH);
-        endMeters += 2 * opW + 2 * opH;
+        if (isDoor) {
+          // Deur: alleen boven + 2× zijkant — geen onderprofiel.
+          endSegments.push(opW, opH, opH);
+          endMeters += opW + 2 * opH;
+        } else {
+          endSegments.push(opW, opW, opH, opH);
+          endMeters += 2 * opW + 2 * opH;
+        }
       }
     });
 
