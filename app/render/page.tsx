@@ -23,6 +23,8 @@ import BatchStatusBand from "@/components/render/BatchStatusBand";
 import VariantSlot, { type VariantSlotState } from "@/components/render/VariantSlot";
 import CreditCounter from "@/components/render/CreditCounter";
 import CreditWallNotice from "@/components/render/CreditWallNotice";
+import { MethodSwitcher, type RenderMethod } from "@/components/render/MethodSwitcher";
+import { VervenSection } from "@/components/render/VervenSection";
 
 const STORAGE_KEY = "renisual-gevelcalc-v1";
 // Local fallback for the /render source photo. Survives navigation
@@ -413,6 +415,7 @@ export default function RenderPage() {
       const compressed = await compressUnderSize(dataUrl, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
+      setPaintFile(new File([blob], file, { type: blob.type || "image/jpeg" }));
       try { localStorage.setItem(LS_RENDER_PHOTO, compressed); } catch { /* quota — ignore */ }
     } catch {
       setErrorMsg(t("render.error.upload"));
@@ -695,6 +698,7 @@ export default function RenderPage() {
       const compressed = await compressUnderSize(raw, 1600, 1_000_000);
       setPhotoOverride(compressed);
       setSelectedSideId("");
+      setPaintFile(file);
       try { localStorage.setItem(LS_RENDER_PHOTO, compressed); } catch { /* quota — ignore */ }
     } catch {
       setErrorMsg(t("render.error.upload"));
@@ -1124,6 +1128,81 @@ export default function RenderPage() {
     remaining: number;
     resetAt: string;
   } | null>(null);
+  // Paint-mode (verven) state: raw File handle, method tab, RAL pick,
+  // render result + loading/error mirrors of the bekleden flow so the
+  // single shared "Genereer" footer button dispatches per method.
+  const [paintFile, setPaintFile] = useState<File | null>(null);
+  const [method, setMethod] = useState<RenderMethod>("bekleden");
+  const [paintRalCode, setPaintRalCode] = useState<string | null>(null);
+  const [paintResultUrl, setPaintResultUrl] = useState<string | null>(null);
+  const [paintLoading, setPaintLoading] = useState(false);
+  const [paintError, setPaintError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (paintResultUrl) URL.revokeObjectURL(paintResultUrl);
+    };
+  }, [paintResultUrl]);
+
+  async function handlePaintGenerate() {
+    if (!paintFile || !paintRalCode) return;
+    setPaintLoading(true);
+    setPaintError(null);
+    if (paintResultUrl) {
+      URL.revokeObjectURL(paintResultUrl);
+      setPaintResultUrl(null);
+    }
+    try {
+      const fd = new FormData();
+      fd.append("photo", paintFile);
+      fd.append("ralCode", paintRalCode);
+      const res = await fetch("/api/render/paint", { method: "POST", body: fd });
+      if (!res.ok) {
+        let body: { error?: string; remaining?: number } = {};
+        try {
+          body = await res.json();
+        } catch {
+          /* non-JSON */
+        }
+        if (res.status === 402 && typeof body.remaining === "number") {
+          setCredits((prev) =>
+            prev ? { ...prev, remaining: body.remaining ?? 0 } : prev,
+          );
+        }
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
+      const remainingHdr = res.headers.get("x-credit-remaining");
+      const remaining = remainingHdr ? parseInt(remainingHdr, 10) : NaN;
+      if (!Number.isNaN(remaining)) {
+        setCredits((prev) => (prev ? { ...prev, remaining } : prev));
+      }
+      const blob = await res.blob();
+      setPaintResultUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      setPaintError(e instanceof Error ? e.message : "render_failed");
+    } finally {
+      setPaintLoading(false);
+    }
+  }
+
+  // After page reload sourcePhoto is restored from localStorage without a
+  // File — re-derive paintFile from the data URL so VervenSection doesn't
+  // show the "upload eerst" warning on restored state.
+  useEffect(() => {
+    if (paintFile || !sourcePhoto) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(sourcePhoto);
+        const blob = await res.blob();
+        if (cancelled) return;
+        setPaintFile(new File([blob], "restored.jpg", { type: blob.type || "image/jpeg" }));
+      } catch {
+        /* leave null — user can re-upload */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sourcePhoto, paintFile]);
 
   // "Bereken materiaal →" handler. Uploads the most relevant variant
   // (baseline if present, otherwise the latest) into the
@@ -1267,11 +1346,11 @@ export default function RenderPage() {
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/"
-              aria-label="Home"
+              aria-label={t("nav.home.aria")}
               className="inline-flex items-center gap-1 rounded-full border border-stone-300 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-stone-600 transition-colors hover:bg-stone-100 hover:text-ink"
             >
               <span aria-hidden>←</span>
-              <span>Home</span>
+              <span>{t("nav.home")}</span>
             </Link>
             <Link
               href="/gevelcalc"
@@ -1404,6 +1483,28 @@ export default function RenderPage() {
           )}
         </section>
 
+        <section>
+          <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+            {t("render.method.label")}
+          </p>
+          <MethodSwitcher method={method} onChange={setMethod} />
+        </section>
+
+        {method === "verven" && (
+          <section>
+            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+              {t("render.method.verven.title")}
+            </p>
+            <VervenSection
+              photoSrc={sourcePhoto || null}
+              ralCode={paintRalCode}
+              onRalChange={setPaintRalCode}
+            />
+          </section>
+        )}
+
+        {method === "bekleden" && (
+        <>
         <section ref={panelSectionRef} className="scroll-mt-20">
           <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
             02 — {t("render.section.supplier")}
@@ -1668,6 +1769,8 @@ export default function RenderPage() {
             </div>
           )}
         </section>
+        </>
+        )}
 
         </div>
 
@@ -1691,6 +1794,54 @@ export default function RenderPage() {
             </div>
           )}
 
+        {method === "verven" && (
+          <section>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
+                {t("render.verven.result.label")}
+              </p>
+            </div>
+            {paintLoading && (
+              <div className="mb-3 rounded-md border border-stone-300 bg-stone-50 p-3 text-xs text-stone-700">
+                {t("render.verven.loading")}
+              </div>
+            )}
+            {paintError && (
+              <div className="mb-3 text-sm text-red-700">
+                {t("render.verven.errorPrefix")} {paintError}
+              </div>
+            )}
+            {paintResultUrl ? (
+              <div>
+                <img
+                  src={paintResultUrl}
+                  alt={t("render.verven.result.alt")}
+                  className="block w-full border border-stone-200 object-contain"
+                />
+                <a
+                  href={paintResultUrl}
+                  download="renisual-verfvariant.jpg"
+                  className="mt-2 inline-block text-sm underline"
+                >
+                  {t("render.download")}
+                </a>
+                <p className="mt-2 text-xs text-stone-600">
+                  {t("render.verven.disclaimer")}
+                </p>
+              </div>
+            ) : (
+              !paintLoading && (
+                <p className="text-sm text-stone-500">
+                  {paintRalCode
+                    ? t("render.verven.readyHint")
+                    : t("render.verven.pickRalHint")}
+                </p>
+              )
+            )}
+          </section>
+        )}
+
+        {method === "bekleden" && (
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600">
@@ -1996,6 +2147,7 @@ export default function RenderPage() {
             </div>
           )}
         </section>
+        )}
         </aside>
         </div>
       </div>
@@ -2035,7 +2187,7 @@ export default function RenderPage() {
                   (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
                   (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
                 }
-                className="col-span-2 border border-ink bg-paper px-4 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-ink transition-colors hover:bg-stone-100 disabled:opacity-40 md:col-auto"
+                className="col-span-2 bg-stone-900 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-50 transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
                 {(() => {
                   // Spanl SKUs (e.g. PB7038A) already encode the colour, so
@@ -2047,7 +2199,9 @@ export default function RenderPage() {
                     brand === "spanl"
                       ? selectedPanel?.sku
                       : selectedKeralitColor?.name;
-                  return productLabel ? `Genereer (${productLabel})` : "Genereer";
+                  return productLabel
+                    ? t("render.generate.withProduct", { product: productLabel })
+                    : t("render.generate");
                 })()}
               </button>
               <div className="mt-2">
@@ -2069,16 +2223,29 @@ export default function RenderPage() {
             <>
               <button
                 type="button"
-                onClick={handleGenerate}
+                onClick={method === "verven" ? handlePaintGenerate : handleGenerate}
                 disabled={
-                  isGenerating ||
-                  !sourcePhoto ||
-                  (brand === "spanl" ? !selectedPanel : !selectedKeralitProduct || !selectedKeralitColor) ||
-                  (credits !== null && credits.remaining >= 0 && credits.remaining < 1)
+                  method === "verven"
+                    ? (paintLoading ||
+                        !sourcePhoto ||
+                        !paintRalCode ||
+                        (credits !== null &&
+                          credits.remaining >= 0 &&
+                          credits.remaining < 1))
+                    : (isGenerating ||
+                        !sourcePhoto ||
+                        (brand === "spanl"
+                          ? !selectedPanel
+                          : !selectedKeralitProduct || !selectedKeralitColor) ||
+                        (credits !== null &&
+                          credits.remaining >= 0 &&
+                          credits.remaining < 1))
                 }
-                className="col-span-2 bg-accent px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
+                className="col-span-2 bg-stone-900 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.15em] text-stone-50 transition-opacity hover:opacity-90 disabled:opacity-40 md:col-auto"
               >
-                Genereer (1 credit)
+                {method === "verven" && paintLoading
+                  ? t("render.verven.loading")
+                  : t("render.generate.cta", { credits: 1 })}
               </button>
               <div className="col-span-2 mt-2 md:col-auto">
                 <CreditCounter remaining={credits?.remaining ?? null} />

@@ -6,8 +6,12 @@ type Props = {
 };
 
 export default function CreditCounter({ remaining, total = 10 }: Props) {
-  if (remaining === null || remaining < 0) return null;
-  const low = remaining < 5;
+  if (remaining === null) return null;
+  // remaining = -1 betekent Upstash-fail-open (dev zonder Redis, of upstream
+  // hiccup). Toon nog steeds een teller met max-credits zodat user weet hoe
+  // ver de wekelijkse cap reikt; productie-Upstash levert het echte cijfer.
+  const display = remaining < 0 ? total : remaining;
+  const low = remaining >= 0 && remaining < 5;
   return (
     <span
       className={`font-mono text-[10px] uppercase tracking-[0.15em] ${
@@ -15,7 +19,7 @@ export default function CreditCounter({ remaining, total = 10 }: Props) {
       }`}
       aria-live="polite"
     >
-      {remaining}/{total} over vandaag
+      {display}/{total} over deze week
     </span>
   );
 }
