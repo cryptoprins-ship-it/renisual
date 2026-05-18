@@ -1470,6 +1470,12 @@ export default function GevelCalcPage() {
         : selectedProduct.name;
     const productLabel = `${selectedProduct.brand} ${keralitLabel}`;
 
+    const altLabel: string | undefined = alternateMaterialResult
+      ? alternateOrientation === "horizontal"
+        ? "Horizontaal"
+        : "Verticaal"
+      : undefined;
+
     const payload = {
       projectName: projectName || undefined,
       productLabel,
@@ -1481,6 +1487,15 @@ export default function GevelCalcPage() {
       insideCornerCount: insideCornerCountNum,
       profileItems: materialResult.profileItems,
       sides: sidesForPdf,
+      alternate:
+        alternateMaterialResult && altLabel
+          ? {
+              orientationLabel: altLabel,
+              netWithWaste: alternateMaterialResult.netWithWaste,
+              panelCount: alternateMaterialResult.panelCount,
+              profileItems: alternateMaterialResult.profileItems,
+            }
+          : undefined,
     };
 
     try {
@@ -1495,6 +1510,54 @@ export default function GevelCalcPage() {
       }
       const blob = await res.blob();
       const filename = `renisual-config-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      showToast(t("gc.toast.pdfFailed"), "error");
+    }
+  }
+
+  async function exportPhotoPdf() {
+    if (activeSides.length === 0) {
+      showToast(t("gc.toast.pdfNoCalc"), "error");
+      return;
+    }
+    const sidesForPdf = activeSides.map((side) => ({
+      name: side.name || "",
+      widthCm: toNumber(side.width),
+      heightCm: toNumber(side.height),
+      photoDataUrl: photos[side.id] || undefined,
+      openings: side.openings.map((o) => ({
+        type: o.type,
+        label: o.label ?? "",
+        widthCm: toNumber(o.width),
+        heightCm: toNumber(o.height),
+        count: toNumber(o.count),
+      })),
+    }));
+    const payload = {
+      projectName: projectName || undefined,
+      sides: sidesForPdf,
+    };
+    try {
+      const res = await fetch("/api/calc/photo-pdf", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        showToast(t("gc.toast.pdfFailed"), "error");
+        return;
+      }
+      const blob = await res.blob();
+      const filename = `renisual-fotos-maten-${new Date().toISOString().slice(0, 10)}.pdf`;
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -2891,6 +2954,9 @@ export default function GevelCalcPage() {
                   </button>
                   <button type="button" onClick={exportPdf} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfigPdf")}
+                  </button>
+                  <button type="button" onClick={exportPhotoPdf} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                    {t("gc.btnExportPhotoPdf")}
                   </button>
                   <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}

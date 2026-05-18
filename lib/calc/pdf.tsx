@@ -31,10 +31,18 @@ export type CalcPdfSide = {
   }>;
 };
 
+export type CalcPdfVariant = {
+  orientationLabel: string;
+  netWithWaste: number;
+  panelCount: number;
+  profileItems: ProfileCalculation[];
+};
+
 export type CalcPdfDocumentProps = {
   generatedAt: Date;
   projectName?: string;
   productLabel?: string;
+  // Primary (selected) orientation result — always present.
   orientationLabel: string;
   totals: { gross: number; openings: number; net: number };
   netWithWaste: number;
@@ -43,6 +51,10 @@ export type CalcPdfDocumentProps = {
   insideCornerCount?: number;
   profileItems: ProfileCalculation[];
   sides: CalcPdfSide[];
+  // Optional second orientation result — alleen aanwezig als product
+  // beide orientaties ondersteunt. Wordt apart gerenderd in een
+  // vergelijkings-blok onder de primaire materiaal-BOM.
+  alternate?: CalcPdfVariant;
 };
 
 const styles = StyleSheet.create({
@@ -163,7 +175,7 @@ export function CalcPdfDocument(props: CalcPdfDocumentProps) {
           </View>
         ))}
 
-        <Text style={styles.h2}>Materiaal</Text>
+        <Text style={styles.h2}>Materiaal — {props.orientationLabel}</Text>
         <View style={styles.row}>
           <Text style={styles.cellLabel}>Panelen</Text>
           <Text style={styles.cellVal}>{props.panelCount}</Text>
@@ -182,6 +194,32 @@ export function CalcPdfDocument(props: CalcPdfDocumentProps) {
             </Text>
           </View>
         ))}
+
+        {props.alternate && (
+          <>
+            <Text style={styles.h2}>
+              Materiaal — {props.alternate.orientationLabel} (alternatief)
+            </Text>
+            <View style={styles.row}>
+              <Text style={styles.cellLabel}>Panelen</Text>
+              <Text style={styles.cellVal}>{props.alternate.panelCount}</Text>
+            </View>
+            {props.alternate.profileItems.map((p, i) => (
+              <View style={styles.row} key={i}>
+                <Text style={styles.cellLabel}>
+                  {p.label} — {p.name}
+                  <Text style={{ color: "#888" }}>
+                    {" "}
+                    ({p.lengthMeters.toFixed(2)}m sticks)
+                  </Text>
+                </Text>
+                <Text style={styles.cellVal}>
+                  {p.count} st — {p.neededMeters.toFixed(2)}m nodig
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={styles.footer}>
           Renisual — gevelconfiguratie export ({dateStr})

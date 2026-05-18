@@ -34,6 +34,13 @@ const profileSchema = z.object({
   totalExVat: z.number().nonnegative(),
 });
 
+const variantSchema = z.object({
+  orientationLabel: z.string().max(40),
+  netWithWaste: z.number().nonnegative(),
+  panelCount: z.number().int().nonnegative(),
+  profileItems: z.array(profileSchema),
+});
+
 const bodySchema = z.object({
   projectName: z.string().max(120).optional(),
   productLabel: z.string().max(160).optional(),
@@ -49,6 +56,7 @@ const bodySchema = z.object({
   insideCornerCount: z.number().int().nonnegative().optional(),
   profileItems: z.array(profileSchema),
   sides: z.array(sideSchema).max(40),
+  alternate: variantSchema.optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -83,6 +91,7 @@ export async function POST(req: NextRequest) {
       insideCornerCount: parsed.data.insideCornerCount,
       profileItems: parsed.data.profileItems,
       sides: parsed.data.sides as CalcPdfSide[],
+      alternate: parsed.data.alternate,
     });
     return new NextResponse(new Uint8Array(pdf), {
       status: 200,
