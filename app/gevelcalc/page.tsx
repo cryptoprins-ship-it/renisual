@@ -1557,19 +1557,59 @@ export default function GevelCalcPage() {
       showToast(t("gc.toast.pdfNoCalc"), "error");
       return;
     }
-    const sidesForPdf = activeSides.map((side) => ({
-      name: side.name || "",
-      widthCm: toNumber(side.width),
-      heightCm: toNumber(side.height),
-      photoDataUrl: photos[side.id] || undefined,
-      openings: side.openings.map((o) => ({
-        type: o.type,
-        label: o.label ?? "",
-        widthCm: toNumber(o.width),
-        heightCm: toNumber(o.height),
-        count: toNumber(o.count),
-      })),
-    }));
+
+    // Compress photos client-side: resize naar 1280px lange zijde, JPEG q=0.78.
+    // Telefoon-foto's zijn vaak 3-6MB; base64 daarvan komt boven Hostinger's
+    // 10MB JSON body-limit uit → req.json() faalt met "invalid_json". Na
+    // compressie ~150-300KB per foto.
+    async function compressPhoto(dataUrl: string): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const max = 1280;
+          const ratio = Math.min(1, max / Math.max(img.width, img.height));
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("no_canvas"));
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = () => reject(new Error("img_load_failed"));
+        img.src = dataUrl;
+      });
+    }
+
+    const sidesForPdf = await Promise.all(
+      activeSides.map(async (side) => {
+        const raw = photos[side.id];
+        let photoDataUrl: string | undefined = undefined;
+        if (raw) {
+          try {
+            photoDataUrl = await compressPhoto(raw);
+          } catch {
+            // Compressie faalde — laat foto weg ipv hele PDF afbreken.
+            photoDataUrl = undefined;
+          }
+        }
+        return {
+          name: side.name || "",
+          widthCm: toNumber(side.width),
+          heightCm: toNumber(side.height),
+          photoDataUrl,
+          openings: side.openings.map((o) => ({
+            type: o.type,
+            label: o.label ?? "",
+            widthCm: toNumber(o.width),
+            heightCm: toNumber(o.height),
+            count: toNumber(o.count),
+          })),
+        };
+      }),
+    );
     const payload = {
       projectName: projectName || undefined,
       sides: sidesForPdf,
