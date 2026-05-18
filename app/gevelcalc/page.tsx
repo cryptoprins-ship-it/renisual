@@ -923,10 +923,9 @@ export default function GevelCalcPage() {
   // are explicit consent.
   const [includePrices, setIncludePrices] = useState(false);
   // Whether to attach the /render handoff render to the offerte (PDF +
-  // mail). Default true when a render exists, but the user can toggle
-  // off — useful when they loaded a saved config and the inherited
-  // render is from a different project.
-  const [includeRenderPhoto, setIncludeRenderPhoto] = useState(true);
+  // mail). Default off — explicit consent. Users must opt-in to ship
+  // hun visualisatie mee (zelfde patroon als includePrices).
+  const [includeRenderPhoto, setIncludeRenderPhoto] = useState(false);
   // Signed URL for the render produced on /render, resolved at mount
   // so the right-column overview can preview the visual the offerte
   // PDF will embed. Null when the user arrived without going through
