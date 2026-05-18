@@ -1426,6 +1426,89 @@ export default function GevelCalcPage() {
     orientation,
   ]);
 
+  async function exportPdf() {
+    if (!materialResult || !selectedProduct) {
+      showToast(t("gc.toast.pdfNoCalc"), "error");
+      return;
+    }
+    const sidesForPdf = activeSides.map((side) => ({
+      name: side.name || "",
+      widthCm: toNumber(side.width),
+      heightCm: toNumber(side.height),
+      grossM2: side.width && side.height
+        ? Math.round(
+            (toNumber(side.width) / 100) *
+              (toNumber(side.height) / 100) *
+              100,
+          ) / 100
+        : 0,
+      netM2: Math.max(
+        0,
+        Math.round(
+          (((toNumber(side.width) / 100) * (toNumber(side.height) / 100)) -
+            side.openings.reduce((sum, o) => {
+              const w = toNumber(o.width) / 100;
+              const h = toNumber(o.height) / 100;
+              const c = toNumber(o.count);
+              return sum + (w > 0 && h > 0 && c > 0 ? w * h * c : 0);
+            }, 0)) *
+            100,
+        ) / 100,
+      ),
+      openings: side.openings.map((o) => ({
+        type: o.type,
+        label: o.label ?? "",
+        widthCm: toNumber(o.width),
+        heightCm: toNumber(o.height),
+        count: toNumber(o.count),
+      })),
+    }));
+
+    const keralitLabel =
+      selectedProduct.brand === "Keralit" && keralitColorNumber
+        ? `${selectedProduct.name} — kleur ${keralitColorNumber}`
+        : selectedProduct.name;
+    const productLabel = `${selectedProduct.brand} ${keralitLabel}`;
+
+    const payload = {
+      projectName: projectName || undefined,
+      productLabel,
+      orientationLabel: orientation === "horizontal" ? "Horizontaal" : "Verticaal",
+      totals: materialResult.totals,
+      netWithWaste: materialResult.netWithWaste,
+      wasteFactor: selectedProduct.wasteFactor,
+      panelCount: materialResult.panelCount,
+      insideCornerCount: insideCornerCountNum,
+      profileItems: materialResult.profileItems,
+      sides: sidesForPdf,
+    };
+
+    try {
+      const res = await fetch("/api/calc/pdf", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        showToast(t("gc.toast.pdfFailed"), "error");
+        return;
+      }
+      const blob = await res.blob();
+      const filename = `renisual-config-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      showToast(t("gc.toast.pdfFailed"), "error");
+    }
+  }
+
   async function exportConfig() {
     const data = buildSaveData(true);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2805,6 +2888,9 @@ export default function GevelCalcPage() {
                 <>
                   <button type="button" onClick={exportConfig} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
+                  </button>
+                  <button type="button" onClick={exportPdf} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                    {t("gc.btnExportConfigPdf")}
                   </button>
                   <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}
