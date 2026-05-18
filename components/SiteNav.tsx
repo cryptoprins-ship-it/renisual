@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import NavLocaleSwitcher from "./NavLocaleSwitcher";
+import MobileLocaleToggle from "./MobileLocaleToggle";
 import MobileNavSheet from "./MobileNavSheet";
 import { Logo } from "./Logo";
 import { useLocale } from "@/lib/i18n";
@@ -37,6 +38,7 @@ export default function SiteNav() {
             <div className="hidden md:block">
               <NavLocaleSwitcher compact className="ml-1" />
             </div>
+            <MobileLocaleToggle className="md:hidden" />
             <button
               type="button"
               aria-label={t("nav.menu.open") || "Menu openen"}

@@ -53,7 +53,8 @@
       "Bash(curl *)",
       "Bash(npx supabase *)",
       "Bash(void)",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "Bash(awk NR==1538,NR==1545{print NR\": \"$0} NR==1618,NR==1625{print NR\": \"$0} NR==1887,NR==1894{print NR\": \"$0} NR==1957,NR==1964{print NR\": \"$0} *)"
     ],
     "additionalDirectories": [
       "C:\\projects\\renisual\\public\\test-outputs\\iterate"
