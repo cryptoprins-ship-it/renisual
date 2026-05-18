@@ -8,6 +8,10 @@ export type SpanlPanelEntry = {
   finish: SpanlFinish;
   panelWidthCm: number;
   note?: string;
+  // Y-prefix SKUs (YMPB*, YMSG*, YPMB*) hebben wood-grain texture op het
+  // anders gladde monoFlat/monoGroove oppervlak. Render-prompt voegt
+  // 'subtle wood-grain texture' toe wanneer grain:true.
+  grain?: boolean;
 };
 
 export const SPANL_PANELS: SpanlPanelEntry[] = [
@@ -33,16 +37,16 @@ export const SPANL_PANELS: SpanlPanelEntry[] = [
   // off-brand. Catalog row + finish enum value retained for a future
   // re-introduction once the prompt is dialled in.
 
-  { sku: "YMPB7021A", colorKey: "color.darkGrey", colorEn: "dark grey almost black", ral: "7021", finish: "monoFlat", panelWidthCm: 37 },
-  { sku: "YMPB9003A", colorKey: "color.white", colorEn: "white", ral: "9010", finish: "monoFlat", panelWidthCm: 37, note: "RAL 9010 look" },
-  { sku: "YMPB9005A", colorKey: "color.black", colorEn: "black", ral: "9005", finish: "monoFlat", panelWidthCm: 37 },
+  { sku: "YMPB7021A", colorKey: "color.darkGrey", colorEn: "dark grey almost black", ral: "7021", finish: "monoFlat", panelWidthCm: 37, grain: true },
+  { sku: "YMPB9003A", colorKey: "color.white", colorEn: "white", ral: "9003", finish: "monoFlat", panelWidthCm: 37, grain: true },
+  { sku: "YMPB9005A", colorKey: "color.black", colorEn: "black", ral: "9005", finish: "monoFlat", panelWidthCm: 37, grain: true },
 
-  { sku: "YMSG7021A", colorKey: "color.darkGrey", colorEn: "dark grey almost black", ral: "7021", finish: "monoGroove", panelWidthCm: 37 },
-  { sku: "YMSG7038A", colorKey: "color.mattGrey", colorEn: "matt grey", ral: "7038", finish: "monoGroove", panelWidthCm: 37 },
-  { sku: "YMSG9003A", colorKey: "color.white", colorEn: "white", ral: "9010", finish: "monoGroove", panelWidthCm: 37, note: "RAL 9010 look" },
-  { sku: "YMSG9005A", colorKey: "color.black", colorEn: "black", ral: "9005", finish: "monoGroove", panelWidthCm: 37 },
+  { sku: "YMSG7021A", colorKey: "color.darkGrey", colorEn: "dark grey almost black", ral: "7021", finish: "monoGroove", panelWidthCm: 37, grain: true },
+  { sku: "YMSG7038A", colorKey: "color.mattGrey", colorEn: "matt grey", ral: "7038", finish: "monoGroove", panelWidthCm: 37, grain: true },
+  { sku: "YMSG9003A", colorKey: "color.white", colorEn: "white", ral: "9010", finish: "monoGroove", panelWidthCm: 37, note: "RAL 9010 look", grain: true },
+  { sku: "YMSG9005A", colorKey: "color.black", colorEn: "black", ral: "9005", finish: "monoGroove", panelWidthCm: 37, grain: true },
 
-  { sku: "YPMB7038A", colorKey: "color.mattGrey", colorEn: "matt grey", ral: "7038", finish: "monoFlat", panelWidthCm: 37 },
+  { sku: "YPMB7038A", colorKey: "color.mattGrey", colorEn: "matt grey", ral: "7038", finish: "monoFlat", panelWidthCm: 37, grain: true },
 ];
 
 export function findPanelBySku(sku: string): SpanlPanelEntry | undefined {

@@ -874,9 +874,10 @@ export default function RenderPage() {
         targetHex = undefined;
       } else if (effSpanlPanel) {
         const ralPart = effSpanlPanel.ral ? ` (RAL ${effSpanlPanel.ral})` : "";
+        const grainPart = effSpanlPanel.grain ? " with subtle wood-grain texture" : "";
         productSku = effSpanlPanel.sku;
-        productLabel = `Spanl ${effSpanlPanel.sku} — ${effSpanlPanel.colorEn}${ralPart}, ${finishEn(effSpanlPanel.finish)}`;
-        productDescription = `Color: ${effSpanlPanel.colorEn}${ralPart}. Finish: ${finishEn(effSpanlPanel.finish)}. Visible panel width: ${effSpanlPanel.panelWidthCm} cm.`;
+        productLabel = `Spanl ${effSpanlPanel.sku} — ${effSpanlPanel.colorEn}${ralPart}, ${finishEn(effSpanlPanel.finish)}${grainPart}`;
+        productDescription = `Color: ${effSpanlPanel.colorEn}${ralPart}. Finish: ${finishEn(effSpanlPanel.finish)}${grainPart}. Visible panel width: ${effSpanlPanel.panelWidthCm} cm.`;
         panelWidthCm = effSpanlPanel.panelWidthCm;
         panelSkuForVariant = effSpanlPanel.sku;
         targetHex = effSpanlPanel.ral && RAL_HEX[effSpanlPanel.ral]?.hex;
