@@ -12,7 +12,7 @@ import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { generateRef } from "@/lib/offerte/ref";
-import { buildOffertePdf } from "@/lib/offerte/pdf";
+import { buildOffertePdf, type OfferteSideInfo } from "@/lib/offerte/pdf";
 import { verifyOrigin } from "@/lib/verifyOrigin";
 import { logger } from "@/lib/logger";
 
@@ -245,6 +245,7 @@ export async function POST(request: Request) {
       primaryOrientation,
       alternate,
       productLabel,
+      sides: sidesFromCalcInput(parsed.calcInput),
     });
 
     const pdfPath = `${inserted.ref}.pdf`;
@@ -319,6 +320,56 @@ function slugify(s: string): string {
 function numberFromCalcInput(input: Record<string, unknown>, key: string): number {
   const v = input[key];
   return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+// Sides in calcInput zijn vrije CalcSide-snapshots: width/height/count
+// staan als strings ("4,2" of "4.2" of leeg). Parse comma-decimaal naar
+// number, drop ongeldige entries zodat de PDF nooit "NaN × NaN cm" toont.
+function toCm(v: unknown): number {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v !== "string") return 0;
+  const n = parseFloat(v.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function sidesFromCalcInput(input: Record<string, unknown>): OfferteSideInfo[] {
+  const raw = input.sides;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((s): OfferteSideInfo | null => {
+      if (!s || typeof s !== "object") return null;
+      const side = s as Record<string, unknown>;
+      const widthCm = toCm(side.width);
+      const heightCm = toCm(side.height);
+      // Skip lege placeholder-zijdes (user heeft alleen een naam getypt
+      // maar geen afmetingen ingevuld) zodat de PDF geen 0 × 0-blok krijgt.
+      if (widthCm === 0 && heightCm === 0) return null;
+      const openingsRaw = Array.isArray(side.openings) ? side.openings : [];
+      const openings: OfferteSideInfo["openings"] = openingsRaw
+        .map((o) => {
+          if (!o || typeof o !== "object") return null;
+          const op = o as Record<string, unknown>;
+          const type =
+            op.type === "window" || op.type === "door" || op.type === "other"
+              ? op.type
+              : "other";
+          return {
+            type: type as "window" | "door" | "other",
+            label: typeof op.label === "string" ? op.label : "",
+            widthCm: toCm(op.width),
+            heightCm: toCm(op.height),
+            count: toCm(op.count),
+          };
+        })
+        .filter((o): o is OfferteSideInfo["openings"][number] => o !== null);
+      return {
+        name: typeof side.name === "string" ? side.name : "",
+        widthCm,
+        heightCm,
+        openings,
+      };
+    })
+    .filter((s): s is OfferteSideInfo => s !== null);
 }
 
 function derivePricePerPanel(body: z.infer<typeof bodySchema>): number {

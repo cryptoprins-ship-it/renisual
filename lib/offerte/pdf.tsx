@@ -277,6 +277,50 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: MUTED,
   },
+  matenSection: {
+    marginBottom: 18,
+  },
+  sideBlock: {
+    borderTopWidth: 1,
+    borderTopColor: LINE,
+    paddingTop: 8,
+    marginBottom: 10,
+  },
+  sideHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    marginBottom: 4,
+  },
+  sideTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+    color: INK,
+  },
+  sideSize: {
+    fontFamily: "Courier",
+    fontSize: 9,
+    color: INK,
+  },
+  openingsHeader: {
+    flexDirection: "row",
+    paddingVertical: 3,
+    borderBottomWidth: 0.5,
+    borderBottomColor: LINE,
+  },
+  openingsRow: {
+    flexDirection: "row",
+    paddingVertical: 3,
+  },
+  cellOpType: { flex: 1.2 },
+  cellOpLabel: { flex: 2 },
+  cellOpSize: { flex: 1.5, textAlign: "right", fontFamily: "Courier" },
+  cellOpCount: { flex: 0.5, textAlign: "right" },
+  noOpenings: {
+    fontSize: 9,
+    color: MUTED,
+    fontStyle: "italic",
+  },
 });
 
 export type OfferteDocumentProps = {
@@ -359,6 +403,24 @@ export type OfferteDocumentProps = {
     subtotalExBtw: number;
     totalInclBtw: number;
   };
+  // Per-zijde maten + openingen, één-op-één gelift uit de "foto's+maten"
+  // PDF zodat de ontvanger ziet welke gevelmaten zijn aangenomen. Wordt
+  // gerenderd tussen render-foto en BOM-tabel. Optioneel — oude
+  // payloads zonder sides slaan deze sectie gewoon over.
+  sides?: OfferteSideInfo[];
+};
+
+export type OfferteSideInfo = {
+  name: string;
+  widthCm: number;
+  heightCm: number;
+  openings: Array<{
+    type: "window" | "door" | "other";
+    label: string;
+    widthCm: number;
+    heightCm: number;
+    count: number;
+  }>;
 };
 
 const fmtMoney = (n: number) =>
@@ -587,6 +649,64 @@ export function OfferteDocument(props: OfferteDocumentProps) {
               <Image src={props.renderSrc} style={styles.facadeImage} />
               <Text style={styles.imageCaption}>VOORGESTELD EINDRESULTAAT</Text>
             </View>
+          </View>
+        ) : null}
+
+        {props.sides && props.sides.length > 0 ? (
+          <View style={styles.matenSection}>
+            <Text style={styles.blockLabel}>MATEN PER ZIJDE</Text>
+            {props.sides.map((side, i) => (
+              <View key={i} style={styles.sideBlock}>
+                <View style={styles.sideHeader}>
+                  <Text style={styles.sideTitle}>
+                    {side.name || `Zijde ${i + 1}`}
+                  </Text>
+                  <Text style={styles.sideSize}>
+                    {side.widthCm} × {side.heightCm} cm
+                  </Text>
+                </View>
+                {side.openings.length === 0 ? (
+                  <Text style={styles.noOpenings}>Geen openingen.</Text>
+                ) : (
+                  <>
+                    <View style={styles.openingsHeader}>
+                      <Text style={[styles.tableHeaderCell, styles.cellOpType]}>
+                        TYPE
+                      </Text>
+                      <Text style={[styles.tableHeaderCell, styles.cellOpLabel]}>
+                        LABEL
+                      </Text>
+                      <Text style={[styles.tableHeaderCell, styles.cellOpSize]}>
+                        B × H (CM)
+                      </Text>
+                      <Text style={[styles.tableHeaderCell, styles.cellOpCount]}>
+                        #
+                      </Text>
+                    </View>
+                    {side.openings.map((o, j) => (
+                      <View key={j} style={styles.openingsRow}>
+                        <Text style={[styles.bodyText, styles.cellOpType]}>
+                          {o.type === "window"
+                            ? "Raam"
+                            : o.type === "door"
+                              ? "Deur"
+                              : "Anders"}
+                        </Text>
+                        <Text style={[styles.bodyText, styles.cellOpLabel]}>
+                          {o.label || "—"}
+                        </Text>
+                        <Text style={[styles.bodyText, styles.cellOpSize]}>
+                          {o.widthCm} × {o.heightCm}
+                        </Text>
+                        <Text style={[styles.bodyText, styles.cellOpCount]}>
+                          {o.count}
+                        </Text>
+                      </View>
+                    ))}
+                  </>
+                )}
+              </View>
+            ))}
           </View>
         ) : null}
 
