@@ -9,5 +9,43 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return <AboutClient />;
+  return (
+    <>
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "https://renisual.com/about#aboutpage",
+              url: "https://renisual.com/about",
+              name: "Over Renisual",
+              description:
+                "Onafhankelijk renovatieplatform ontstaan uit een eigen woonboot-renovatie. Eigen AI-visualisatie-tool, geen affiliatie met leveranciers.",
+              isPartOf: { "@id": "https://renisual.com/#website" },
+              mainEntity: { "@id": "https://renisual.com/#organization" },
+            },
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Home",
+                  item: "https://renisual.com",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Over",
+                  item: "https://renisual.com/about",
+                },
+              ],
+            },
+          ],
+        })}
+      </script>
+      <AboutClient />
+    </>
+  );
 }
