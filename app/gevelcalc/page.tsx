@@ -1426,7 +1426,43 @@ export default function GevelCalcPage() {
     orientation,
   ]);
 
-  async function exportPdf() {
+  // Shared post-fetch handler: try Web Share API (when share=true and
+  // platform supports file-share), fallback to anchor download. Used by
+  // both PDF exports + their share-button siblings.
+  async function deliverPdfBlob(
+    blob: Blob,
+    filename: string,
+    share: boolean,
+  ): Promise<void> {
+    const file = new File([blob], filename, { type: "application/pdf" });
+    if (
+      share &&
+      typeof navigator !== "undefined" &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [file] })
+    ) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to download
+      }
+    }
+    if (share) {
+      showToast(t("gc.toast.shareUnavailable"), "ok");
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  async function exportPdf(share: boolean = false) {
     if (!materialResult || !selectedProduct) {
       showToast(t("gc.toast.pdfNoCalc"), "error");
       return;
@@ -1510,21 +1546,13 @@ export default function GevelCalcPage() {
       }
       const blob = await res.blob();
       const filename = `renisual-config-${new Date().toISOString().slice(0, 10)}.pdf`;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.rel = "noopener";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await deliverPdfBlob(blob, filename, share);
     } catch {
       showToast(t("gc.toast.pdfFailed"), "error");
     }
   }
 
-  async function exportPhotoPdf() {
+  async function exportPhotoPdf(share: boolean = false) {
     if (activeSides.length === 0) {
       showToast(t("gc.toast.pdfNoCalc"), "error");
       return;
@@ -1553,20 +1581,25 @@ export default function GevelCalcPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        showToast(t("gc.toast.pdfFailed"), "error");
+        let detail = "";
+        try {
+          const body = await res.json();
+          detail = body?.detail || body?.error || "";
+        } catch {
+          /* non-JSON body */
+        }
+        console.error("photo-pdf failed", res.status, detail);
+        showToast(
+          detail
+            ? `${t("gc.toast.pdfFailed")} (${detail})`
+            : t("gc.toast.pdfFailed"),
+          "error",
+        );
         return;
       }
       const blob = await res.blob();
       const filename = `renisual-fotos-maten-${new Date().toISOString().slice(0, 10)}.pdf`;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.rel = "noopener";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await deliverPdfBlob(blob, filename, share);
     } catch {
       showToast(t("gc.toast.pdfFailed"), "error");
     }
@@ -2952,11 +2985,17 @@ export default function GevelCalcPage() {
                   <button type="button" onClick={exportConfig} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
                   </button>
-                  <button type="button" onClick={exportPdf} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                  <button type="button" onClick={() => exportPdf(false)} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfigPdf")}
                   </button>
-                  <button type="button" onClick={exportPhotoPdf} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                  <button type="button" onClick={() => exportPdf(true)} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                    {t("gc.btnShareConfigPdf")}
+                  </button>
+                  <button type="button" onClick={() => exportPhotoPdf(false)} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportPhotoPdf")}
+                  </button>
+                  <button type="button" onClick={() => exportPhotoPdf(true)} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                    {t("gc.btnSharePhotoPdf")}
                   </button>
                   <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}

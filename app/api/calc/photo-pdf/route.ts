@@ -95,6 +95,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     logger.error({ err }, "calc_photo_pdf_render_failed");
-    return NextResponse.json({ error: "render_failed" }, { status: 500 });
+    const detail = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: "render_failed", detail: detail.slice(0, 500) },
+      { status: 500 },
+    );
   }
 }
