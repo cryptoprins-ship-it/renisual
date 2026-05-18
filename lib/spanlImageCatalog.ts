@@ -43,15 +43,18 @@ export function findSpanlMainImage(
 
   if (!id && !name) return "";
 
+  // Exact-match op id (cleaned SKU) — substring-match koppelde YMPB9003A
+  // verkeerd aan PB9003A omdat "ympb9003a".includes("pb9003a") true is.
   const match = index.find((item) => {
     const sku = clean(item.sku);
     const slug = clean(item.slug);
     const title = clean(item.name);
 
-    return (
-      (id && (sku.includes(id) || slug.includes(id) || title.includes(id))) ||
-      (name && (title.includes(name) || name.includes(title)))
-    );
+    if (id && (sku === id || slug === id || title === id)) return true;
+    // Name-match blijft fuzzy: product-namen zijn vrij-tekstueel
+    // ("Spanl PB9003A — white") en hebben geen botsing-risico zoals SKUs.
+    if (name && (title.includes(name) || name.includes(title))) return true;
+    return false;
   });
 
   return match?.images?.[0]?.local ?? "";
