@@ -120,13 +120,16 @@ function findImagesForSku(index: SpanlImageProduct[], sku: string): { main?: str
   if (target.includes("9003")) candidates.push(target.replace("9003", "9010"));
   if (target.includes("9010")) candidates.push(target.replace("9010", "9003"));
 
-  // Exact-match alleen — eerdere substring-match koppelde YMPB9003A
-  // verkeerd aan PB9003A omdat "ympb9003a" "pb9003a" als substring bevat
-  // en PB9003A eerst in index staat.
+  // Prefix-match: slug mag suffix bevatten (`pb7038a-mono-flat-matt-grey...`)
+  // maar moet beginnen met de SKU. Eerdere `includes`-match koppelde
+  // YMPB9003A verkeerd aan PB9003A omdat "ympb9003a" "pb9003a" bevat.
+  // `startsWith` voorkomt dat: "ympb9003a".startsWith("pb9003a") = false.
   const match = index.find((p) => {
     const folderClean = cleanSku(p.slug);
     const skuClean = cleanSku(p.sku);
-    return candidates.some((c) => folderClean === c || skuClean === c);
+    return candidates.some(
+      (c) => folderClean.startsWith(c) || skuClean.startsWith(c),
+    );
   });
   if (!match) return {};
   const main = match.images.find((i) => i.type === "main") ?? match.images[0];
