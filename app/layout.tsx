@@ -28,6 +28,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://renisual.com"),
   title: "Renisual — Zien is weten.",
   description: "Visualiseer je gevel, bereken je materiaal, vraag je offerte aan. Visualiseer, reken, renoveer.",
   manifest: "/manifest.json",
@@ -103,6 +104,55 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
+        {/* JSON-LD: Organization + WebSite + SoftwareApplication.
+            Rendered as <script> JSX children — Next.js SSR emits the
+            JSON literal as the script body so crawlers see structured
+            data without waiting for client JS. Static content only. */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://renisual.com/#organization",
+                name: "Renisual",
+                url: "https://renisual.com",
+                logo: "https://renisual.com/icons/icon-512.png",
+                slogan: "Zien is weten.",
+                description:
+                  "AI-platform voor gevelvisualisatie, materiaalberekening en renovatieoffertes in Nederland.",
+                areaServed: "NL",
+                sameAs: [],
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://renisual.com/#website",
+                url: "https://renisual.com",
+                name: "Renisual",
+                description:
+                  "Visualiseer je gevel met AI, bereken materiaal en vraag offerte aan.",
+                publisher: { "@id": "https://renisual.com/#organization" },
+                inLanguage: ["nl", "en", "de", "fr", "es"],
+              },
+              {
+                "@type": "SoftwareApplication",
+                "@id": "https://renisual.com/#app",
+                name: "Renisual",
+                applicationCategory: "DesignApplication",
+                operatingSystem: "Web",
+                url: "https://renisual.com",
+                offers: {
+                  "@type": "Offer",
+                  price: "0",
+                  priceCurrency: "EUR",
+                  description:
+                    "10 gratis renders per week, daarna credit-packs vanaf €5.",
+                },
+                publisher: { "@id": "https://renisual.com/#organization" },
+              },
+            ],
+          })}
+        </script>
       </head>
       <body className="min-h-[100dvh] flex flex-col bg-paper text-ink">
         {/* Plausible analytics — cookieless, no PII, GDPR-exempt by
