@@ -1426,9 +1426,19 @@ export default function GevelCalcPage() {
     orientation,
   ]);
 
+  // Touch-device detection: mobiel/tablet wil native share-sheet
+  // (WhatsApp/Mail/Save to Files); desktop wil gewone download.
+  function isTouchDevice(): boolean {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(pointer: coarse)").matches ||
+      /iPad|iPhone|iPod|Android/.test(navigator.userAgent ?? "")
+    );
+  }
+
   // Shared post-fetch handler: try Web Share API (when share=true and
   // platform supports file-share), fallback to anchor download. Used by
-  // both PDF exports + their share-button siblings.
+  // both PDF exports.
   async function deliverPdfBlob(
     blob: Blob,
     filename: string,
@@ -3025,17 +3035,11 @@ export default function GevelCalcPage() {
                   <button type="button" onClick={exportConfig} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfig")}
                   </button>
-                  <button type="button" onClick={() => exportPdf(false)} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                  <button type="button" onClick={() => exportPdf(isTouchDevice())} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportConfigPdf")}
                   </button>
-                  <button type="button" onClick={() => exportPdf(true)} className="rounded-xl border border-ink px-3 py-2 text-sm">
-                    {t("gc.btnShareConfigPdf")}
-                  </button>
-                  <button type="button" onClick={() => exportPhotoPdf(false)} className="rounded-xl border border-ink px-3 py-2 text-sm">
+                  <button type="button" onClick={() => exportPhotoPdf(isTouchDevice())} className="rounded-xl border border-ink px-3 py-2 text-sm">
                     {t("gc.btnExportPhotoPdf")}
-                  </button>
-                  <button type="button" onClick={() => exportPhotoPdf(true)} className="rounded-xl border border-ink px-3 py-2 text-sm">
-                    {t("gc.btnSharePhotoPdf")}
                   </button>
                   <label className="cursor-pointer rounded-xl border border-ink px-3 py-2 text-center text-sm">
                     {t("gc.btnLoadConfig")}
