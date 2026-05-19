@@ -1476,7 +1476,7 @@ export default function RenderPage() {
             <div className="mt-3">
               <img
                 src={sourcePhoto}
-                alt="source"
+                alt="Geüploade gevelfoto"
                 className="mx-auto max-h-64 w-full rounded-xl object-contain"
               />
             </div>
@@ -1788,7 +1788,7 @@ export default function RenderPage() {
               </p>
               <img
                 src={sourcePhoto}
-                alt=""
+                alt="Originele gevelfoto"
                 className="block w-full border border-stone-200 object-contain"
               />
             </div>

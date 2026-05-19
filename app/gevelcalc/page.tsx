@@ -2492,7 +2492,7 @@ export default function GevelCalcPage() {
 
               {photos[QUICK_SIDE_ID] && (
                 <div className="relative mt-3 text-center">
-                  <img src={photos[QUICK_SIDE_ID]} alt="" className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
+                  <img src={photos[QUICK_SIDE_ID]} alt="Geüploade gevelfoto" className="mx-auto max-h-[320px] w-full rounded-xl object-contain" />
                   <button
                     type="button"
                     onClick={() => clearPhotoState(QUICK_SIDE_ID)}
@@ -3116,7 +3116,7 @@ export default function GevelCalcPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={renderPreviewUrl}
-                  alt=""
+                  alt="Gevelvisualisatie uit Renisual render-tool"
                   className="block w-full border border-stone-200 object-contain"
                 />
               </div>
