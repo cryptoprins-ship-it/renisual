@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Visualiseer je gevel met AI — Renisual",
+  title: "Visualiseer je gevel met AI in seconden — Renisual",
   description:
     "Upload een foto van je gevel, kies een paneel of RAL-kleur, en zie binnen seconden hoe je gerenoveerde huis eruit ziet. AI-render via FLUX.",
   alternates: { canonical: "https://renisual.com/render" },

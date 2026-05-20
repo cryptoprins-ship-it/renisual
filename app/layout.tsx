@@ -30,7 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://renisual.com"),
   title: "Renisual — Zien is weten.",
-  description: "Visualiseer je gevel, bereken je materiaal, vraag je offerte aan. Visualiseer, reken, renoveer.",
+  description: "AI-platform voor gevelrenovatie in Nederland. Visualiseer je gevel met een eigen foto, bereken materiaal en prijs, en vraag direct een offerte aan.",
   manifest: "/manifest.json",
   openGraph: {
     title: "Renisual — Zien is weten.",

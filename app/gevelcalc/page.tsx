@@ -2258,7 +2258,7 @@ export default function GevelCalcPage() {
           </header>
 
           <div className="hidden print:block mb-4">
-            <h1 className="text-2xl font-bold">{t("gc.title")}</h1>
+            <h2 className="text-2xl font-bold">{t("gc.title")}</h2>
             {projectName && <p className="text-base font-medium mt-1">{projectName}</p>}
             {calcDate && <p className="text-sm text-stone-500 mt-1">{t("gc.dateLabel", { date: formatDate(calcDate, locale) })}</p>}
             <p className="text-sm italic text-stone-600 mt-1">

@@ -35,8 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/privacy", priority: 0.4, source: "app/privacy/page.tsx" },
     { path: "/terms", priority: 0.4, source: "app/terms/page.tsx" },
     { path: "/cookiebeleid", priority: 0.4, source: "app/cookiebeleid/page.tsx" },
-    { path: "/wachten", priority: 0.5, source: "app/wachten/page.tsx" },
-    { path: "/leaderboard", priority: 0.5, source: "app/leaderboard/page.tsx" },
   ];
   return routes.map(({ path, priority, source }) => ({
     url: `${BASE}${path}`,

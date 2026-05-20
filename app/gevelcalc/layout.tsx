@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Renisual GevelCalc — bereken panelen, profielen en prijs",
-  description: "Bereken gevelpanelen, profielen, openingen en prijs voor je renovatieproject.",
+  description: "Bereken gevelpanelen, profielen, hoekstukken en openingen voor je gevelrenovatie. Snelle modus of per zijde, met materiaalprijs en offerte-export.",
   alternates: { canonical: "https://renisual.com/gevelcalc" },
 };
 
